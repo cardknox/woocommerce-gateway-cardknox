@@ -1,0 +1,1 @@
+1. card type icons dont sync due to ifields

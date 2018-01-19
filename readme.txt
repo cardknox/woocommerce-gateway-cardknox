@@ -10,7 +10,12 @@ License: GNU GPL 3.0
 accept payments with the Cardknox gateway.
 
 == Description ==
-adds the ability to accept credit cards with authorize only and capture and supports voiding or refunding.
+
+adds the ability to accept credit cards and handles sending the information to the cardknox gateway for credit card processing using the cardknox API.
+
+see this link for information about the cardknox gateway. https://www.cardknox.com and this one for the API information. https://kb.cardknox.com/api/
+
+it supports authorize only capture voiding or refunding.
 
 it has support for cards on file as well and works with the WC subscription plugin for recurring payments.
 

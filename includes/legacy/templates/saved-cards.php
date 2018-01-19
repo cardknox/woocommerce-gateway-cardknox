@@ -1,3 +1,4 @@
+<?php
 /*
 Copyright © 2018 Cardknox Development Inc. All rights reserved.
 
@@ -14,6 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+?>
 <h2 id="saved-cards" style="margin-top:40px;"><?php _e( 'Saved cards', 'woocommerce-gateway-cardknox' ); ?></h2>
 <table class="shop_table">
 	<thead>

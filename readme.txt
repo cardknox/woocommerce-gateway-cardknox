@@ -13,7 +13,7 @@ Accept payments with the Cardknox gateway.
 
 Adds the ability to accept credit cards and handles sending the information to the Cardknox gateway for credit card processing using the Cardknox API.
 
-See this link for information about the cardknox gateway: https://www.cardknox.com, and this one for the API information: https://kb.cardknox.com/api/
+See this link for information about the Cardknox gateway: https://www.cardknox.com, and this one for the API information: https://kb.cardknox.com/api/
 
 The plugin supports the following transaction types: authorize only, capture, voiding, and refunding.
 

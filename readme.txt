@@ -7,19 +7,19 @@ Requires PHP: 5.6.0
 Stable tag: trunk
 License: GNU GPL 3.0
 
-accept payments with the Cardknox gateway.
+Accept payments with the Cardknox gateway.
 
 == Description ==
 
-adds the ability to accept credit cards and handles sending the information to the cardknox gateway for credit card processing using the cardknox API.
+Adds the ability to accept credit cards and handles sending the information to the Cardknox gateway for credit card processing using the Cardknox API.
 
-see this link for information about the cardknox gateway. https://www.cardknox.com and this one for the API information. https://kb.cardknox.com/api/
+See this link for information about the cardknox gateway: https://www.cardknox.com, and this one for the API information: https://kb.cardknox.com/api/
 
-it supports authorize only capture voiding or refunding.
+The plugin supports the following transaction types: authorize only, capture, voiding, and refunding.
 
-it has support for cards on file as well and works with the WC subscription plugin for recurring payments.
+It supports storing cards on file as well using tokenization and works with the WooCommerce Subscriptions plugin (https://woocommerce.com/products/woocommerce-subscriptions) for recurring payments.
 
 == Installation ==
-copy this folder in the to plugins directory and make sure the folder is named woocommerce-gateway-cardknox.
+Copy this folder into the plugins directory and make sure the folder is named woocommerce-gateway-cardknox.
 
-go to the admin panel to configure the setting and enable the plugin
+Go to the admin panel to configure the setting and enable the plugin.

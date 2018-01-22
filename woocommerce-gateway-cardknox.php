@@ -300,7 +300,6 @@ if ( ! class_exists( 'WC_Cardknox' ) ) :
 				include_once( dirname( __FILE__ ) . '/includes/class-wc-gateway-cardknox.php' );
 			} else {
 				include_once( dirname( __FILE__ ) . '/includes/legacy/class-wc-gateway-cardknox.php' );
-				include_once( dirname( __FILE__ ) . '/includes/legacy/class-wc-gateway-cardknox-saved-cards.php' );
 			}
 
 			load_plugin_textdomain( 'woocommerce-gateway-cardknox', false, plugin_basename( dirname( __FILE__ ) ) . '/languages' );

@@ -278,10 +278,11 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 		$post_data                = array();
         $post_data['xCommand']     = $this->capture ? 'cc:sale' : 'cc:authonly';
 		$post_data['xCurrency']    = strtolower( $order->get_order_currency() ? $order->get_order_currency() : get_woocommerce_currency() );
-		$post_data['xAmount']      = $this->get_cardknox_amount( $order->get_total(), $post_data['currency'] );
+
+        $post_data['xAmount']      = $this->get_cardknox_amount( $order->get_total(), $post_data['currency'] );
         $post_data['xEmail'] = $order->billing_email;
 		$post_data['xDescription'] = sprintf( __( '%s - Order %s', 'woocommerce-gateway-cardknox' ), wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ), $order->get_order_number() );
-        $post_data['xInvoice'] = $order->get_id();
+        $post_data['xInvoice'] = $order->get_order_number();
         $post_data['xIP'] = $order->customer_ip_address;
 
         $post_data['xCardNum'] = wc_clean($_POST['xCardNum']);

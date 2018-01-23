@@ -359,7 +359,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 
 				if ( is_wp_error( $response ) ) {
 
-					throw new Exception( $response['xErrorCode']. ': ' . $response['xError'] );
+					throw new Exception( $response->get_error_code(). ': ' . $response->get_error_message() );
 				}
 
 				if ( $force_customer ) {

@@ -1,6 +1,6 @@
-=== woocommerce-gateway-cardknox ===
+=== Cardknox Payment Gateway for WooCommerce ===
 Contributors: dlehren
-Tags: Credit Cards, Gateway
+Tags: credit card, gateway, cardknox, woocommerce
 Requires at least: 4.4
 Tested up to: 4.9.2
 Requires PHP: 5.6.0

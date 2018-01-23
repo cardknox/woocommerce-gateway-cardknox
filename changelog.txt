@@ -1,1 +1,2 @@
 - fixed bug with adding new payment method
+- fixed lagacy support for WooCommerce 2.5

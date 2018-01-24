@@ -4,7 +4,7 @@ Tags: credit card, gateway, cardknox, woocommerce
 Requires at least: 4.4
 Tested up to: 4.9.2
 Requires PHP: 5.6.0
-Stable tag: trunk
+Stable tag: 1.0.1
 License: GNU GPL 3.0
 
 Accept payments with the Cardknox gateway.

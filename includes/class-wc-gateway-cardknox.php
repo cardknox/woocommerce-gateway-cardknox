@@ -536,8 +536,16 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 			} else {
 //				the below get sets when a subscription charge gets fired
 				if ($force_customer && wcs_is_subscription($order_id)) {
-                    $response = WC_Cardknox_API::save($this->generate_payment_request( $order ));
-                    $this->save_payment_for_subscription($order_id, $response );
+					$post_data                = array();
+					$post_data['xCommand']     = 'cc:save';
+					$post_data = self::get_order_data($post_data, $order );
+					$post_data = self::get_billing_shiping_info($post_data, $order);
+					$post_data = self::get_payment_data($post_data);
+                    $response = WC_Cardknox_API::request($post_data);
+					$this->save_payment($force_customer,$response );
+					update_post_meta( $order_id, '_cardknox_token', $response['xToken'] );
+					update_post_meta( $order_id, '_cardknox_masked_card', $response['xMaskedCardNumber'] );
+					update_post_meta( $order_id, '_cardknox_cardtype', $response['xCardType'] );
 				}
 				$order->payment_complete();
 			}

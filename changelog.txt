@@ -1,3 +1,4 @@
+- fixed bug if no exp date in response
 - fixed bug with adding new payment method
 - fixed lagacy support for WooCommerce 2.5
 - fixed change payment method in subscriptions

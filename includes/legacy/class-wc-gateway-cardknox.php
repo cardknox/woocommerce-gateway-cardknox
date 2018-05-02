@@ -64,7 +64,8 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 		$this->method_title         = __( 'Cardknox', 'woocommerce-gateway-cardknox' );
 		$this->method_description   = __( 'Cardknox works by adding credit card fields on the checkout and then sending the details to Cardknox for verification.', 'woocommerce-gateway-cardknox' );
 		$this->has_fields           = true;
-		$this->view_transaction_url = 'https://dashboard.cardknox.com/payments/%s';
+		$this->view_transaction_url = 'https://secure.cardknox.com';
+//		$this->view_transaction_url = 'https://secure.cardknox.com/payments/%s';
 		$this->supports             = array(
 			'subscriptions',
 			'products',
@@ -157,7 +158,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 				$total = absint( $total );
 				break;
 			default :
-				$total = absint( $total );
+				// In cents.
 				break;
 		}
 		return $total;
@@ -175,17 +176,17 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 
 		// Check required fields
 		if ( ! $this->transaction_key ) {
-			echo '<div class="error"><p>' . sprintf( __( 'Cardknox error: Please enter your secret key <a href="%s">here</a>', 'woocommerce-gateway-cardknox' ), admin_url( 'admin.php?page=wc-settings&tab=checkout&section=wc_gateway_cardknox' . $addons ) ) . '</p></div>';
+			echo '<div class="error"><p>' . sprintf( __( 'Cardknox error: Please enter your transaction key <a href="%s">here</a>', 'woocommerce-gateway-cardknox' ), admin_url( 'admin.php?page=wc-settings&tab=checkout&section=wc_gateway_cardknox' . $addons ) ) . '</p></div>';
 			return;
 
 		} elseif ( ! $this->token_key ) {
-			echo '<div class="error"><p>' . sprintf( __( 'Cardknox error: Please enter your publishable key <a href="%s">here</a>', 'woocommerce-gateway-cardknox' ), admin_url( 'admin.php?page=wc-settings&tab=checkout&section=wc_gateway_cardknox' . $addons ) ) . '</p></div>';
+			echo '<div class="error"><p>' . sprintf( __( 'Cardknox error: Please enter your token key <a href="%s">here</a>', 'woocommerce-gateway-cardknox' ), admin_url( 'admin.php?page=wc-settings&tab=checkout&section=wc_gateway_cardknox' . $addons ) ) . '</p></div>';
 			return;
 		}
 
 		// Simple check for duplicate keys
 		if ( $this->transaction_key == $this->token_key ) {
-			echo '<div class="error"><p>' . sprintf( __( 'Cardknox error: Your secret and publishable keys match. Please check and re-enter.', 'woocommerce-gateway-cardknox' ), admin_url( 'admin.php?page=wc-settings&tab=checkout&section=wc_gateway_cardknox' . $addons ) ) . '</p></div>';
+			echo '<div class="error"><p>' . sprintf( __( 'Cardknox error: Your transaction and token keys match. Please check and re-enter.', 'woocommerce-gateway-cardknox' ), admin_url( 'admin.php?page=wc-settings&tab=checkout&section=wc_gateway_cardknox' . $addons ) ) . '</p></div>';
 			return;
 		}
 

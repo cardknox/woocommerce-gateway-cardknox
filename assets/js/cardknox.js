@@ -135,7 +135,7 @@ jQuery( function( $ ) {
             //}
 
             $('.wc-cardknox-error, .xExp').remove();
-            $('#cardknox-card-number').closest('p').before('<ul class="woocommerce_error woocommerce-error wc-cardknox-error"><li>' + message + '</li></ul>');
+            $('#ifieldsError').closest('p').before('<ul class="woocommerce_error woocommerce-error wc-cardknox-error"><li>' + message + '</li></ul>');
             wc_cardknox_form.unblock();
         },
 
@@ -145,25 +145,27 @@ jQuery( function( $ ) {
             if (wc_cardknox_form.isCardknoxChosen() && !wc_cardknox_form.hasExp()) {
                 e.preventDefault();
                 wc_cardknox_form.block();
-                setAccount(wc_cardknox_params.key, "wordpress", "1.0.0");
-                if (document.getElementById('cardknox-card-number').value === '') {
-                    $(document).trigger('cardknoxError', 'card number required');
-                }
                 setAccount( wc_cardknox_params.key,"wordpress", "0.1.2" );
-
                 getTokens(
                     function () {
                         //onSuccess
                         //perform your own validation here...
+                        if (document.getElementsByName("xCardNum")[0].value === '') {
+                           
+                            $(document).trigger('cardknoxError', 'Card Number Required');
+                            return false
+                            }
+                        if (document.getElementsByName("xCVV")[0].value === '') {
+                            $(document).trigger('cardknoxError', 'CVV Required');
+                            return false
+                        }
                         console.log("Success");
                         wc_cardknox_form.onCardknoxResponse();
                     },
                     function () {
                         //onError
                         console.log("error");
-                        wc_cardknox_form.unblock();
                         $(document).trigger('cardknoxError', document.getElementById('ifieldsError').textContent);
-                        //$( document ).trigger( 'cardknoxError', document.getElementById('ifieldsError').textContent);
                         return false;
                     },
                     //30 second timeout

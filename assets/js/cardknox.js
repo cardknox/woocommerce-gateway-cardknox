@@ -47,6 +47,10 @@ jQuery( function( $ ) {
                 .on(
                     'checkout_place_order_cardknox',
                     this.onSubmit
+                )
+				.on(
+					'change',
+					this.reset
                 );
 
             // pay order page
@@ -75,7 +79,7 @@ jQuery( function( $ ) {
                 .on(
                     'change',
                     '#wc-cardknox-cc-form :input',
-                    this.onCCFormChange
+                    this.reset
                 )
                 .on(
                     'cardknoxError',
@@ -83,7 +87,7 @@ jQuery( function( $ ) {
                 )
                 .on(
                     'checkout_error',
-                    this.clearToken
+                    this.reset
                 );
         },
 
@@ -120,6 +124,7 @@ jQuery( function( $ ) {
         onSubmit: function (e) {
             //debugger;
             console.log('onSubmit');
+            // wc_cardknox_form.form.validate_field();
             if (wc_cardknox_form.isCardknoxChosen() && !wc_cardknox_form.hasExp()) {
                 e.preventDefault();
                 wc_cardknox_form.block();
@@ -151,10 +156,7 @@ jQuery( function( $ ) {
                 );
                 return false;
             }
-        },
-
-        onCCFormChange: function () {
-            $('.wc-cardknox-error, .xExp').remove();
+            return true;
         },
 
         onCardknoxResponse: function () {
@@ -169,6 +171,11 @@ jQuery( function( $ ) {
             wc_cardknox_form.form.append("<input type='hidden' class='xExp' name='xExp' value='" + xExp + "'/>");
             wc_cardknox_form.form.submit();
 
+        },
+
+        reset: function() {
+            $( '#cardknox-card-cvc, #cardknox-card-number' ).val('');
+            $( '.xExp').remove()
         },
 
         onIfieldloaded: function () {

@@ -135,7 +135,8 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 		</p><input data-ifields-id="cvv-token" name="xCVV" id="cardknox-card-cvc" type="hidden"/>';
 
 		$default_fields = array(
-			'card-number-field' => '<p class="form-row form-row-wide">
+			'card-number-field' => '<p><label data-ifields-id="card-data-error" id="ifieldsError" style="display:none;"></label></p>
+			<p class="form-row form-row-wide">
 				<label for="' . esc_attr( $this->id ) . '-card-number">' . esc_html__( 'Card number', 'woocommerce' ) . ' <span class="required">*</span></label>
 
 				<iframe data-ifields-id="card-number" data-ifields-placeholder="Card Number"

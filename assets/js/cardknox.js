@@ -28,11 +28,6 @@ jQuery( function( $ ) {
         }
     });
 
-
-    //
-    //console.log("add_payment_method");
-
-
     /**
      * Object to handle Cardknox payment forms.
      */
@@ -117,23 +112,6 @@ jQuery( function( $ ) {
         onError: function (e, responseObject) {
             console.log('onError');
             var message = responseObject;
-
-            // Customers do not need to know the specifics of the below type of errors
-            // therefore return a generic localizable error message.
-            //if (
-            //	'invalid_request_error' === responseObject.response.error.type ||
-            //	'api_connection_error'  === responseObject.response.error.type ||
-            //	'api_error'             === responseObject.response.error.type ||
-            //	'authentication_error'  === responseObject.response.error.type ||
-            //	'rate_limit_error'      === responseObject.response.error.type
-            //) {
-            //message = wc_cardknox_params.invalid_request_error;
-            //}
-
-            //if ( 'card_error' === responseObject.response.error.type && wc_cardknox_params.hasOwnProperty( responseObject.response.error.code ) ) {
-            //	message = wc_cardknox_params[ responseObject.response.error.code ];
-            //}
-
             $('.wc-cardknox-error, .xExp').remove();
             $('#ifieldsError').closest('p').before('<ul class="woocommerce_error woocommerce-error wc-cardknox-error"><li>' + message + '</li></ul>');
             wc_cardknox_form.unblock();
@@ -151,10 +129,10 @@ jQuery( function( $ ) {
                         //onSuccess
                         //perform your own validation here...
                         if (document.getElementsByName("xCardNum")[0].value === '') {
-                           
+
                             $(document).trigger('cardknoxError', 'Card Number Required');
                             return false
-                            }
+                        }
                         if (document.getElementsByName("xCVV")[0].value === '') {
                             $(document).trigger('cardknoxError', 'CVV Required');
                             return false
@@ -182,6 +160,11 @@ jQuery( function( $ ) {
         onCardknoxResponse: function () {
             var expires = $('#cardknox-card-expiry').payment('cardExpiryVal');
             var xExp = expires.month.toString() + expires.year.toString().substr(2, 2);
+            if (!!xExp)
+            {
+                $(document).trigger('cardknoxError', 'Expiration date');
+                return false
+            }
             console.log('onCardknoxResponse');
             wc_cardknox_form.form.append("<input type='hidden' class='xExp' name='xExp' value='" + xExp + "'/>");
             wc_cardknox_form.form.submit();
@@ -189,39 +172,29 @@ jQuery( function( $ ) {
         },
 
         onIfieldloaded: function () {
-            //var interval = setInterval(function () {
-            //    if (wc_cardknox_form.isCardknoxChosen()) {
-                    //alert("loaded");
-                    var card_style = {
-                        border: '0',
-                        'border-left-color': 'rgb(67, 69, 75)',
-                        'font-size': '19.8px',
-                        padding: '12.25px',
-                        width: '225px',
-                        height: '32px',
-                        'background-color': 'rgb(242, 242, 242)',
-                        'font-weight': '400'
-                    };
-
-                    var cvv_style = {
-                        border: '0',
-                        'border-left-color': 'rgb(67, 69, 75)',
-                        'font-size': '19.8px',
-                        padding: '12.25px',
-                        width: '106px',
-                        height: '32px',
-                        'background-color': 'rgb(242, 242, 242)',
-                        'font-weight': '400'
-                    };
-
-                    setIfieldStyle('card-number', card_style);
-                    setIfieldStyle('cvv', cvv_style);
-                    //clearInterval(interval);
+            var card_style = {
+                border: '0',
+                'border-left-color': 'rgb(67, 69, 75)',
+                'font-size': '19.8px',
+                padding: '12.25px',
+                width: '225px',
+                height: '32px',
+                'background-color': 'rgb(242, 242, 242)',
+                'font-weight': '400'
+            };
+            var cvv_style = {
+                border: '0',
+                'border-left-color': 'rgb(67, 69, 75)',
+                'font-size': '19.8px',
+                padding: '12.25px',
+                width: '106px',
+                height: '32px',
+                'background-color': 'rgb(242, 242, 242)',
+                'font-weight': '400'
+            };
+            setIfieldStyle('card-number', card_style);
+            setIfieldStyle('cvv', cvv_style);
         }
-                //Check what you want here
-            //}, 500);
-
-
 
     };
 

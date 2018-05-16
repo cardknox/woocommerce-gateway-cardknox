@@ -160,9 +160,9 @@ jQuery( function( $ ) {
         onCardknoxResponse: function () {
             var expires = $('#cardknox-card-expiry').payment('cardExpiryVal');
             var xExp = expires.month.toString() + expires.year.toString().substr(2, 2);
-            if (!!xExp)
+            if (isNaN(expires.month) || isNaN(expires.year))
             {
-                $(document).trigger('cardknoxError', 'Expiration date');
+                $(document).trigger('cardknoxError', 'Invalid expiration date');
                 return false
             }
             console.log('onCardknoxResponse');

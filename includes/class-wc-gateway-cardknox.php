@@ -536,8 +536,16 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 			} else {
 //				the below get sets when a subscription charge gets fired
 				if ($force_customer && wcs_is_subscription($order_id)) {
-                    $response = WC_Cardknox_API::save($this->generate_payment_request( $order ));
-                    $this->save_payment_for_subscription($order_id, $response );
+					$post_data                = array();
+					$post_data['xCommand']     = 'cc:save';
+					$post_data = self::get_order_data($post_data, $order );
+					$post_data = self::get_billing_shiping_info($post_data, $order);
+					$post_data = self::get_payment_data($post_data);
+                    $response = WC_Cardknox_API::request($post_data);
+					$this->save_payment($force_customer,$response );
+					update_post_meta( $order_id, '_cardknox_token', $response['xToken'] );
+					update_post_meta( $order_id, '_cardknox_masked_card', $response['xMaskedCardNumber'] );
+					update_post_meta( $order_id, '_cardknox_cardtype', $response['xCardType'] );
 				}
 				$order->payment_complete();
 			}
@@ -773,20 +781,25 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 
         // Add token to WooCommerce
         if ( get_current_user_id() && class_exists('WC_Payment_Token_CC')) {
-            $token = new WC_Payment_Token_CC();
-            $token->set_token( $response['xToken'] );
-            $token->set_gateway_id( 'cardknox' );
-            $token->set_card_type( strtolower( $response['xCardType'] ) );
-            $token->set_last4( $response['xMaskedCardNumber'] );
-            $token->set_expiry_month( substr($response['xExp'],0,2) );
-            $token->set_expiry_year('20' . substr($response['xExp'],2,2) );
-            $token->set_user_id( get_current_user_id() );
-            $response = $token->save();
+			$myExp = '';
+			if ($response['xExp']){
+				$myExp = $response['xExp'];
+			} elseif(wc_clean($_POST['xExp']) != '') {
+				$myExp = wc_clean($_POST['xExp']);
+			}
+			if ($myExp) {
+				$token = new WC_Payment_Token_CC();
+				$token->set_token( $response['xToken'] );
+				$token->set_gateway_id( 'cardknox' );
+				$token->set_card_type( strtolower( $response['xCardType'] ) );
+				$token->set_last4( $response['xMaskedCardNumber'] );
+				$token->set_expiry_month( substr($myExp,0,2) );
+				$token->set_expiry_year('20' . substr($myExp,2,2) );
+				$token->set_user_id( get_current_user_id() );
+				$response = $token->save();
+				do_action( 'woocommerce_cardknox_add_card', get_current_user_id(), $response );
+			}
         }
-
-
-        do_action( 'woocommerce_cardknox_add_card', get_current_user_id(), $response );
-
         return "";
     }
 

@@ -107,7 +107,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 		$this->transaction_key              =  $this->get_option( 'transaction_key' );
 		$this->token_key         =  $this->get_option( 'token_key' );
 		$this->logging                 = 'yes' === $this->get_option( 'logging' );
-		$this->authonly_status                 = $this->get_option( 'cardknox_authonly_status' );
+		$this->authonly_status                 = $this->get_option( 'auth_only_order_status' );
 
 
 		WC_Cardknox_API::set_transaction_key( $this->transaction_key );

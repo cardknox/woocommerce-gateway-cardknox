@@ -31,18 +31,16 @@ jQuery( function( $ ) {
 		 */
 		init: function() {
 
-			// Validate the keys to make sure it is matching live with live field.
-			$( '#woocommerce_cardknox_test_transaction_key, #woocommerce_cardknox_test_token_key' ).on( 'input', function() {
-				var value = $( this ).val();
-
-				if ( value.indexOf( '_live_' ) >= 0 ) {
-					$( this ).css( 'border-color', 'red' ).after( '<span class="description cardknox-error-description" style="color:red; display:block;">' + wc_cardknox_admin_params.localized_messages.not_valid_test_key_msg + '</span>' );
+			$( 'input#woocommerce_cardknox_capture' ).change(function() {
+				if ( $( this ).is( ':checked' ) ) {
+					$( '#woocommerce_cardknox_auth_only_order_status' ).closest( 'tr' ).hide();
 				} else {
-					$( this ).css( 'border-color', '' );
-					$( '.cardknox-error-description', $( this ).parent() ).remove();
+					$( '#woocommerce_cardknox_auth_only_order_status' ).closest( 'tr' ).show();
 				}
-			}).trigger( 'input' );
+			}).change();
 		}
+
+
 	};
 
 	wc_cardknox_admin.init();

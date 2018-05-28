@@ -63,6 +63,8 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 	public $logging;
 
 
+	public $authonly_status;
+
 	/**
 	 * Constructor
 	 */
@@ -105,7 +107,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 		$this->transaction_key              =  $this->get_option( 'transaction_key' );
 		$this->token_key         =  $this->get_option( 'token_key' );
 		$this->logging                 = 'yes' === $this->get_option( 'logging' );
-
+		$this->authonly_status                 = $this->get_option( 'cardknox_authonly_status' );
 
 
 		WC_Cardknox_API::set_transaction_key( $this->transaction_key );
@@ -633,7 +635,13 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 			}
             $xRefNum =  $response['xRefNum'];
 
-			$order->update_status( 'on-hold', sprintf( __( 'Cardknox charge authorized (Charge ID: %s). Process order to take payment, or cancel to remove the pre-authorization.', 'woocommerce-gateway-cardknox' ), $response['xRefNum'] ) );
+			if ($this->authonly_status == "on-hold")
+			{
+				$order->update_status( 'on-hold', sprintf( __( 'Cardknox charge authorized (Charge ID: %s). Process order to take payment, or cancel to remove the pre-authorization.', 'woocommerce-gateway-cardknox' ), $response['xRefNum'] ) );
+			} else {
+				$order->update_status( 'processing', sprintf( __( 'Cardknox charge authorized (Charge ID: %s). Complete order to take payment, or cancel to remove the pre-authorization.', 'woocommerce-gateway-cardknox' ), $response['xRefNum'] ) );
+			}
+
 			$this->log( "Successful auth: $xRefNum" );
 		}
 

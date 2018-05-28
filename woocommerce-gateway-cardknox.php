@@ -136,6 +136,10 @@ if ( ! class_exists( 'WC_Cardknox' ) ) :
 			add_action( 'woocommerce_order_status_on-hold_to_completed', array( $this, 'capture_payment' ) );
 			add_action( 'woocommerce_order_status_on-hold_to_cancelled', array( $this, 'refund_payment' ) );
 			add_action( 'woocommerce_order_status_on-hold_to_refunded', array( $this, 'refund_payment' ) );
+
+			add_action( 'woocommerce_order_status_processing_to_cancelled', array( $this, 'refund_payment' ) );
+			add_action( 'woocommerce_order_status_processing_to_completed', array( $this, 'capture_payment' ) );
+			
 		}
 
 		/**
@@ -365,8 +369,8 @@ if ( ! class_exists( 'WC_Cardknox' ) ) :
 
 			if ( 'cardknox' === ( version_compare( WC_VERSION, '3.0.0', '<' ) ? $order->payment_method : $order->get_payment_method() ) ) {
 				$my_xrefnum   = get_post_meta( $order_id, '_cardknox_xrefnum', true );
-				$captured = get_post_meta( $order_id, '_cardknox_charge_captured', true );
 
+				$captured = get_post_meta( $order_id, '_cardknox_transaction_captured', true );
 				if ( $my_xrefnum && 'no' === $captured ) {
 					$result = WC_Cardknox_API::request( array(
 						'xAmount'   => $order->get_total(),

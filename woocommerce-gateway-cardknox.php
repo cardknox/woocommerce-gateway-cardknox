@@ -36,7 +36,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Required minimums and constants
  */
-define( 'WC_CARDKNOX_VERSION', '1.0.6' );
+define( 'WC_CARDKNOX_VERSION', '1.0.7' );
 define( 'WC_CARDKNOX_MIN_PHP_VER', '5.6.0' );
 define( 'WC_CARDKNOX_MIN_WC_VER', '2.5.0' );
 define( 'WC_CARDKNOX_MAIN_FILE', __FILE__ );

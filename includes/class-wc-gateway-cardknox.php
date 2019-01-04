@@ -181,22 +181,22 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 	 * @access public
 	 * @return string
 	 */
-	public function get_icon() {
-		$ext   = version_compare( WC()->version, '2.6', '>=' ) ? '.svg' : '.png';
-		$style = version_compare( WC()->version, '2.6', '>=' ) ? 'style="margin-left: 0.3em"' : '';
-
-		$icon  = '<img src="' . WC_HTTPS::force_https_url( WC()->plugin_url() . '/assets/images/icons/credit-cards/visa' . $ext ) . '" alt="Visa" width="32" ' . $style . ' />';
-		$icon .= '<img src="' . WC_HTTPS::force_https_url( WC()->plugin_url() . '/assets/images/icons/credit-cards/mastercard' . $ext ) . '" alt="Mastercard" width="32" ' . $style . ' />';
-		$icon .= '<img src="' . WC_HTTPS::force_https_url( WC()->plugin_url() . '/assets/images/icons/credit-cards/amex' . $ext ) . '" alt="Amex" width="32" ' . $style . ' />';
-
-		if ( 'USD' === get_woocommerce_currency() ) {
-			$icon .= '<img src="' . WC_HTTPS::force_https_url( WC()->plugin_url() . '/assets/images/icons/credit-cards/discover' . $ext ) . '" alt="Discover" width="32" ' . $style . ' />';
-			$icon .= '<img src="' . WC_HTTPS::force_https_url( WC()->plugin_url() . '/assets/images/icons/credit-cards/jcb' . $ext ) . '" alt="JCB" width="32" ' . $style . ' />';
-			$icon .= '<img src="' . WC_HTTPS::force_https_url( WC()->plugin_url() . '/assets/images/icons/credit-cards/diners' . $ext ) . '" alt="Diners" width="32" ' . $style . ' />';
-		}
-
-		return apply_filters( 'woocommerce_gateway_icon', $icon, $this->id );
-	}
+//	public function get_icon() {
+//		$ext   = version_compare( WC()->version, '2.6', '>=' ) ? '.svg' : '.png';
+//		$style = version_compare( WC()->version, '2.6', '>=' ) ? 'style="margin-left: 0.3em"' : '';
+//
+//		$icon  = '<img src="' . WC_HTTPS::force_https_url( WC()->plugin_url() . '/assets/images/icons/credit-cards/visa' . $ext ) . '" alt="Visa" width="32" ' . $style . ' />';
+//		$icon .= '<img src="' . WC_HTTPS::force_https_url( WC()->plugin_url() . '/assets/images/icons/credit-cards/mastercard' . $ext ) . '" alt="Mastercard" width="32" ' . $style . ' />';
+//		$icon .= '<img src="' . WC_HTTPS::force_https_url( WC()->plugin_url() . '/assets/images/icons/credit-cards/amex' . $ext ) . '" alt="Amex" width="32" ' . $style . ' />';
+//
+//		if ( 'USD' === get_woocommerce_currency() ) {
+//			$icon .= '<img src="' . WC_HTTPS::force_https_url( WC()->plugin_url() . '/assets/images/icons/credit-cards/discover' . $ext ) . '" alt="Discover" width="32" ' . $style . ' />';
+//			$icon .= '<img src="' . WC_HTTPS::force_https_url( WC()->plugin_url() . '/assets/images/icons/credit-cards/jcb' . $ext ) . '" alt="JCB" width="32" ' . $style . ' />';
+//			$icon .= '<img src="' . WC_HTTPS::force_https_url( WC()->plugin_url() . '/assets/images/icons/credit-cards/diners' . $ext ) . '" alt="Diners" width="32" ' . $style . ' />';
+//		}
+//
+//		return apply_filters( 'woocommerce_gateway_icon', $icon, $this->id );
+//	}
 
 	/**
 	 * Get Cardknox amount to pay
@@ -517,17 +517,19 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 				$response = WC_Cardknox_API::request( $this->generate_payment_request( $order ) );
 
 				if ( is_wp_error( $response ) ) {
-					$localized_messages = $this->get_localized_messages();
-
-					$message = isset( $localized_messages[ $response->get_error_code() ] ) ? $localized_messages[ $response->get_error_code() ] : $response->get_error_message();
-
-					$order->add_order_note( $message );
-
+//					$localized_messages = $this->get_localized_messages();
+//
+//					$message = isset( $localized_messages[ $response->get_error_code() ] ) ? $localized_messages[ $response->get_error_code() ] : $response->get_error_message();
+//
+//					$order->add_order_note( $message );
+					$order->add_order_note($response->get_error_message());
 					throw new Exception( "The transaction was declined please try again" );
 				}
 
+				$this->log( "Info: set_transaction_id");
 				$order->set_transaction_id($response['xRefNum']);
 
+				$this->log( "Info: save_payment");
                 $this->save_payment($force_customer,$response );
 
                 //the below get sets when a subscription charge gets fired
@@ -535,6 +537,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
                    $this->save_payment_for_subscription($order_id, $response );
                 }
 				// Process valid response.
+				$this->log( "Info: process_response");
 				$this->process_response( $response, $order );
 			} else {
 //				the below get sets when a subscription charge gets fired
@@ -553,11 +556,16 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 				$order->payment_complete();
 			}
 
+
+			$this->log( "Info: empty_cart");
 			// Remove cart.
 			WC()->cart->empty_cart();
 
+			$this->log( "Info: wc_gateway_cardknox_process_payment");
 			do_action( 'wc_gateway_cardknox_process_payment', $response, $order );
 
+
+			$this->log( "Info: thank you page redirect");
 			// Return thank you page redirect.
 			return array(
 				'result'   => 'success',

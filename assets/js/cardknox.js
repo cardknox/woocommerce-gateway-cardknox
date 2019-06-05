@@ -160,10 +160,7 @@ jQuery( function( $ ) {
         },
 
         onCardknoxResponse: function () {
-            // var expires = $('#cardknox-card-expiry').payment('cardExpiryVal');
-            // var xExp = expires.month.toString() + expires.year.toString().substr(2, 2);
             var xExp = document.getElementById("cardknox-card-expiry").value.replace(/\s|\//g, "");
-            // if (isNaN(expires.month) || isNaN(expires.year))
             if(xExp.length != 4)
             {
                 $(document).trigger('cardknoxError', 'Invalid expiration date');
@@ -203,6 +200,7 @@ jQuery( function( $ ) {
             };
             setIfieldStyle('card-number', card_style);
             setIfieldStyle('cvv', cvv_style);
+            enableLogging();
         }
 
     };

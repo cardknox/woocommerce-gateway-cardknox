@@ -352,7 +352,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 
 		$suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
         wp_enqueue_script( 'cardknox', 'https://cdn.cardknox.com/ifields/2.5.1905.0801/ifields.min.js', '', filemtime(get_stylesheet_directory()), false );
-        wp_enqueue_script( 'woocommerce_cardknox', plugins_url( 'assets/js/cardknox' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE ), array( 'jquery-payment', 'cardknox' ), filemtime(get_stylesheet_directory()), true );
+        wp_enqueue_script( 'woocommerce_cardknox', plugins_url( 'assets/js/cardknox' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE ), array( 'jquery-payment'), filemtime(get_stylesheet_directory()), true );
 		$cardknox_params = array(
 			'key'                  => $this->token_key,
 			'i18n_terms'           => __( 'Please accept the terms and conditions first', 'woocommerce-gateway-cardknox' ),

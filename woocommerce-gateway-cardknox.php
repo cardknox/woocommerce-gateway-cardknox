@@ -4,11 +4,11 @@ Plugin Name: WooCommerce Cardknox Gateway
 Description: Accept credit card payments on your store using the Cardknox gateway.
 Author: Cardknox Development Inc.
 Author URI: https://www.cardknox.com/
-Version: 1.0.9
+Version: 1.0.10
 Requires at least: 4.4
-Tested up to: 4.8
+Tested up to: 5.4
 WC requires at least: 2.5
-WC tested up to: 3.2
+WC tested up to: 3.5.7
 Text Domain: woocommerce-gateway-cardknox
 Domain Path: /languages
 
@@ -36,7 +36,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Required minimums and constants
  */
-define( 'WC_CARDKNOX_VERSION', '1.0.9' );
+define( 'WC_CARDKNOX_VERSION', '1.0.10' );
 define( 'WC_CARDKNOX_MIN_PHP_VER', '5.6.0' );
 define( 'WC_CARDKNOX_MIN_WC_VER', '2.5.0' );
 define( 'WC_CARDKNOX_MAIN_FILE', __FILE__ );
@@ -412,7 +412,7 @@ if ( ! class_exists( 'WC_Cardknox' ) ) :
 					) );
 
 					if ( is_wp_error( $result ) ) {
-						$order->add_order_note( __( 'Unable to refund transaction!', 'woocommerce-gateway-cardknox' ) . ' ' . $result['xError'] );
+						$order->add_order_note( __( 'Unable to refund transaction!', 'woocommerce-gateway-cardknox' ) . ' ' . $result->get_error_message() );
 					} else {
 						$order->add_order_note( sprintf( __( 'Cardknox transaction refunded (RefNum: %s)', 'woocommerce-gateway-cardknox' ), $result['xRefNum'] ) );
 						delete_post_meta( $order_id, '_cardknox_transaction_captured' );

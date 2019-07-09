@@ -115,22 +115,22 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 	 * @access public
 	 * @return string
 	 */
-	public function get_icon() {
-		$ext   = version_compare( WC()->version, '2.6', '>=' ) ? '.svg' : '.png';
-		$style = version_compare( WC()->version, '2.6', '>=' ) ? 'style="margin-left: 0.3em"' : '';
-
-		$icon  = '<img src="' . WC_HTTPS::force_https_url( WC()->plugin_url() . '/assets/images/icons/credit-cards/visa' . $ext ) . '" alt="Visa" width="32" ' . $style . ' />';
-		$icon .= '<img src="' . WC_HTTPS::force_https_url( WC()->plugin_url() . '/assets/images/icons/credit-cards/mastercard' . $ext ) . '" alt="Mastercard" width="32" ' . $style . ' />';
-		$icon .= '<img src="' . WC_HTTPS::force_https_url( WC()->plugin_url() . '/assets/images/icons/credit-cards/amex' . $ext ) . '" alt="Amex" width="32" ' . $style . ' />';
-
-		if ( 'USD' === get_woocommerce_currency() ) {
-			$icon .= '<img src="' . WC_HTTPS::force_https_url( WC()->plugin_url() . '/assets/images/icons/credit-cards/discover' . $ext ) . '" alt="Discover" width="32" ' . $style . ' />';
-			$icon .= '<img src="' . WC_HTTPS::force_https_url( WC()->plugin_url() . '/assets/images/icons/credit-cards/jcb' . $ext ) . '" alt="JCB" width="32" ' . $style . ' />';
-			$icon .= '<img src="' . WC_HTTPS::force_https_url( WC()->plugin_url() . '/assets/images/icons/credit-cards/diners' . $ext ) . '" alt="Diners" width="32" ' . $style . ' />';
-		}
-
-		return apply_filters( 'woocommerce_gateway_icon', $icon, $this->id );
-	}
+//	public function get_icon() {
+//		$ext   = version_compare( WC()->version, '2.6', '>=' ) ? '.svg' : '.png';
+//		$style = version_compare( WC()->version, '2.6', '>=' ) ? 'style="margin-left: 0.3em"' : '';
+//
+//		$icon  = '<img src="' . WC_HTTPS::force_https_url( WC()->plugin_url() . '/assets/images/icons/credit-cards/visa' . $ext ) . '" alt="Visa" width="32" ' . $style . ' />';
+//		$icon .= '<img src="' . WC_HTTPS::force_https_url( WC()->plugin_url() . '/assets/images/icons/credit-cards/mastercard' . $ext ) . '" alt="Mastercard" width="32" ' . $style . ' />';
+//		$icon .= '<img src="' . WC_HTTPS::force_https_url( WC()->plugin_url() . '/assets/images/icons/credit-cards/amex' . $ext ) . '" alt="Amex" width="32" ' . $style . ' />';
+//
+//		if ( 'USD' === get_woocommerce_currency() ) {
+//			$icon .= '<img src="' . WC_HTTPS::force_https_url( WC()->plugin_url() . '/assets/images/icons/credit-cards/discover' . $ext ) . '" alt="Discover" width="32" ' . $style . ' />';
+//			$icon .= '<img src="' . WC_HTTPS::force_https_url( WC()->plugin_url() . '/assets/images/icons/credit-cards/jcb' . $ext ) . '" alt="JCB" width="32" ' . $style . ' />';
+//			$icon .= '<img src="' . WC_HTTPS::force_https_url( WC()->plugin_url() . '/assets/images/icons/credit-cards/diners' . $ext ) . '" alt="Diners" width="32" ' . $style . ' />';
+//		}
+//
+//		return apply_filters( 'woocommerce_gateway_icon', $icon, $this->id );
+//	}
 
 	/**
 	 * Get Cardknox amount to pay
@@ -229,14 +229,14 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 			<label for="' . esc_attr( $this->id ) . '-card-number">' . esc_html__( 'Card number', 'woocommerce' ) . ' <span class="required">*</span></label>
 
 			<iframe data-ifields-id="card-number" data-ifields-placeholder="Card Number"
-					src="https://cdn.cardknox.com/ifields/ifield.htm?" + "'. esc_attr($timestamp).'" frameBorder="0" width="100%"
+					src="https://cdn.cardknox.com/ifields/2.5.1905.0801/ifield.htm?" + "'. esc_attr($timestamp).'" frameBorder="0" width="100%"
 					height="71"></iframe>
 			</p>
 			<input data-ifields-id="card-number-token" name="xCardNum" id="cardknox-card-number" type="hidden"/>', 
 			'card-cvc-field' => '<p class="form-row form-row-last">
 			<label for="' . esc_attr( $this->id ) . '-card-cvc">' . esc_html__( 'Card code', 'woocommerce' ) . ' <span class="required">*</span></label>
 			<iframe data-ifields-id="cvv" data-ifields-placeholder="CVV"
-                        src="https://cdn.cardknox.com/ifields/ifield.htm?" + "'. esc_attr($timestamp).'" frameBorder="0" width="100%"
+                        src="https://cdn.cardknox.com/ifields/2.5.1905.0801/ifield.htm?" + "'. esc_attr($timestamp).'" frameBorder="0" width="100%"
                         height="71" id="cvv-frame"></iframe>
 			</p><input data-ifields-id="cvv-token" name="xCVV" id="cardknox-card-cvc" type="hidden"/>'
 			
@@ -286,7 +286,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 	 */
 	public function payment_scripts() {
 
-			wp_enqueue_script( 'cardknox', 'https://cdn.cardknox.com/ifields/ifields.min.js', '', filemtime(get_stylesheet_directory()), false );
+			wp_enqueue_script( 'cardknox', 'https://cdn.cardknox.com/ifields/2.5.1905.0801/ifields.min.js', '', filemtime(get_stylesheet_directory()), false );
 			wp_enqueue_script( 'woocommerce_cardknox', plugins_url( 'assets/js/cardknox.js', WC_CARDKNOX_MAIN_FILE ), array( 'jquery-payment', 'cardknox' ), WC_CARDKNOX_VERSION, true );
 		$cardknox_params = array(
 			'key'                  => $this->token_key,

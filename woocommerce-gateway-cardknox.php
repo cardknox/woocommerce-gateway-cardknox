@@ -388,6 +388,7 @@ if ( ! class_exists( 'WC_Cardknox' ) ) :
 						update_post_meta( $order_id, 'Cardknox Payment ID', $result['xRefNum'] );
 						update_post_meta( $order_id, '_transaction_id', $result['xRefNum'] );
 						$order->set_transaction_id($result['xRefNum']);
+						$order->payment_complete($result['xRefNum']);
 					}
 				}
 			}

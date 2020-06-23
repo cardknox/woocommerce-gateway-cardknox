@@ -3,3 +3,4 @@
 - fixed lagacy support for WooCommerce 2.5
 - fixed change payment method in subscriptions
 - fixed validation for ifields
+- added call to payment_complete

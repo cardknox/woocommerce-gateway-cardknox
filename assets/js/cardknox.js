@@ -128,7 +128,6 @@ jQuery( function( $ ) {
             if (wc_cardknox_form.isCardknoxChosen() && !wc_cardknox_form.hasExp()) {
                 e.preventDefault();
                 wc_cardknox_form.block();
-                setAccount( wc_cardknox_params.key,"wordpress", "0.1.2" );
                 getTokens(
                     function () {
                         //onSuccess
@@ -178,6 +177,8 @@ jQuery( function( $ ) {
         },
 
         onIfieldloaded: function () {
+            enableLogging();
+            setAccount( wc_cardknox_params.key,"wordpress", "0.1.2" );
             var card_style = {
                 border: '0',
                 'border-left-color': 'rgb(67, 69, 75)',
@@ -200,7 +201,6 @@ jQuery( function( $ ) {
             };
             setIfieldStyle('card-number', card_style);
             setIfieldStyle('cvv', cvv_style);
-            enableLogging();
         }
 
     };

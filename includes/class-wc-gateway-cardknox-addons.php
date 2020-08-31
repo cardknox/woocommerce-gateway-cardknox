@@ -82,7 +82,7 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox {
 	 * @param  bool initial_payment
 	 */
 	public function process_subscription_payment( $order = '', $amount = 0 ) {
-		if ( $amount  < WC_Cardknox::get_minimum_amount() ) {
+		if ( $amount  < WC_Cardknox::get_minimum_amount() / 100 ) {
 			return new WP_Error( 'cardknox_error', sprintf( __( 'Sorry, the minimum allowed order total is %1$s to use this payment method.', 'woocommerce-gateway-cardknox' ), wc_price( WC_Cardknox::get_minimum_amount() / 100 ) ) );
 		}
 

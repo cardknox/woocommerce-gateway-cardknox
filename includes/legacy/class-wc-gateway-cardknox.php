@@ -355,7 +355,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 			// Handle payment
 			if ( $order->get_total() > 0 ) {
 
-				if ( $order->get_total()  < WC_Cardknox::get_minimum_amount() ) {
+				if ( $order->get_total()  < WC_Cardknox::get_minimum_amount() / 100 ) {
 					throw new Exception( sprintf( __( 'Sorry, the minimum allowed order total is %1$s to use this payment method.', 'woocommerce-gateway-cardknox' ), wc_price( WC_Cardknox::get_minimum_amount() / 100 ) ) );
 				}
 				WC_Cardknox::log( "Info: Begin processing payment for order $order_id for the amount of {$order->get_total()}" );

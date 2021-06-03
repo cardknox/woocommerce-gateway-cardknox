@@ -1,2 +1,1 @@
-- moved setAccount to ifields loaded
-- fix minimum amount decimal conversion
+- Error saving card should not cause transaction to fail

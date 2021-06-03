@@ -551,7 +551,11 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
         $maybe_saved_card = isset( $_POST['wc-cardknox-new-payment-method'] ) && ! empty( $_POST['wc-cardknox-new-payment-method'] );
         // This is true if the user wants to store the card to their account.
         if ( ( get_current_user_id() && $this->saved_cards && $maybe_saved_card ) || $my_force_customer ) {
-            $this->add_card($response);
+            try {
+                $this->add_card($response);
+            } catch (\Throwable $th) {
+                $this->log( 'Error: ' . $th->getMessage() );
+            }
         }
     }
 
@@ -646,7 +650,13 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 
         } elseif ( ! empty( $response['xToken'] ) ) {
             $this->log( 'Success: ' . html_entity_decode( strip_tags( $response ) ) );
-            $card  = $this->add_card($response);
+			try {
+				$card = $this->add_card($response);
+			} catch (\Throwable $th) {
+				$this->log( 'Error: ' . $th->getMessage() );
+				wc_add_notice( 'An error occured while Adding Payment Method', 'error' );
+			}
+
 
             if ( is_wp_error( $card ) ) {
                 $localized_messages = $this->get_localized_messages();

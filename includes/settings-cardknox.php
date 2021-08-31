@@ -45,7 +45,7 @@ return apply_filters( 'wc_cardknox_settings',
 		'token_key' => array(
 			'title'       => __( 'Cardknox Token Key', 'woocommerce-gateway-cardknox' ),
 			'type'        => 'text',
-			'description' => __( 'Get your API keys from your cardknox account.', 'woocommerce-gateway-cardknox' ),
+			'description' => __( 'Get your ifields key from your Cardknox account.', 'woocommerce-gateway-cardknox' ),
 			'default'     => '',
 			'desc_tip'    => true,
 		),

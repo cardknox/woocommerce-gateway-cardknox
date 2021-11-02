@@ -416,8 +416,20 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
             $post_data['xCVV'] = wc_clean( $_POST['xCVV'] );
             $post_data['xExp'] = wc_clean( $_POST['xExp'] );
         }
+        $this->validate_payment_data($post_data);
         return $post_data;
+  }
+
+  public function validate_payment_data($post_data){
+    if (!isset($post_data['xToken'])) {
+      if (!isset($post_data['xCardNum'])) {
+        throw new Exception("Invalid card number");
+      }
+      if (!isset($post_data['xCVV'])) {
+        throw new Exception("Invalid cvv");
+      }
     }
+  }
 
     public function get_billing_shiping_info($post_data, $order){
         $post_data['xBillCompany'] = version_compare( WC_VERSION, '3.0.0', '<' ) ? $order->billing_company : $order->get_billing_company();

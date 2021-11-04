@@ -421,14 +421,18 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
   }
 
   public function validate_payment_data($post_data){
-    if (!isset($post_data['xToken'])) {
-      if (!isset($post_data['xCardNum'])) {
         throw new Exception("Invalid card number");
+    if ($this->is_unset_or_empty($post_data['xToken'])) {
+      if ($this->is_unset_or_empty($post_data['xCardNum'])) {
       }
-      if (!isset($post_data['xCVV'])) {
         throw new Exception("Invalid cvv");
+      if ($this->is_unset_or_empty($post_data['xCVV'])) {
       }
     }
+  }
+
+  private function is_unset_or_empty($s){
+    return !isset($s) || $s === '';
   }
 
     public function get_billing_shiping_info($post_data, $order){

@@ -421,12 +421,12 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
   }
 
   public function validate_payment_data($post_data){
-        throw new Exception("Invalid card number");
     if ($this->is_unset_or_empty($post_data['xToken'])) {
       if ($this->is_unset_or_empty($post_data['xCardNum'])) {
+        throw new Exception("Invalid card number");
       }
-        throw new Exception("Invalid cvv");
       if ($this->is_unset_or_empty($post_data['xCVV'])) {
+        throw new Exception("Invalid cvv");
       }
     }
   }

@@ -351,8 +351,8 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 		}
 
 		$suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
-        wp_enqueue_script( 'cardknox', 'https://cdn.cardknox.com/ifields/2.5.1905.0801/ifields.min.js', '', filemtime(get_stylesheet_directory()), false );
-        wp_enqueue_script( 'woocommerce_cardknox', plugins_url( 'assets/js/cardknox' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE ), array( 'jquery-payment'), filemtime(get_stylesheet_directory()), true );
+        wp_enqueue_script( 'cardknox', 'https://cdn.cardknox.com/ifields/2.5.1905.0801/ifields.min.js', '', '1.0.0', false );
+        wp_enqueue_script( 'woocommerce_cardknox', plugins_url( 'assets/js/cardknox' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE ), array( 'jquery-payment'), filemtime( plugin_dir_path(dirname(__FILE__)) . 'assets/js/cardknox' . $suffix . '.js' ), true );
 		$cardknox_params = array(
 			'key'                  => $this->token_key,
 			'i18n_terms'           => __( 'Please accept the terms and conditions first', 'woocommerce-gateway-cardknox' ),
@@ -567,7 +567,11 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
         $maybe_saved_card = isset( $_POST['wc-cardknox-new-payment-method'] ) && ! empty( $_POST['wc-cardknox-new-payment-method'] );
         // This is true if the user wants to store the card to their account.
         if ( ( get_current_user_id() && $this->saved_cards && $maybe_saved_card ) || $my_force_customer ) {
-            $this->add_card($response);
+            try {
+                $this->add_card($response);
+            } catch (\Throwable $th) {
+                $this->log( 'Error: ' . $th->getMessage() );
+            }
         }
     }
 
@@ -662,7 +666,13 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 
         } elseif ( ! empty( $response['xToken'] ) ) {
             $this->log( 'Success: ' . html_entity_decode( strip_tags( $response ) ) );
-            $card  = $this->add_card($response);
+			try {
+				$card = $this->add_card($response);
+			} catch (\Throwable $th) {
+				$this->log( 'Error: ' . $th->getMessage() );
+				wc_add_notice( 'An error occured while Adding Payment Method', 'error' );
+			}
+
 
             if ( is_wp_error( $card ) ) {
                 $localized_messages = $this->get_localized_messages();

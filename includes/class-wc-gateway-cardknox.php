@@ -431,9 +431,9 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
     }
   }
 
-  private function is_unset_or_empty($s){
-    return !isset($s) || $s === '';
-  }
+    private function is_unset_or_empty($s){
+      return !isset($s) || $s === '';
+    }
 
     public function get_billing_shiping_info($post_data, $order){
         $post_data['xBillCompany'] = version_compare( WC_VERSION, '3.0.0', '<' ) ? $order->billing_company : $order->get_billing_company();

@@ -416,7 +416,23 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
             $post_data['xCVV'] = wc_clean( $_POST['xCVV'] );
             $post_data['xExp'] = wc_clean( $_POST['xExp'] );
         }
+        $this->validate_payment_data($post_data);
         return $post_data;
+  }
+
+  public function validate_payment_data($post_data){
+    if ($this->is_unset_or_empty($post_data['xToken'])) {
+      if ($this->is_unset_or_empty($post_data['xCardNum'])) {
+        throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: card number", 400);
+      }
+      if ($this->is_unset_or_empty($post_data['xCVV'])) {
+        throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: cvv", 400);
+      }
+    }
+  }
+
+    private function is_unset_or_empty($s){
+      return !isset($s) || $s === '';
     }
 
     public function get_billing_shiping_info($post_data, $order){

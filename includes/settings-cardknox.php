@@ -45,7 +45,7 @@ return apply_filters( 'wc_cardknox_settings',
 		'token_key' => array(
 			'title'       => __( 'Cardknox Token Key', 'woocommerce-gateway-cardknox' ),
 			'type'        => 'text',
-			'description' => __( 'Get your iFields key from your Cardknox account.', 'woocommerce-gateway-cardknox' ),
+			'description' => __( 'Get your ifields key from your Cardknox account.', 'woocommerce-gateway-cardknox' ),
 			'default'     => '',
 			'desc_tip'    => true,
 		),
@@ -94,6 +94,15 @@ return apply_filters( 'wc_cardknox_settings',
 			'description' => __( 'Save debug messages to the WooCommerce System Status log.', 'woocommerce-gateway-cardknox' ),
 			'default'     => 'no',
 			'desc_tip'    => true,
+		),
+		'bgcolor' => array(
+			'title'       => __( 'Background color', 'woocommerce-gateway-cardknox' ),
+			'type'        => 'text',
+			'description' => __( 'Background color for card number and cvv. Default #F2F2F2', 'woocommerce-gateway-cardknox' ),
+			'default'     => '#F2F2F2',
+			'desc_tip'    => true,
+			'class'       => 'colorpick',
+			'css'		  => 'width: 6em'
 		),
 	)
 );

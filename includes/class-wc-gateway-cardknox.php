@@ -354,9 +354,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 
 		$suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
 
-		//wp_enqueue_style( 'woocommerce_cardknox_front_css', plugins_url( 'assets/css/cardknox-admin' . $suffix . '.css',	WC_CARDKNOX_MAIN_FILE ), array(), '', false);
-		
-        wp_enqueue_script( 'cardknox', 'https://cdn.cardknox.com/ifields/2.9.2110.1901/ifields.min.js', '', '1.0.0', false );
+		wp_enqueue_script( 'cardknox', 'https://cdn.cardknox.com/ifields/2.9.2110.1901/ifields.min.js', '', '1.0.0', false );
         wp_enqueue_script( 'woocommerce_cardknox', plugins_url( 'assets/js/cardknox' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE ), array( 'jquery-payment'), filemtime( plugin_dir_path(dirname(__FILE__)) . 'assets/js/cardknox' . $suffix . '.js' ), true );
 		$cardknox_params = array(
 			'key'                  => $this->token_key,
@@ -422,9 +420,23 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
             $post_data['xCVV'] = wc_clean( $_POST['xCVV'] );
             $post_data['xExp'] = wc_clean( $_POST['xExp'] );
         }
+		$this->validate_payment_data($post_data);
         return $post_data;
     }
 
+	public function validate_payment_data($post_data){
+		if ($this->is_unset_or_empty($post_data['xToken'])) {
+		  if ($this->is_unset_or_empty($post_data['xCardNum'])) {
+			throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: card number", 400);
+		  }
+		  if ($this->is_unset_or_empty($post_data['xCVV'])) {
+			throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: cvv", 400);
+		  }
+		}
+	}	
+	private function is_unset_or_empty($s){
+		return !isset($s) || $s === '';
+	}
     public function get_billing_shiping_info($post_data, $order){
         $post_data['xBillCompany'] = version_compare( WC_VERSION, '3.0.0', '<' ) ? $order->billing_company : $order->get_billing_company();
         $post_data['xBillFirstName'] = version_compare( WC_VERSION, '3.0.0', '<' ) ? $order->billing_first_name : $order->get_billing_first_name();

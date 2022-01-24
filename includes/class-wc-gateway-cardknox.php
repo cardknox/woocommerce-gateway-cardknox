@@ -108,7 +108,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 		$this->token_key         	   =  $this->get_option( 'token_key' );
 		$this->logging                 = 'yes' === $this->get_option( 'logging' );
 		$this->authonly_status         = $this->get_option( 'auth_only_order_status' );
-		$this->bgcolor         		   = $this->get_option( 'bgcolor' );
+		$this->bgcolor                 = $this->get_option( 'bgcolor' );
 
 
 		WC_Cardknox_API::set_transaction_key( $this->transaction_key );
@@ -420,7 +420,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
             $post_data['xCVV'] = wc_clean( $_POST['xCVV'] );
             $post_data['xExp'] = wc_clean( $_POST['xExp'] );
         }
-		$this->validate_payment_data($post_data);
+        $this->validate_payment_data($post_data);
         return $post_data;
     }
 
@@ -603,7 +603,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 
 		// Store charge data
 		update_post_meta( $order_id, '_cardknox_xrefnum', $response['xRefNum'] );
-		update_post_meta( $order_id, '_cardknox_transaction_captured', $this->capture ? 'yes' : 'no' );		
+		update_post_meta( $order_id, '_cardknox_transaction_captured', $this->capture ? 'yes' : 'no' );
 
 		if ( $this->capture ) {
 

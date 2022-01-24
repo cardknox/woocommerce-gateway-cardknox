@@ -104,10 +104,11 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 		$this->enabled                 = $this->get_option( 'enabled' );
 		$this->capture                 = 'yes' === $this->get_option( 'capture', 'yes' );
 		$this->saved_cards             = 'yes' === $this->get_option( 'saved_cards' );
-		$this->transaction_key              =  $this->get_option( 'transaction_key' );
-		$this->token_key         =  $this->get_option( 'token_key' );
+		$this->transaction_key         =  $this->get_option( 'transaction_key' );
+		$this->token_key         	   =  $this->get_option( 'token_key' );
 		$this->logging                 = 'yes' === $this->get_option( 'logging' );
-		$this->authonly_status                 = $this->get_option( 'auth_only_order_status' );
+		$this->authonly_status         = $this->get_option( 'auth_only_order_status' );
+		$this->bgcolor                 = $this->get_option( 'bgcolor' );
 
 
 		WC_Cardknox_API::set_transaction_key( $this->transaction_key );
@@ -117,6 +118,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_scripts' ) );
 		add_action( 'admin_notices', array( $this, 'admin_notices' ) );
 		add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
+		add_action( 'woocommerce_admin_order_data_after_order_details', array($this, 'cardknox_order_meta_general'));
 	}
 
 
@@ -129,25 +131,25 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
         $timestamp  = filemtime(get_stylesheet_directory());
 		$fields = array();
 		$cvc_field = '<p class="form-row form-row-last">
-			<label for="' . esc_attr( $this->id ) . '-card-cvc">' . esc_html__( 'Card code', 'woocommerce' ) . ' <span class="required">*</span></label>
+			<label for="' . esc_attr( $this->id ) . '-card-cvc">' . esc_html__( 'Card Code', 'woocommerce' ) . ' <span class="required">*</span></label>
 			<iframe data-ifields-id="cvv" data-ifields-placeholder="CVV"
-                        src="https://cdn.cardknox.com/ifields/2.5.1905.0801/ifield.htm?" + "'. esc_attr($timestamp).'" frameBorder="0" width="100%"
-                        height="71" id="cvv-frame"></iframe>
+                        src="https://cdn.cardknox.com/ifields/2.9.2110.1901/ifield.htm?" + "'. esc_attr($timestamp).'" frameBorder="0" width="100%"
+                        height="55" id="cvv-frame"></iframe>
             <label data-ifields-id="card-data-error" style="color: red;"></label>
 		</p><input data-ifields-id="cvv-token" name="xCVV" id="cardknox-card-cvc" type="hidden"/>';
 
 		$default_fields = array(
 			'card-number-field' => '<p><label data-ifields-id="card-data-error" id="ifieldsError" style="display:none;"></label></p>
 			<p class="form-row form-row-wide">
-				<label for="' . esc_attr( $this->id ) . '-card-number">' . esc_html__( 'Card number', 'woocommerce' ) . ' <span class="required">*</span></label>
+				<label for="' . esc_attr( $this->id ) . '-card-number">' . esc_html__( 'Card Number', 'woocommerce' ) . ' <span class="required">*</span></label>
 
 				<iframe data-ifields-id="card-number" data-ifields-placeholder="Card Number"
-                        src="https://cdn.cardknox.com/ifields/2.5.1905.0801/ifield.htm?" + "'. esc_attr($timestamp).'" frameBorder="0" width="100%"
-                        height="71"></iframe>
+                        src="https://cdn.cardknox.com/ifields/2.9.2110.1901/ifield.htm?" + "'. esc_attr($timestamp).'" frameBorder="0" width="100%"
+                        height="55"></iframe>
 			</p> <input data-ifields-id="card-number-token" name="xCardNum" id="cardknox-card-number" type="hidden"/>',
 			'card-expiry-field' => '<p class="form-row form-row-first">
 				<label for="' . esc_attr( $this->id ) . '-card-expiry">' . esc_html__( 'Expiry (MM/YY)', 'woocommerce' ) . ' <span class="required">*</span></label>
-				<input id="' . esc_attr( $this->id ) . '-card-expiry" class="input-text wc-credit-card-form-card-expiry" inputmode="numeric" autocomplete="cc-exp" autocorrect="no" autocapitalize="no" spellcheck="no" type="tel" placeholder="' . esc_attr__( 'MM / YY', 'woocommerce' ) . '" ' . $this->field_name( 'card-expiry' ) . ' />
+				<input id="' . esc_attr( $this->id ) . '-card-expiry" class="input-text wc-credit-card-form-card-expiry" inputmode="numeric" autocomplete="cc-exp" autocorrect="no" autocapitalize="no" spellcheck="no" type="tel" placeholder="' . esc_attr__( 'MM / YY', 'woocommerce' ) . '" ' . $this->field_name( 'card-expiry' ) . ' style="font-size:inherit; line-height:1.1" />
 			</p>',
 		);
 
@@ -351,12 +353,14 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 		}
 
 		$suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
-        wp_enqueue_script( 'cardknox', 'https://cdn.cardknox.com/ifields/2.5.1905.0801/ifields.min.js', '', '1.0.0', false );
+
+		wp_enqueue_script( 'cardknox', 'https://cdn.cardknox.com/ifields/2.9.2110.1901/ifields.min.js', '', '1.0.0', false );
         wp_enqueue_script( 'woocommerce_cardknox', plugins_url( 'assets/js/cardknox' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE ), array( 'jquery-payment'), filemtime( plugin_dir_path(dirname(__FILE__)) . 'assets/js/cardknox' . $suffix . '.js' ), true );
 		$cardknox_params = array(
 			'key'                  => $this->token_key,
 			'i18n_terms'           => __( 'Please accept the terms and conditions first', 'woocommerce-gateway-cardknox' ),
 			'i18n_required_fields' => __( 'Please fill in required checkout fields first', 'woocommerce-gateway-cardknox' ),
+			'bgcolor'			   => $this->bgcolor
 		);
 
 		// merge localized messages to be use in JS
@@ -418,23 +422,21 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
         }
         $this->validate_payment_data($post_data);
         return $post_data;
-  }
-
-  public function validate_payment_data($post_data){
-    if ($this->is_unset_or_empty($post_data['xToken'])) {
-      if ($this->is_unset_or_empty($post_data['xCardNum'])) {
-        throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: card number", 400);
-      }
-      if ($this->is_unset_or_empty($post_data['xCVV'])) {
-        throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: cvv", 400);
-      }
-    }
-  }
-
-    private function is_unset_or_empty($s){
-      return !isset($s) || $s === '';
     }
 
+	public function validate_payment_data($post_data){
+		if ($this->is_unset_or_empty($post_data['xToken'])) {
+		  if ($this->is_unset_or_empty($post_data['xCardNum'])) {
+			throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: card number", 400);
+		  }
+		  if ($this->is_unset_or_empty($post_data['xCVV'])) {
+			throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: cvv", 400);
+		  }
+		}
+	}	
+	private function is_unset_or_empty($s){
+		return !isset($s) || $s === '';
+	}
     public function get_billing_shiping_info($post_data, $order){
         $post_data['xBillCompany'] = version_compare( WC_VERSION, '3.0.0', '<' ) ? $order->billing_company : $order->get_billing_company();
         $post_data['xBillFirstName'] = version_compare( WC_VERSION, '3.0.0', '<' ) ? $order->billing_first_name : $order->get_billing_first_name();
@@ -606,6 +608,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 		if ( $this->capture ) {
 
             update_post_meta( $order_id, '_transaction_id', $response['xRefNum'], true );
+			update_post_meta( $order_id, '_cardknox_masked_card', $response['xMaskedCardNumber'] );
 			$order->payment_complete($response['xRefNum']);
 
 			$message = sprintf( __( 'Cardknox transaction captured (capture RefNum: %s)', 'woocommerce-gateway-cardknox' ), $response['xRefNum'] );
@@ -814,6 +817,21 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 	public function log( $message ) {
 		if ( $this->logging ) {
 			WC_Cardknox::log( $message );
+		}
+	}
+
+	/*
+	 * Card last 4 digits.
+	 */
+	public function cardknox_order_meta_general($order){
+		$order_id = $order->get_id();
+		$cardknox_masked_card = get_post_meta($order_id, '_cardknox_masked_card', true);
+		if($cardknox_masked_card){
+		?>
+		<br class="clear" />
+		<p><strong><?php echo __('Last 4 Digits Of Credit Card:', 'woocommerce-gateway-cardknox'); ?></strong><br>
+		<?php echo substr($cardknox_masked_card, -4); ?></p>
+		<?php
 		}
 	}
 }

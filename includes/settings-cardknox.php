@@ -95,5 +95,14 @@ return apply_filters( 'wc_cardknox_settings',
 			'default'     => 'no',
 			'desc_tip'    => true,
 		),
+		'bgcolor' => array(
+			'title'       => __( 'Background color', 'woocommerce-gateway-cardknox' ),
+			'type'        => 'text',
+			'description' => __( 'Background color for card number and cvv. Default #F2F2F2', 'woocommerce-gateway-cardknox' ),
+			'default'     => '#F2F2F2',
+			'desc_tip'    => true,
+			'class'       => 'colorpick',
+			'css'		  => 'width: 6em'
+		),
 	)
 );

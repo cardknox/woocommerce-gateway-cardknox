@@ -68,7 +68,8 @@ class WC_Cardknox_API {
 		$request['xKey'] =  self::get_transaction_key();
 		$request['xVersion'] =  '4.5.8';
 		$request['xSoftwareVersion'] =  WC_CARDKNOX_VERSION;
-		$request['xSoftwareName'] =  'Wordpress_WooCommerce '. WC()->version;
+		$request['xSoftwareName'] =  'Wordpress_WooCommerce';
+		$request['xSDKVersion'] =  WC()->version;
 		self::log( " request: " . print_r( $request, true ) );
 		$response = wp_safe_remote_post(
 			self::ENDPOINT,

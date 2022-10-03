@@ -73,7 +73,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 		$this->method_title         = __( 'Cardknox', 'woocommerce-gateway-cardknox' );
 		$this->method_description   = sprintf( __( 'Cardknox works by adding credit card fields on the checkout and then sending the details to Cardknox for verification. <a href="%1$s" target="_blank">Sign up</a> for a Cardknox account.', 'woocommerce-gateway-cardknox' ), 'https://www.cardknox.com');
 		$this->has_fields           = true;
-		$this->view_transaction_url = 'https://secure.cardknox.com/';
+		$this->view_transaction_url = 'https://portal.cardknox.com/transactions?referenceNumber=%s';
 		$this->supports             = array(
 			'subscriptions',
 			'products',

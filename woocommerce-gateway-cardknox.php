@@ -6,9 +6,9 @@ Author: Cardknox Development Inc.
 Author URI: https://www.cardknox.com/
 Version: 1.0.14
 Requires at least: 4.4
-Tested up to: 5.9.2
+Tested up to: 6.0.3
 WC requires at least: 2.5
-WC tested up to: 6.3.1
+WC tested up to: 7.3.0
 Text Domain: woocommerce-gateway-cardknox
 Domain Path: /languages
 

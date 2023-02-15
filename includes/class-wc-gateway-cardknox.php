@@ -553,6 +553,11 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 
 			if ( $order->has_status( array( 'pending', 'failed' ) ) ) {
 				$this->send_failed_order_email( $order_id );
+
+				$order_status = $order->get_status();    
+				if ('pending' == $order_status) {    
+					$order->update_status( 'failed' );
+				}
 			}
 
 			do_action( 'wc_gateway_cardknox_process_payment_error', $e, $order );

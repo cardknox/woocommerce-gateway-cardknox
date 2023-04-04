@@ -673,7 +673,15 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
             );
 
         } elseif ( ! empty( $response['xToken'] ) ) {
-            $this->log( 'Success: ' . html_entity_decode( strip_tags( $response ) ) );
+
+			$log_string = 'Success: ';
+			foreach ($response as $key => $value) {
+				$log_string .= $key . ' - ' . $value . ' | ';
+			}
+			$log_string = rtrim($log_string, ' | '); // Remove the trailing '|' character
+
+			$this->log(html_entity_decode(strip_tags($log_string)));
+
 			try {
 				$card = $this->add_card($response);
 			} catch (\Throwable $th) {
@@ -757,7 +765,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 		} elseif ( ! empty( $response['xRefNum'] ) ) {
 			$refund_message = sprintf( __( 'Refunded %1$s - Refund ID: %2$s - Reason: %3$s', 'woocommerce-gateway-cardknox' ), wc_price( $response['xAuthAmount'] ), $response['xRefNum'], $reason );
 			$order->add_order_note( $refund_message );
-			$this->log( 'Success: ' . html_entity_decode( strip_tags( $refund_message ) ) );
+			$this->log( 'Success: ' . html_entity_decode( strip_tags( (string) $refund_message ) ) );
 			return true;
 		} else {
 			return new WP_Error("refund failed", 'woocommerce-gateway-cardknox' );

@@ -302,6 +302,7 @@ if ( ! class_exists( 'WC_Cardknox' ) ) :
 
 			if ( class_exists( 'WC_Payment_Gateway_CC' ) ) {
 				include_once( dirname( __FILE__ ) . '/includes/class-wc-gateway-cardknox.php' );
+				include_once( dirname( __FILE__ ) . '/includes/class-wc-gateway-cardknox-applepay.php' );
 			} else {
 				include_once( dirname( __FILE__ ) . '/includes/legacy/class-wc-gateway-cardknox.php' );
 			}
@@ -330,6 +331,7 @@ if ( ! class_exists( 'WC_Cardknox' ) ) :
 				$methods[] = 'WC_Gateway_Cardknox_Addons';
 			} else {
 				$methods[] = 'WC_Gateway_Cardknox';
+				$methods[] = 'WC_Gateway_Cardknox_ApplePay';
 			}
 			return $methods;
 		}

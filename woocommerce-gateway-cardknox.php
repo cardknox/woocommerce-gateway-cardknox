@@ -246,9 +246,11 @@ if ( ! class_exists( 'WC_Cardknox' ) ) :
 		 */
 		public function plugin_action_links( $links ) {
 			$setting_link = $this->get_setting_link();
+			$applepay_setting_link = $this->get_setting_applepay_link();
 
 			$plugin_links = array(
 				'<a href="' . $setting_link . '">' . __( 'Settings', 'woocommerce-gateway-cardknox' ) . '</a>',
+				'<a href="' . $applepay_setting_link . '">' . __( 'Apple Pay', 'woocommerce-gateway-cardknox' ) . '</a>',
 				'<a href="https://docs.woocommerce.com/document/cardknox/">' . __( 'Docs', 'woocommerce-gateway-cardknox' ) . '</a>',
 				'<a href="https://woocommerce.com/contact-us/">' . __( 'Support', 'woocommerce-gateway-cardknox' ) . '</a>',
 			);
@@ -266,6 +268,21 @@ if ( ! class_exists( 'WC_Cardknox' ) ) :
 			$use_id_as_section = function_exists( 'WC' ) ? version_compare( WC()->version, '2.6', '>=' ) : false;
 
 			$section_slug = $use_id_as_section ? 'cardknox' : strtolower( 'WC_Gateway_Cardknox' );
+
+			return admin_url( 'admin.php?page=wc-settings&tab=checkout&section=' . $section_slug );
+		}
+
+		/**
+		 * Get apple pay setting link.
+		 *
+		 * @since 1.0.15
+		 *
+		 * @return string Setting link
+		 */
+		public function get_setting_applepay_link() {
+			$use_id_as_section = function_exists( 'WC' ) ? version_compare( WC()->version, '2.6', '>=' ) : false;
+
+			$section_slug = $use_id_as_section ? 'cardknox-applepay' : strtolower( 'WC_Gateway_Cardknox' );
 
 			return admin_url( 'admin.php?page=wc-settings&tab=checkout&section=' . $section_slug );
 		}

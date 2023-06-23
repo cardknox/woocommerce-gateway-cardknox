@@ -247,7 +247,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC {
 	 * Initialise Gateway Settings Form Fields
 	 */
 	public function init_form_fields() {
-		$this->form_fields = require 'settings-cardknox.php';
+		$this->form_fields = require_once 'settings-cardknox.php';
 
 	}
 

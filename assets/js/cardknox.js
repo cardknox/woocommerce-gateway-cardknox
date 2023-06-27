@@ -168,13 +168,13 @@ jQuery(function ($) {
         }
 
         // Extract the month and year from the expiration date
-        var month = parseInt(xExp.substr(0, 2));
-        var year = parseInt(xExp.substr(2));
+        let month = parseInt(xExp.substr(0, 2));
+        let year = parseInt(xExp.substr(2));
 
         // Validate the expiration month and year
-        var currentDate = new Date();
-        var currentYear = currentDate.getFullYear() % 100; // Get the last two digits of the current year
-        var currentMonth = currentDate.getMonth() + 1; // January is month 0 in JavaScript
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear() % 100; // Get the last two digits of the current year
+        const currentMonth = currentDate.getMonth() + 1; // January is month 0 in JavaScript
 
         if (year < currentYear || (year === currentYear && month < currentMonth)) {
           $(document).trigger("cardknoxError", "Incorrect credit card expiration date.");
@@ -229,8 +229,8 @@ jQuery(function ($) {
     jQuery(document.body).on('updated_checkout', function() {
       
     jQuery("#ap-container").hide();
-        var paymentMethodSelect = 'input[name="payment_method"]'; // Replace with your payment method selector
-        var placeOrderButton = 'button[name="woocommerce_checkout_place_order"]'; // Replace with your "Place Order" button selector
+      let paymentMethodSelect = 'input[name="payment_method"]'; // Replace with your payment method selector
+      let placeOrderButton = 'button[name="woocommerce_checkout_place_order"]'; // Replace with your "Place Order" button selector
         
         // Initial check on page load
         hidePlaceOrderButton();
@@ -242,7 +242,7 @@ jQuery(function ($) {
             
         // Function to hide/show "Place Order" button
         function hidePlaceOrderButton() {
-            var selectedPaymentMethod = jQuery(paymentMethodSelect + ':checked').val();
+            let selectedPaymentMethod = jQuery(paymentMethodSelect + ':checked').val();
     
             if (selectedPaymentMethod === 'cardknox-applepay') { // Replace 'your_payment_method_slug' with your payment method value
                 jQuery(placeOrderButton).hide();

@@ -66,7 +66,7 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 		$this->title 				= __('Cardknox', 'woocommerce-other-payment-gateway');
 		$this->method_description   = sprintf(__('<strong class="important-label" style="color: #e22626;">Important: </strong>Please complete the Apple Pay Domain Registration <a target="_blank" href="https://portal.cardknox.com/account-settings/payment-methods">here</a> prior to enabling Cardknox Apple Pay.', 'woocommerce-gateway-cardknox'), 'https://www.cardknox.com');
 		$this->has_fields           = true;
-		$this->view_transaction_url = 'https://secure.cardknox.com/';
+		$this->view_transaction_url = 'https://portal.cardknox.com/transactions?referenceNumber=%s';
 		$this->supports             = array(
 			'subscriptions',
 			'products',
@@ -196,7 +196,7 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 			return;
 		}
 
-		wp_enqueue_script('woocommerce_cardknox_apple_pay', plugins_url('assets/js/cardknox-apple-pay.js', WC_CARDKNOX_MAIN_FILE), array('jquery-payment'), filemtime(plugin_dir_path(dirname(__FILE__)) . 'assets/js/cardknox-apple-pay.js'), true);
+		wp_enqueue_script('woocommerce_cardknox_apple_pay', plugins_url('assets/js/cardknox-apple-pay.min.js', WC_CARDKNOX_MAIN_FILE), array('jquery-payment'), filemtime(plugin_dir_path(dirname(__FILE__)) . 'assets/js/cardknox-apple-pay.min.js'), true);
 
 		$cardknox_applepay_settings = array(
 			'enabled'     			=> $this->enabled,

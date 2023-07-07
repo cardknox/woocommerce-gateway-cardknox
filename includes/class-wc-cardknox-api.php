@@ -29,7 +29,7 @@ class WC_Cardknox_API {
 	/**
 	 * Cardknox API Endpoint
 	 */
-	const ENDPOINT = 'https://x3.cardknox.com/gateway';
+	const ENDPOINT = 'https://x1.cardknox.com/gateway';
 
 	/**
 	 * Secret API Key.

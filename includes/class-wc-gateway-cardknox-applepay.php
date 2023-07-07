@@ -168,7 +168,7 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 	 */
 	public function init_form_fields()
 	{
-		$this->form_fields = include('settings-cardknox-applepay.php');
+		$this->form_fields = include_once('settings-cardknox-applepay.php');
 	}
 
 	/**

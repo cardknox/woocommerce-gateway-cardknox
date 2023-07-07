@@ -239,10 +239,7 @@ function getApButtonType(applePaysettings) {
             break;
         case "order":
             apButtonType = APButtonType.order;
-            break;
-        case "donate":
-            apButtonType = APButtonType.donate;
-            break;
+            break;        
         case "donate":
             apButtonType = APButtonType.donate;
             break;

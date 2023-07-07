@@ -168,13 +168,13 @@ jQuery(function ($) {
         }
 
         // Extract the month and year from the expiration date
-        var month = parseInt(xExp.substr(0, 2));
-        var year = parseInt(xExp.substr(2));
+        let month = parseInt(xExp.substr(0, 2));
+        let year = parseInt(xExp.substr(2));
 
         // Validate the expiration month and year
-        var currentDate = new Date();
-        var currentYear = currentDate.getFullYear() % 100; // Get the last two digits of the current year
-        var currentMonth = currentDate.getMonth() + 1; // January is month 0 in JavaScript
+        let currentDate = new Date();
+        let currentYear = currentDate.getFullYear() % 100; // Get the last two digits of the current year
+        let currentMonth = currentDate.getMonth() + 1; // January is month 0 in JavaScript
 
         if (year < currentYear || (year === currentYear && month < currentMonth)) {
           $(document).trigger("cardknoxError", "Incorrect credit card expiration date.");

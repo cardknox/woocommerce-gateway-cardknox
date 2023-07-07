@@ -50,9 +50,9 @@ jQuery(function(a){(function(){a("input#woocommerce_cardknox-applepay_applepay_c
 
 jQuery(document).ready(function($) {
     // Target the first select box
-    var select1 = $('#woocommerce_cardknox-applepay_applepay_applicable_countries');
+    let select1 = $('#woocommerce_cardknox-applepay_applepay_applicable_countries');
     // Target the second select box
-    var select2 = $('#woocommerce_cardknox-applepay_applepay_specific_countries');
+    let select2 = $('#woocommerce_cardknox-applepay_applepay_specific_countries');
     // Disable the second select box initially
     if (select1.val() == 0) {
         select2.prop('disabled', true);

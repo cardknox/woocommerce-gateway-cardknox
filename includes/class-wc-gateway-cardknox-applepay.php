@@ -21,11 +21,14 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 		$this->id                   = 'cardknox-applepay';
 		$this->method_title         = __('Cardknox', 'woocommerce-gateway-cardknox');
 		$this->title 				= __('Cardknox', 'woocommerce-other-payment-gateway');
+
+		$method_description = '<strong class="important-label" style="color: #e22626;">';
+		$method_description .= 'Please complete the Apple Pay Domain Registration ';
+		$method_description .= '<a target="_blank" href="https://portal.cardknox.com/account-settings/payment-methods">here</a> ';
+		$method_description .= 'prior to enabling Cardknox Apple Pay.';
+
 		$this->method_description = sprintf(
-			__(
-				'<strong class="important-label" style="color: #e22626;">Important: </strong>Please complete the Apple Pay Domain Registration <a target="_blank" href="https://portal.cardknox.com/account-settings/payment-methods">here</a> prior to enabling Cardknox Apple Pay.',
-				'woocommerce-gateway-cardknox'
-			),
+			__(	$method_description, 'woocommerce-gateway-cardknox'),
 			'https://www.cardknox.com'
 		);
 		$this->has_fields           = true;
@@ -322,18 +325,18 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 	/**
 	 * Process the payment
 	 *
-	 * @param int  $order_id Reference.
+	 * @param int  $orderId Reference.
 	 * @param bool $retry Should we retry on fail.
-	 * @param bool $force_customer Force user creation.
+	 * @param bool $forceCustomer Force user creation.
 	 *
 	 * @throws Exception If payment will not be accepted.
 	 *
 	 * @return array|void
 	 */
-	public function process_payment($order_id, $retry = true, $force_customer = false)
+	public function process_payment($orderId, $retry = true, $forceCustomer = false)
 	{
 		try {
-			$order  = wc_get_order($order_id);
+			$order  = wc_get_order($orderId);
 
 			// Result from Cardknox API request.
 			$response = null;
@@ -342,10 +345,14 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 			if ($order->get_total() > 0) {
 
 				if ($order->get_total() < WC_Cardknox::get_minimum_amount() / 100) {
-					throw new Exception(sprintf(__('Sorry, the minimum allowed order total is %1$s to use this payment method.', 'woocommerce-gateway-cardknox'), wc_price(WC_Cardknox::get_minimum_amount() / 100)));
+					throw new Exception(sprintf(
+						__('Sorry, the minimum allowed order total is %1$s to use this payment method.',
+						'woocommerce-gateway-cardknox'),
+						wc_price(WC_Cardknox::get_minimum_amount() / 100))
+					);
 				}
 
-				$this->log("Info: Begin processing payment for order $order_id for the amount of {$order->get_total()}");
+				$this->log("Info: Begin processing payment for order $orderId for the amount of {$order->get_total()}");
 
 				// Make the request.
 				$response = WC_Cardknox_API::request($this->generate_payment_request($order));
@@ -384,7 +391,7 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 			$this->log(sprintf(__('Error: %s', 'woocommerce-gateway-cardknox'), $e->getMessage()));
 
 			if ($order->has_status(array('pending', 'failed'))) {
-				$this->send_failed_order_email($order_id);
+				$this->send_failed_order_email($orderId);
 
 				$order_status = $order->get_status();
 				if ('pending' == $order_status) {
@@ -433,9 +440,16 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 			$xRefNum =  $response['xRefNum'];
 
 			if ($this->authonly_status == "on-hold") {
-				$order->update_status('on-hold', sprintf(__('Cardknox charge authorized (Charge ID: %s). Process order to take payment, or cancel to remove the pre-authorization.', 'woocommerce-gateway-cardknox'), $response['xRefNum']));
+				$order->update_status('on-hold', sprintf(
+					__('Cardknox charge authorized (Charge ID: %s). Process order to take payment, or cancel to remove the pre-authorization.',
+					'woocommerce-gateway-cardknox'),
+					$response['xRefNum'])
+				);
 			} else {
-				$order->update_status('processing', sprintf(__('Cardknox charge authorized (Charge ID: %s). Complete order to take payment, or cancel to remove the pre-authorization.', 'woocommerce-gateway-cardknox'), $response['xRefNum']));
+				$order->update_status('processing', sprintf(
+					__('Cardknox charge authorized (Charge ID: %s). Complete order to take payment, or cancel to remove the pre-authorization.',
+					'woocommerce-gateway-cardknox'),
+					$response['xRefNum']));
 			}
 
 			$this->log("Successful auth: $xRefNum");

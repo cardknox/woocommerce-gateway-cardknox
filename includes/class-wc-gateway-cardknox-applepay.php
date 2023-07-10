@@ -67,7 +67,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         $this->applepay_applicable_countries    = $this->get_option('applepay_applicable_countries');
         $this->applepay_specific_countries      = $this->get_option('applepay_specific_countries');
 
-        $this->$wcVersion = version_compare(WC_VERSION, '3.0.0', '<');
+        $this->wcVersion = version_compare(WC_VERSION, '3.0.0', '<');
         // Hooks.
         add_action('wp_enqueue_scripts', array($this, 'payment_scripts'));
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
@@ -213,7 +213,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
     public function get_order_data($postData, $order)
     {
-        $wcVersionLessThanThree = $this->$wcVersion;
+        $wcVersionLessThanThree = $this->wcVersion;
 
         $billingEmail = $wcVersionLessThanThree ? $order->billing_email : $order->get_billing_email();
         $postData['xCurrency'] = strtolower(
@@ -247,7 +247,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
     public function get_billing_shiping_info($postData, $order)
     {
-        $wcVersionLessThanThree = $this->$wcVersion;
+        $wcVersionLessThanThree = $this->wcVersion;
 
         // Billing info
         $postData['xBillCompany'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_company');
@@ -375,7 +375,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
      */
     public function process_response($response, $order)
     {
-        $orderId = $this->$wcVersion ? $order->id : $order->get_id();
+        $orderId = $this->wcVersion ? $order->id : $order->get_id();
 
         // Store charge data
         update_post_meta($orderId, '_cardknox_xrefnum', $response['xRefNum']);
@@ -399,7 +399,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             update_post_meta($orderId, '_transaction_id', $response['xRefNum'], true);
 
             if ($order->has_status(array('pending', 'failed'))) {
-                if ($this->$wcVersion) {
+                if ($this->wcVersion) {
                     $order->reduce_order_stock();
                 } else {
                     wc_reduce_stock_levels($orderId);

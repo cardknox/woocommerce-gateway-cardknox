@@ -7,7 +7,7 @@ if (!defined('ABSPATH')) {
  *
  * @extends WC_Payment_Gateway
  */
-class WC_Cardknox_Applepay extends WC_Payment_Gateway_CC
+class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 {
 	/**
 	 * Should we capture Credit cards
@@ -211,16 +211,18 @@ class WC_Cardknox_Applepay extends WC_Payment_Gateway_CC
 
 	public function get_order_data($postData, $order)
 	{
-		$billingEmail = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_email : $order->get_billing_email();
+		$wcVersionLessThanThree = version_compare(WC_VERSION, '3.0.0', '<');
+
+		$billingEmail = $wcVersionLessThanThree ? $order->billing_email : $order->get_billing_email();
 		$postData['xCurrency'] = strtolower(
-			version_compare(WC_VERSION, '3.0.0', '<')
+			$wcVersionLessThanThree
 				? $order->get_order_currency()
 				: $order->get_currency()
 		);
 		$postData['xAmount'] = $this->get_cardknox_amount($order->get_total());
 		$postData['xEmail'] = $billingEmail;
-		$postData['xInvoice'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->id : $order->get_id();
-		$postData['xIP'] = version_compare(WC_VERSION, '3.0.0', '<')
+		$postData['xInvoice'] = $wcVersionLessThanThree ? $order->id : $order->get_id();
+		$postData['xIP'] = $wcVersionLessThanThree
 			? $order->customer_ip_address
 			: $order->get_customer_ip_address();
 		if (!empty($billingEmail) && apply_filters('wc_cardknox_send_cardknox_receipt', false)) {
@@ -442,14 +444,14 @@ class WC_Cardknox_Applepay extends WC_Payment_Gateway_CC
 
 			if ($this->authonly_status == "on-hold") {
 				$order->update_status('on-hold', sprintf(
-					__('Cardknox charge authorized (Charge ID: %s). 
+					__('Cardknox charge authorized (Charge ID: %s).
 					Process order to take payment, or cancel to remove the pre-authorization.',
 					'woocommerce-gateway-cardknox'),
 					$response['xRefNum'])
 				);
 			} else {
 				$order->update_status('processing', sprintf(
-					__('Cardknox charge authorized (Charge ID: %s). 
+					__('Cardknox charge authorized (Charge ID: %s).
 					Complete order to take payment, or cancel to remove the pre-authorization.',
 					'woocommerce-gateway-cardknox'),
 					$response['xRefNum']));

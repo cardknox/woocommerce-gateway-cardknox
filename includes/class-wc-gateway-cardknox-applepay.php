@@ -14,14 +14,20 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 	 *
 	 * @var bool
 	 */
-	public $capture;	
+	public $capture;
 
 	public function __construct()
 	{
 		$this->id                   = 'cardknox-applepay';
 		$this->method_title         = __('Cardknox', 'woocommerce-gateway-cardknox');
 		$this->title 				= __('Cardknox', 'woocommerce-other-payment-gateway');
-		$this->method_description   = sprintf(__('<strong class="important-label" style="color: #e22626;">Important: </strong>Please complete the Apple Pay Domain Registration <a target="_blank" href="https://portal.cardknox.com/account-settings/payment-methods">here</a> prior to enabling Cardknox Apple Pay.', 'woocommerce-gateway-cardknox'), 'https://www.cardknox.com');
+		$this->method_description = sprintf(
+			__(
+				'<strong class="important-label" style="color: #e22626;">Important: </strong>Please complete the Apple Pay Domain Registration <a target="_blank" href="https://portal.cardknox.com/account-settings/payment-methods">here</a> prior to enabling Cardknox Apple Pay.',
+				'woocommerce-gateway-cardknox'
+			),
+			'https://www.cardknox.com'
+		);
 		$this->has_fields           = true;
 		$this->view_transaction_url = 'https://portal.cardknox.com/transactions?referenceNumber=%s';
 		$this->supports             = array(
@@ -56,13 +62,13 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 		$this->authonly_status					= $this->get_option('applepay_auth_only_order_status');
 		$this->applepay_applicable_countries    = $this->get_option('applepay_applicable_countries');
 		$this->applepay_specific_countries      = $this->get_option('applepay_specific_countries');
-		
+
 		// Hooks.
 		add_action('wp_enqueue_scripts', array($this, 'payment_scripts'));
 		add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
 
-		add_action(	'woocommerce_review_order_after_submit', array($this, 'cardknox_review_order_after_submit') );
-		add_filter(	'woocommerce_available_payment_gateways', array($this, 'cardknox_allow_payment_method_by_country') );
+		add_action('woocommerce_review_order_after_submit', array($this, 'cardknox_review_order_after_submit'));
+		add_filter('woocommerce_available_payment_gateways', array($this, 'cardknox_allow_payment_method_by_country'));
 	}
 
 	/**
@@ -73,9 +79,9 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 		if ($this->description) {
 			echo apply_filters('wc_cardknox_description', wpautop(wp_kses_post($this->description)));
 		}
-		?>
+?>
 		<input type="hidden" name="xCardNumToken" value="" id="applePaytoken">
-	<?php
+<?php
 	}
 	/**
 	 * Get Cardknox amount to pay
@@ -91,7 +97,7 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 			$currency = get_woocommerce_currency();
 		}
 		switch (strtoupper($currency)) {
-			// Zero decimal currencies.
+				// Zero decimal currencies.
 			case 'BIF':
 			case 'CLP':
 			case 'DJF':
@@ -135,7 +141,7 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 	{
 		return apply_filters('wc_cardknox_localized_messages', array());
 	}
-	
+
 	/**
 	 * payment_scripts function.
 	 *
@@ -156,7 +162,7 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 			filemtime(plugin_dir_path(dirname(__FILE__)) . 'assets/js/cardknox-apple-pay.min.js'),
 			true
 		);
-		
+
 		$cardknoxApplepaySettings = array(
 			'enabled'     			=> $this->enabled,
 			'title'           		=> $this->title,
@@ -202,53 +208,114 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 
 	public function get_order_data($post_data, $order)
 	{
-		$billing_email    = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_email : $order->get_billing_email();
-		$post_data['xCurrency']    = strtolower(version_compare(WC_VERSION, '3.0.0', '<') ? $order->get_order_currency() : $order->get_currency());
-		$post_data['xAmount']      = $this->get_cardknox_amount($order->get_total());
+		$billing_email = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_email : $order->get_billing_email();
+		$post_data['xCurrency'] = strtolower(
+			version_compare(WC_VERSION, '3.0.0', '<')
+				? $order->get_order_currency()
+				: $order->get_currency()
+		);
+		$post_data['xAmount'] = $this->get_cardknox_amount($order->get_total());
 		$post_data['xEmail'] = $billing_email;
 		$post_data['xInvoice'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->id : $order->get_id();
-		$post_data['xIP'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->customer_ip_address : $order->get_customer_ip_address();
-
+		$post_data['xIP'] = version_compare(WC_VERSION, '3.0.0', '<')
+			? $order->customer_ip_address
+			: $order->get_customer_ip_address();
 		if (!empty($billing_email) && apply_filters('wc_cardknox_send_cardknox_receipt', false)) {
 			$post_data['xCustReceipt'] = '1';
 		}
+
 		return $post_data;
 	}
-
 	public function get_payment_data($post_data)
 	{
 		if (isset($_POST['xCardNumToken'])) {
-			
+
 			$post_data['xCardNum'] 				= wc_clean($_POST['xCardNumToken']);
 			$post_data['xAmount'] 				= WC()->cart->total;
 			$post_data['xDigitalWalletType'] 	= 'applepay';
-
 		}
 		return $post_data;
 	}
 
 	public function get_billing_shiping_info($post_data, $order)
 	{
-		$post_data['xBillCompany'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_company : $order->get_billing_company();
-		$post_data['xBillFirstName'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_first_name : $order->get_billing_first_name();
-		$post_data['xBillLastName']  = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_last_name : $order->get_billing_last_name();
-		$post_data['xBillStreet'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_address_1 : $order->get_billing_address_1();
-		$post_data['xBillStreet2'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_address_2 : $order->get_billing_address_2();
-		$post_data['xBillCity'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_city : $order->get_billing_city();
-		$post_data['xBillState'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_state : $order->get_billing_state();
-		$post_data['xBillZip'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_postcode : $order->get_billing_postcode();
-		$post_data['xBillCountry'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_country : $order->get_billing_country();
-		$post_data['xBillPhone'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_phone : $order->get_billing_phone();
+		$post_data['xBillCompany'] = version_compare(WC_VERSION, '3.0.0', '<')
+			? $order->billing_company
+			: $order->get_billing_company();
 
-		$post_data['xShipCompany'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->shipping_company : $order->get_shipping_company();
-		$post_data['xShipFirstName'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->shipping_first_name : $order->get_shipping_first_name();
-		$post_data['xShipLastName'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->shipping_last_name : $order->get_shipping_last_name();
-		$post_data['xShipStreet'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->shipping_address_1 : $order->get_shipping_address_1();
-		$post_data['xShipStreet2'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->shipping_address_2 : $order->get_shipping_address_2();
-		$post_data['xShipCity'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->shipping_city : $order->get_shipping_city();
-		$post_data['xShipState'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->shipping_state : $order->get_shipping_state();
-		$post_data['xShipZip'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->shipping_postcode : $order->get_shipping_postcode();
-		$post_data['xShipCountry'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->shipping_country : $order->get_shipping_country();
+		$post_data['xBillFirstName'] = version_compare(WC_VERSION, '3.0.0', '<')
+			? $order->billing_first_name
+			: $order->get_billing_first_name();
+
+		$post_data['xBillLastName'] = version_compare(WC_VERSION, '3.0.0', '<')
+			? $order->billing_last_name
+			: $order->get_billing_last_name();
+
+		$post_data['xBillStreet'] = version_compare(WC_VERSION, '3.0.0', '<')
+			? $order->billing_address_1
+			: $order->get_billing_address_1();
+
+		$post_data['xBillStreet2'] = version_compare(WC_VERSION, '3.0.0', '<')
+			? $order->billing_address_2
+			: $order->get_billing_address_2();
+
+		$post_data['xBillCity'] = version_compare(WC_VERSION, '3.0.0', '<')
+			? $order->billing_city
+			: $order->get_billing_city();
+
+		$post_data['xBillState'] = version_compare(WC_VERSION, '3.0.0', '<')
+			? $order->billing_state
+			: $order->get_billing_state();
+
+		$post_data['xBillZip'] = version_compare(WC_VERSION, '3.0.0', '<')
+			? $order->billing_postcode
+			: $order->get_billing_postcode();
+
+		$post_data['xBillCountry'] = version_compare(WC_VERSION, '3.0.0', '<')
+			? $order->billing_country
+			: $order->get_billing_country();
+
+		$post_data['xBillPhone'] = version_compare(WC_VERSION, '3.0.0', '<')
+			? $order->billing_phone
+			: $order->get_billing_phone();
+
+
+		$post_data['xShipCompany'] = version_compare(WC_VERSION, '3.0.0', '<')
+			? $order->shipping_company
+			: $order->get_shipping_company();
+
+		$post_data['xShipFirstName'] = version_compare(WC_VERSION, '3.0.0', '<')
+			? $order->shipping_first_name
+			: $order->get_shipping_first_name();
+
+		$post_data['xShipLastName'] = version_compare(WC_VERSION, '3.0.0', '<')
+			? $order->shipping_last_name
+			: $order->get_shipping_last_name();
+
+		$post_data['xShipStreet'] = version_compare(WC_VERSION, '3.0.0', '<')
+			? $order->shipping_address_1
+			: $order->get_shipping_address_1();
+
+		$post_data['xShipStreet2'] = version_compare(WC_VERSION, '3.0.0', '<')
+			? $order->shipping_address_2
+			: $order->get_shipping_address_2();
+
+		$post_data['xShipCity'] = version_compare(WC_VERSION, '3.0.0', '<')
+			? $order->shipping_city
+			: $order->get_shipping_city();
+
+		$post_data['xShipState'] = version_compare(WC_VERSION, '3.0.0', '<')
+			? $order->shipping_state
+			: $order->get_shipping_state();
+
+		$post_data['xShipZip'] = version_compare(WC_VERSION, '3.0.0', '<')
+			? $order->shipping_postcode
+			: $order->get_shipping_postcode();
+
+		$post_data['xShipCountry'] = version_compare(WC_VERSION, '3.0.0', '<')
+			? $order->shipping_country
+			: $order->get_shipping_country();
+
 		return $post_data;
 	}
 
@@ -263,69 +330,69 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 	 *
 	 * @return array|void
 	 */
-	public function process_payment( $order_id, $retry = true, $force_customer = false ) {
+	public function process_payment($order_id, $retry = true, $force_customer = false)
+	{
 		try {
-			$order  = wc_get_order( $order_id );
+			$order  = wc_get_order($order_id);
 
 			// Result from Cardknox API request.
 			$response = null;
 
 			// Handle payment.
-			if ( $order->get_total() > 0 ) {
+			if ($order->get_total() > 0) {
 
-				if ( $order->get_total() < WC_Cardknox::get_minimum_amount() / 100) {
-					throw new Exception( sprintf( __( 'Sorry, the minimum allowed order total is %1$s to use this payment method.', 'woocommerce-gateway-cardknox' ), wc_price( WC_Cardknox::get_minimum_amount() / 100 ) ) );
+				if ($order->get_total() < WC_Cardknox::get_minimum_amount() / 100) {
+					throw new Exception(sprintf(__('Sorry, the minimum allowed order total is %1$s to use this payment method.', 'woocommerce-gateway-cardknox'), wc_price(WC_Cardknox::get_minimum_amount() / 100)));
 				}
 
-				$this->log( "Info: Begin processing payment for order $order_id for the amount of {$order->get_total()}" );
+				$this->log("Info: Begin processing payment for order $order_id for the amount of {$order->get_total()}");
 
 				// Make the request.
-				$response = WC_Cardknox_API::request( $this->generate_payment_request( $order ) );
+				$response = WC_Cardknox_API::request($this->generate_payment_request($order));
 
-				if ( is_wp_error( $response ) ) {
+				if (is_wp_error($response)) {
 					$order->add_order_note($response->get_error_message());
-					throw new Exception( "The transaction was declined please try again" );
+					throw new Exception("The transaction was declined please try again");
 				}
 
-				$this->log( "Info: set_transaction_id");
+				$this->log("Info: set_transaction_id");
 				$order->set_transaction_id($response['xRefNum']);
 
 				// Process valid response.
-				$this->log( "Info: process_response");
-				$this->process_response( $response, $order );
-			} else {			
+				$this->log("Info: process_response");
+				$this->process_response($response, $order);
+			} else {
 				$order->payment_complete();
 			}
 
-			$this->log( "Info: empty_cart");
+			$this->log("Info: empty_cart");
 
 			// Remove cart.
 			WC()->cart->empty_cart();
 
-			$this->log( "Info: wc_gateway_cardknox_process_payment");
-			do_action( 'wc_gateway_cardknox_process_payment', $response, $order );
+			$this->log("Info: wc_gateway_cardknox_process_payment");
+			do_action('wc_gateway_cardknox_process_payment', $response, $order);
 
-			$this->log( "Info: thank you page redirect");
+			$this->log("Info: thank you page redirect");
 			// Return thank you page redirect.
 			return array(
 				'result'   => 'success',
-				'redirect' => $this->get_return_url( $order ),
+				'redirect' => $this->get_return_url($order),
 			);
+		} catch (Exception $e) {
+			wc_add_notice($e->getMessage(), 'error');
+			$this->log(sprintf(__('Error: %s', 'woocommerce-gateway-cardknox'), $e->getMessage()));
 
-		} catch ( Exception $e ) {
-			wc_add_notice( $e->getMessage(), 'error' );
-			$this->log( sprintf( __( 'Error: %s', 'woocommerce-gateway-cardknox' ), $e->getMessage() ) );
+			if ($order->has_status(array('pending', 'failed'))) {
+				$this->send_failed_order_email($order_id);
 
-			if ( $order->has_status( array( 'pending', 'failed' ) ) ) {
-				$this->send_failed_order_email( $order_id );
-
-				$order_status = $order->get_status();    
-				if ('pending' == $order_status) {    
-					$order->update_status( 'failed' );
-				} 
+				$order_status = $order->get_status();
+				if ('pending' == $order_status) {
+					$order->update_status('failed');
+				}
 			}
 
-			do_action( 'wc_gateway_cardknox_process_payment_error', $e, $order );
+			do_action('wc_gateway_cardknox_process_payment_error', $e, $order);
 
 			return array(
 				'result'   => 'fail',
@@ -350,7 +417,11 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 			update_post_meta($order_id, '_cardknox_masked_card', $response['xMaskedCardNumber']);
 			$order->payment_complete($response['xRefNum']);
 
-			$message = sprintf(__('Cardknox transaction captured (capture RefNum: %s)', 'woocommerce-gateway-cardknox'), $response['xRefNum']);
+			$message = sprintf(
+				__('Cardknox transaction captured (capture RefNum: %s)',
+				'woocommerce-gateway-cardknox'),
+				$response['xRefNum']
+			);
 			$order->add_order_note($message);
 			$this->log('Success: ' . $message);
 		} else {
@@ -421,7 +492,11 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 			$this->log('Error: ' . $response->get_error_message());
 			return $response;
 		} elseif (!empty($response['xRefNum'])) {
-			$refund_message = sprintf(__('Refunded %1$s - Refund ID: %2$s - Reason: %3$s', 'woocommerce-gateway-cardknox'), wc_price($response['xAuthAmount']), $response['xRefNum'], $reason);
+			$refund_message = sprintf(
+				__('Refunded %1$s - Refund ID: %2$s - Reason: %3$s', 'woocommerce-gateway-cardknox'),
+				wc_price($response['xAuthAmount']),
+				$response['xRefNum'],
+				$reason);
 			$order->add_order_note($refund_message);
 			$this->log('Success: ' . html_entity_decode(strip_tags((string) $refund_message)));
 			return true;
@@ -438,10 +513,11 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 	 * @param int $order_id
 	 * @return null
 	 */
-	public function send_failed_order_email( $order_id ) {
+	public function send_failed_order_email($order_id)
+	{
 		$emails = WC()->mailer()->get_emails();
-		if ( ! empty( $emails ) && ! empty( $order_id ) ) {
-			$emails['WC_Email_Failed_Order']->trigger( $order_id );
+		if (!empty($emails) && !empty($order_id)) {
+			$emails['WC_Email_Failed_Order']->trigger($order_id);
 		}
 	}
 
@@ -468,8 +544,11 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 	public function cardknox_review_order_after_submit()
 	{
 		if ($this->enabled == 'yes') {
-			echo '<div id="ap-container" class="ap hidden" style="height:auto;min-height:55px;"><br/></div><div class="messages"><div class="message message-error error applepay-error" style="display: none;"></div>';
-		}
+			echo '<div id="ap-container" class="ap hidden" style="height:auto;min-height:55px;"></div><br/>';
+			echo '<div class="messages">';
+			echo '<div class="message message-error error applepay-error" style="display: none;"></div>';
+			echo '</div>';
+		}		
 	}
 
 	/**
@@ -478,26 +557,27 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 	 * @param [type] $available_gateways
 	 * @return void
 	 */
-	public function cardknox_allow_payment_method_by_country($available_gateways){
+	public function cardknox_allow_payment_method_by_country($available_gateways)
+	{
 
-		if ( is_admin() ) return $available_gateways;
-		
-		$applicable_countries 	= $this->applepay_applicable_countries;
-		$specific_countries 	= $this->applepay_specific_countries;
+		if (is_admin()) return $available_gateways;
 
-		if(isset($applicable_countries) && $applicable_countries == 1){
+		$applicable_countries = $this->applepay_applicable_countries;
+		$specific_countries	= $this->applepay_specific_countries;
+
+		if (isset($applicable_countries) && $applicable_countries == 1) {
 			// Get the customer's billing and shipping addresses
 			$billing_country = WC()->customer->get_billing_country();
-		
+
 			// Define the country codes for which you want to allow the payment method
 			$enabled_countries = $specific_countries; // Add the country codes to this array
-		
+
 			// Check if the billing or shipping address country is in the allow countries array
-			if ( !in_array($billing_country, $enabled_countries) ) {
+			if (!in_array($billing_country, $enabled_countries)) {
 				// allow the payment method by unsetting it from the available gateways
 				unset($available_gateways['cardknox-applepay']);
 			}
-		} 	
+		}
 		return $available_gateways;
 	}
 }

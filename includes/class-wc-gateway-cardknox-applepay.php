@@ -67,6 +67,8 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         $this->applepay_applicable_countries    = $this->get_option('applepay_applicable_countries');
         $this->applepay_specific_countries      = $this->get_option('applepay_specific_countries');
 
+        $this->$wcVersionLessThanThree          = version_compare(WC_VERSION, '3.0.0', '<');
+
         // Hooks.
         add_action('wp_enqueue_scripts', array($this, 'payment_scripts'));
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
@@ -212,18 +214,16 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
     public function get_order_data($postData, $order)
     {
-        $wcVersionLessThanThree = version_compare(WC_VERSION, '3.0.0', '<');
-
-        $billingEmail = $wcVersionLessThanThree ? $order->billing_email : $order->get_billing_email();
+        $billingEmail = $this->$wcVersionLessThanThree ? $order->billing_email : $order->get_billing_email();
         $postData['xCurrency'] = strtolower(
-            $wcVersionLessThanThree
+            $this->$wcVersionLessThanThree
                 ? $order->get_order_currency()
                 : $order->get_currency()
         );
         $postData['xAmount'] = $this->get_cardknox_amount($order->get_total());
         $postData['xEmail'] = $billingEmail;
-        $postData['xInvoice'] = $wcVersionLessThanThree ? $order->id : $order->get_id();
-        $postData['xIP'] = $wcVersionLessThanThree
+        $postData['xInvoice'] = $this->$wcVersionLessThanThree ? $order->id : $order->get_id();
+        $postData['xIP'] = $this->$wcVersionLessThanThree
             ? $order->customer_ip_address
             : $order->get_customer_ip_address();
         if (!empty($billingEmail) && apply_filters('wc_cardknox_send_cardknox_receipt', false)) {
@@ -244,37 +244,35 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     }
     public function get_billing_shiping_info($postData, $order)
     {
-        $wcVersionLessThanThree = version_compare(WC_VERSION, '3.0.0', '<');
-
         // Billing info
-        $postData['xBillCompany'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_company');
-        $postData['xBillFirstName'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_first_name');
-        $postData['xBillLastName'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_last_name');
-        $postData['xBillStreet'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_address_1');
-        $postData['xBillStreet2'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_address_2');
-        $postData['xBillCity'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_city');
-        $postData['xBillState'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_state');
-        $postData['xBillZip'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_postcode');
-        $postData['xBillCountry'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_country');
-        $postData['xBillPhone'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_phone');
+        $postData['xBillCompany'] = $this->get_billing_info($order, $this->$wcVersionLessThanThree, 'billing_company');
+        $postData['xBillFirstName'] = $this->get_billing_info($order, $this->$wcVersionLessThanThree, 'billing_first_name');
+        $postData['xBillLastName'] = $this->get_billing_info($order, $this->$wcVersionLessThanThree, 'billing_last_name');
+        $postData['xBillStreet'] = $this->get_billing_info($order, $this->$wcVersionLessThanThree, 'billing_address_1');
+        $postData['xBillStreet2'] = $this->get_billing_info($order, $this->$wcVersionLessThanThree, 'billing_address_2');
+        $postData['xBillCity'] = $this->get_billing_info($order, $this->$wcVersionLessThanThree, 'billing_city');
+        $postData['xBillState'] = $this->get_billing_info($order, $this->$wcVersionLessThanThree, 'billing_state');
+        $postData['xBillZip'] = $this->get_billing_info($order, $this->$wcVersionLessThanThree, 'billing_postcode');
+        $postData['xBillCountry'] = $this->get_billing_info($order, $this->$wcVersionLessThanThree, 'billing_country');
+        $postData['xBillPhone'] = $this->get_billing_info($order, $this->$wcVersionLessThanThree, 'billing_phone');
 
         // Shipping info
-        $postData['xShipCompany'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_company');
-        $postData['xShipFirstName'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_first_name');
-        $postData['xShipLastName'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_last_name');
-        $postData['xShipStreet'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_address_1');
-        $postData['xShipStreet2'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_address_2');
-        $postData['xShipCity'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_city');
-        $postData['xShipState'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_state');
-        $postData['xShipZip'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_postcode');
-        $postData['xShipCountry'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_country');
+        $postData['xShipCompany'] = $this->get_billing_info($order, $this->$wcVersionLessThanThree, 'shipping_company');
+        $postData['xShipFirstName'] = $this->get_billing_info($order, $this->$wcVersionLessThanThree, 'shipping_first_name');
+        $postData['xShipLastName'] = $this->get_billing_info($order, $this->$wcVersionLessThanThree, 'shipping_last_name');
+        $postData['xShipStreet'] = $this->get_billing_info($order, $this->$wcVersionLessThanThree, 'shipping_address_1');
+        $postData['xShipStreet2'] = $this->get_billing_info($order, $this->$wcVersionLessThanThree, 'shipping_address_2');
+        $postData['xShipCity'] = $this->get_billing_info($order, $this->$wcVersionLessThanThree, 'shipping_city');
+        $postData['xShipState'] = $this->get_billing_info($order, $this->$wcVersionLessThanThree, 'shipping_state');
+        $postData['xShipZip'] = $this->get_billing_info($order, $this->$wcVersionLessThanThree, 'shipping_postcode');
+        $postData['xShipCountry'] = $this->get_billing_info($order, $this->$wcVersionLessThanThree, 'shipping_country');
 
         return $postData;
     }
 
-    private function get_billing_info($order, $wcVersionLessThanThree, $field)
+    private function get_billing_info($order, $this->$wcVersionLessThanThree, $field)
     {
-        return $wcVersionLessThanThree ? $order->$field : $order->{"get_$field"}();
+        return $this->$wcVersionLessThanThree ? $order->$field : $order->{"get_$field"}();
     }
     /**
      * Process the payment
@@ -371,7 +369,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
      */
     public function process_response($response, $order)
     {
-        $orderId = version_compare(WC_VERSION, '3.0.0', '<') ? $order->id : $order->get_id();
+        $orderId = $this->$wcVersionLessThanThree ? $order->id : $order->get_id();
 
         // Store charge data
         update_post_meta($orderId, '_cardknox_xrefnum', $response['xRefNum']);
@@ -395,7 +393,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             update_post_meta($orderId, '_transaction_id', $response['xRefNum'], true);
 
             if ($order->has_status(array('pending', 'failed'))) {
-                if (version_compare(WC_VERSION, '3.0.0', '<')) {
+                if ($this->$wcVersionLessThanThree) {
                     $order->reduce_order_stock();
                 } else {
                     wc_reduce_stock_levels($orderId);

@@ -7,7 +7,7 @@ if (!defined('ABSPATH')) {
  *
  * @extends WC_Payment_Gateway
  */
-class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
+class WC_Gateway_Cardknox_Applepay extends WC_Payment_Gateway_CC
 {
 	/**
 	 * Should we capture Credit cards
@@ -22,13 +22,13 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 		$this->method_title         = __('Cardknox', 'woocommerce-gateway-cardknox');
 		$this->title 				= __('Cardknox', 'woocommerce-other-payment-gateway');
 
-		$method_description = '<strong class="important-label" style="color: #e22626;">';
-		$method_description .= 'Please complete the Apple Pay Domain Registration ';
-		$method_description .= '<a target="_blank" href="https://portal.cardknox.com/account-settings/payment-methods">here</a> ';
-		$method_description .= 'prior to enabling Cardknox Apple Pay.';
+		$methodDescription = '<strong class="important-label" style="color: #e22626;">';
+		$methodDescription .= 'Please complete the Apple Pay Domain Registration ';
+		$methodDescription .= '<a target="_blank" href="https://portal.cardknox.com/account-settings/payment-methods">here</a> ';
+		$methodDescription .= 'prior to enabling Cardknox Apple Pay.';
 
 		$this->method_description = sprintf(
-			__(	$method_description, 'woocommerce-gateway-cardknox'),
+			__(	$methodDescription, 'woocommerce-gateway-cardknox'),
 			'https://www.cardknox.com'
 		);
 		$this->has_fields           = true;
@@ -191,137 +191,138 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 	 */
 	protected function generate_payment_request($order)
 	{
-		$post_data                = array();
-		$post_data['xCommand']    = $this->capture ? 'cc:sale' : 'cc:authonly';
+		$postData                = array();
+		$postData['xCommand']    = $this->capture ? 'cc:sale' : 'cc:authonly';
 
-		$post_data = self::get_order_data($post_data, $order);
-		$post_data = self::get_billing_shiping_info($post_data, $order);
-		$post_data = self::get_payment_data($post_data);
+		$postData = self::get_order_data($postData, $order);
+		$postData = self::get_billing_shiping_info($postData, $order);
+		$postData = self::get_payment_data($postData);
 
 		/**
 		 * Filter the return value of the WC_Payment_Gateway_CC::generate_payment_request.
 		 *
 		 * @since 3.1.0
-		 * @param array $post_data
+		 * @param array $postData
 		 * @param WC_Order $order
 		 * @param object $source
 		 */
-		return apply_filters('wc_cardknox_generate_payment_request', $post_data, $order);
+		return apply_filters('wc_cardknox_generate_payment_request', $postData, $order);
 	}
 
-	public function get_order_data($post_data, $order)
+	public function get_order_data($postData, $order)
 	{
-		$billing_email = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_email : $order->get_billing_email();
-		$post_data['xCurrency'] = strtolower(
+		$billingEmail = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_email : $order->get_billing_email();
+		$postData['xCurrency'] = strtolower(
 			version_compare(WC_VERSION, '3.0.0', '<')
 				? $order->get_order_currency()
 				: $order->get_currency()
 		);
-		$post_data['xAmount'] = $this->get_cardknox_amount($order->get_total());
-		$post_data['xEmail'] = $billing_email;
-		$post_data['xInvoice'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->id : $order->get_id();
-		$post_data['xIP'] = version_compare(WC_VERSION, '3.0.0', '<')
+		$postData['xAmount'] = $this->get_cardknox_amount($order->get_total());
+		$postData['xEmail'] = $billingEmail;
+		$postData['xInvoice'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->id : $order->get_id();
+		$postData['xIP'] = version_compare(WC_VERSION, '3.0.0', '<')
 			? $order->customer_ip_address
 			: $order->get_customer_ip_address();
-		if (!empty($billing_email) && apply_filters('wc_cardknox_send_cardknox_receipt', false)) {
-			$post_data['xCustReceipt'] = '1';
+		if (!empty($billingEmail) && apply_filters('wc_cardknox_send_cardknox_receipt', false)) {
+			$postData['xCustReceipt'] = '1';
 		}
 
-		return $post_data;
+		return $postData;
 	}
-	public function get_payment_data($post_data)
+	public function get_payment_data($postData)
 	{
 		if (isset($_POST['xCardNumToken'])) {
 
-			$post_data['xCardNum'] 				= wc_clean($_POST['xCardNumToken']);
-			$post_data['xAmount'] 				= WC()->cart->total;
-			$post_data['xDigitalWalletType'] 	= 'applepay';
+			$postData['xCardNum'] 				= wc_clean($_POST['xCardNumToken']);
+			$postData['xAmount'] 				= WC()->cart->total;
+			$postData['xDigitalWalletType'] 	= 'applepay';
 		}
-		return $post_data;
+		return $postData;
 	}
-
-	public function get_billing_shiping_info($post_data, $order)
+	public function get_billing_shiping_info($postData, $order)
 	{
-		$post_data['xBillCompany'] = version_compare(WC_VERSION, '3.0.0', '<')
+		$wcVersionLessThanThree = version_compare(WC_VERSION, '3.0.0', '<');
+
+		// Billing info
+		$postData['xBillCompany'] = $wcVersionLessThanThree
 			? $order->billing_company
 			: $order->get_billing_company();
 
-		$post_data['xBillFirstName'] = version_compare(WC_VERSION, '3.0.0', '<')
+		$postData['xBillFirstName'] = $wcVersionLessThanThree
 			? $order->billing_first_name
 			: $order->get_billing_first_name();
 
-		$post_data['xBillLastName'] = version_compare(WC_VERSION, '3.0.0', '<')
+		$postData['xBillLastName'] = $wcVersionLessThanThree
 			? $order->billing_last_name
 			: $order->get_billing_last_name();
 
-		$post_data['xBillStreet'] = version_compare(WC_VERSION, '3.0.0', '<')
+		$postData['xBillStreet'] = $wcVersionLessThanThree
 			? $order->billing_address_1
 			: $order->get_billing_address_1();
 
-		$post_data['xBillStreet2'] = version_compare(WC_VERSION, '3.0.0', '<')
+		$postData['xBillStreet2'] = $wcVersionLessThanThree
 			? $order->billing_address_2
 			: $order->get_billing_address_2();
 
-		$post_data['xBillCity'] = version_compare(WC_VERSION, '3.0.0', '<')
+		$postData['xBillCity'] = $wcVersionLessThanThree
 			? $order->billing_city
 			: $order->get_billing_city();
 
-		$post_data['xBillState'] = version_compare(WC_VERSION, '3.0.0', '<')
+		$postData['xBillState'] = $wcVersionLessThanThree
 			? $order->billing_state
 			: $order->get_billing_state();
 
-		$post_data['xBillZip'] = version_compare(WC_VERSION, '3.0.0', '<')
+		$postData['xBillZip'] = $wcVersionLessThanThree
 			? $order->billing_postcode
 			: $order->get_billing_postcode();
 
-		$post_data['xBillCountry'] = version_compare(WC_VERSION, '3.0.0', '<')
+		$postData['xBillCountry'] = $wcVersionLessThanThree
 			? $order->billing_country
 			: $order->get_billing_country();
 
-		$post_data['xBillPhone'] = version_compare(WC_VERSION, '3.0.0', '<')
+		$postData['xBillPhone'] = $wcVersionLessThanThree
 			? $order->billing_phone
 			: $order->get_billing_phone();
 
-
-		$post_data['xShipCompany'] = version_compare(WC_VERSION, '3.0.0', '<')
+		// Shipping info
+		$postData['xShipCompany'] = $wcVersionLessThanThree
 			? $order->shipping_company
 			: $order->get_shipping_company();
 
-		$post_data['xShipFirstName'] = version_compare(WC_VERSION, '3.0.0', '<')
+		$postData['xShipFirstName'] = $wcVersionLessThanThree
 			? $order->shipping_first_name
 			: $order->get_shipping_first_name();
 
-		$post_data['xShipLastName'] = version_compare(WC_VERSION, '3.0.0', '<')
+		$postData['xShipLastName'] = $wcVersionLessThanThree
 			? $order->shipping_last_name
 			: $order->get_shipping_last_name();
 
-		$post_data['xShipStreet'] = version_compare(WC_VERSION, '3.0.0', '<')
+		$postData['xShipStreet'] = $wcVersionLessThanThree
 			? $order->shipping_address_1
 			: $order->get_shipping_address_1();
 
-		$post_data['xShipStreet2'] = version_compare(WC_VERSION, '3.0.0', '<')
+		$postData['xShipStreet2'] = $wcVersionLessThanThree
 			? $order->shipping_address_2
 			: $order->get_shipping_address_2();
 
-		$post_data['xShipCity'] = version_compare(WC_VERSION, '3.0.0', '<')
+		$postData['xShipCity'] = $wcVersionLessThanThree
 			? $order->shipping_city
 			: $order->get_shipping_city();
 
-		$post_data['xShipState'] = version_compare(WC_VERSION, '3.0.0', '<')
+		$postData['xShipState'] = $wcVersionLessThanThree
 			? $order->shipping_state
 			: $order->get_shipping_state();
 
-		$post_data['xShipZip'] = version_compare(WC_VERSION, '3.0.0', '<')
+		$postData['xShipZip'] = $wcVersionLessThanThree
 			? $order->shipping_postcode
 			: $order->get_shipping_postcode();
 
-		$post_data['xShipCountry'] = version_compare(WC_VERSION, '3.0.0', '<')
+		$postData['xShipCountry'] = $wcVersionLessThanThree
 			? $order->shipping_country
 			: $order->get_shipping_country();
 
-		return $post_data;
+		return $postData;
 	}
-
 	/**
 	 * Process the payment
 	 *

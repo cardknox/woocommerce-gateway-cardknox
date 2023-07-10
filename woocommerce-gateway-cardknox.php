@@ -348,7 +348,7 @@ if ( ! class_exists( 'WC_Cardknox' ) ) :
 				$methods[] = 'WC_Gateway_Cardknox_Addons';
 			} else {
 				$methods[] = 'WC_Gateway_Cardknox';
-				$methods[] = 'WC_Gateway_Cardknox_ApplePay';
+				$methods[] = 'WC_Gateway_Cardknox_Applepay';
 			}
 			return $methods;
 		}

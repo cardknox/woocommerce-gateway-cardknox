@@ -225,7 +225,7 @@ if (!class_exists('WC_Cardknox')) :
          * Checks the environment for compatibility problems.  Returns a string with the first incompatibility
          * found or false if the environment has no problems.
          */
-        static function get_environment_warning()
+        public static function get_environment_warning()
         {
             if (version_compare(phpversion(), WC_CARDKNOX_MIN_PHP_VER, '<')) {
                 $message = __('WooCommerce Cardknox - The minimum PHP version required for this plugin is %1$s. You are running %2$s.', 'woocommerce-gateway-cardknox');

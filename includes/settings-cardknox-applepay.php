@@ -77,8 +77,14 @@ return apply_filters( 'wc_cardknox_apple_settings',
             'default'     => 'on-hold',
             'desc_tip'    => true,
             'options'     => array(
-                'on-hold'        => __( 'Set order status to on-hold when payment is authorized', 'woocommerce-gateway-cardknox' ),
-                'processing' => __( 'Set order status to processing when payment is authorized', 'woocommerce-gateway-cardknox' ),
+                'on-hold'        => __( 
+					'Set order status to on-hold when payment is authorized', 
+					'woocommerce-gateway-cardknox' 
+				),
+                'processing' => __( 
+					'Set order status to processing when payment is authorized', 
+					'woocommerce-gateway-cardknox' 
+				),
             ),
         ),
         'applepay_applicable_countries' => array(

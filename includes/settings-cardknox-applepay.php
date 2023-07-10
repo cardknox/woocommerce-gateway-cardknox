@@ -77,7 +77,7 @@ return apply_filters( 'wc_cardknox_apple_settings',
 			'description' => __(
 				'If the transaction is not immediately captured for Apple Pay, it will require capturing at a later stage.',
 				'woocommerce-gateway-cardknox'
-			),			
+			),
 			'default'     => 'yes',
 			'desc_tip'    => true,
 		),
@@ -89,7 +89,7 @@ return apply_filters( 'wc_cardknox_apple_settings',
 			'description' => __(
 				'Defines the intended order status after an authorization-only transaction for Apple Pay.',
 				'woocommerce-gateway-cardknox'
-			),			
+			),
 			'default'     => 'on-hold',
 			'desc_tip'    => true,
 			'options'  => array(

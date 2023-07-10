@@ -7,7 +7,7 @@ if (!defined('ABSPATH')) {
  *
  * @extends WC_Payment_Gateway
  */
-class WC_Gateway_Cardknox_Applepay extends WC_Payment_Gateway_CC
+class WC_Cardknox_Applepay extends WC_Payment_Gateway_CC
 {
 	/**
 	 * Should we capture Credit cards
@@ -394,8 +394,8 @@ class WC_Gateway_Cardknox_Applepay extends WC_Payment_Gateway_CC
 			if ($order->has_status(array('pending', 'failed'))) {
 				$this->send_failed_order_email($orderId);
 
-				$order_status = $order->get_status();
-				if ('pending' == $order_status) {
+				$orderStatus = $order->get_status();
+				if ('pending' == $orderStatus) {
 					$order->update_status('failed');
 				}
 			}
@@ -414,15 +414,15 @@ class WC_Gateway_Cardknox_Applepay extends WC_Payment_Gateway_CC
 	 */
 	public function process_response($response, $order)
 	{
-		$order_id = version_compare(WC_VERSION, '3.0.0', '<') ? $order->id : $order->get_id();
+		$orderId = version_compare(WC_VERSION, '3.0.0', '<') ? $order->id : $order->get_id();
 
 		// Store charge data
-		update_post_meta($order_id, '_cardknox_xrefnum', $response['xRefNum']);
-		update_post_meta($order_id, '_cardknox_transaction_captured', $this->capture ? 'yes' : 'no');
+		update_post_meta($orderId, '_cardknox_xrefnum', $response['xRefNum']);
+		update_post_meta($orderId, '_cardknox_transaction_captured', $this->capture ? 'yes' : 'no');
 
 		if ($this->capture) {
-			update_post_meta($order_id, '_transaction_id', $response['xRefNum'], true);
-			update_post_meta($order_id, '_cardknox_masked_card', $response['xMaskedCardNumber']);
+			update_post_meta($orderId, '_transaction_id', $response['xRefNum'], true);
+			update_post_meta($orderId, '_cardknox_masked_card', $response['xMaskedCardNumber']);
 			$order->payment_complete($response['xRefNum']);
 
 			$message = sprintf(
@@ -433,22 +433,24 @@ class WC_Gateway_Cardknox_Applepay extends WC_Payment_Gateway_CC
 			$order->add_order_note($message);
 			$this->log('Success: ' . $message);
 		} else {
-			update_post_meta($order_id, '_transaction_id', $response['xRefNum'], true);
+			update_post_meta($orderId, '_transaction_id', $response['xRefNum'], true);
 
 			if ($order->has_status(array('pending', 'failed'))) {
-				version_compare(WC_VERSION, '3.0.0', '<') ? $order->reduce_order_stock() : wc_reduce_stock_levels($order_id);
+				version_compare(WC_VERSION, '3.0.0', '<') ? $order->reduce_order_stock() : wc_reduce_stock_levels($orderId);
 			}
 			$xRefNum =  $response['xRefNum'];
 
 			if ($this->authonly_status == "on-hold") {
 				$order->update_status('on-hold', sprintf(
-					__('Cardknox charge authorized (Charge ID: %s). Process order to take payment, or cancel to remove the pre-authorization.',
+					__('Cardknox charge authorized (Charge ID: %s). 
+					Process order to take payment, or cancel to remove the pre-authorization.',
 					'woocommerce-gateway-cardknox'),
 					$response['xRefNum'])
 				);
 			} else {
 				$order->update_status('processing', sprintf(
-					__('Cardknox charge authorized (Charge ID: %s). Complete order to take payment, or cancel to remove the pre-authorization.',
+					__('Cardknox charge authorized (Charge ID: %s). 
+					Complete order to take payment, or cancel to remove the pre-authorization.',
 					'woocommerce-gateway-cardknox'),
 					$response['xRefNum']));
 			}
@@ -463,19 +465,19 @@ class WC_Gateway_Cardknox_Applepay extends WC_Payment_Gateway_CC
 
 	/**
 	 * Refund a charge
-	 * @param  int $order_id
+	 * @param  int $orderId
 	 * @param  float $amount
 	 * @return bool
 	 */
-	public function process_refund($order_id, $amount = null, $reason = '')
+	public function process_refund($orderId, $amount = null, $reason = '')
 	{
-		$order = wc_get_order($order_id);
+		$order = wc_get_order($orderId);
 
-		if (!$order || !get_post_meta($order_id, '_cardknox_xrefnum', true)) {
+		if (!$order || !get_post_meta($orderId, '_cardknox_xrefnum', true)) {
 			return false;
 		}
 
-		$captured = get_post_meta($order_id, '_cardknox_transaction_captured', true);
+		$captured = get_post_meta($orderId, '_cardknox_transaction_captured', true);
 		$body = array();
 
 		if (!is_null($amount)) {
@@ -498,8 +500,8 @@ class WC_Gateway_Cardknox_Applepay extends WC_Payment_Gateway_CC
 		}
 
 		$body['xCommand'] = $command;
-		$body['xRefNum'] = get_post_meta($order_id, '_cardknox_xrefnum', true);
-		$this->log("Info: Beginning refund for order $order_id for the amount of {$amount}");
+		$body['xRefNum'] = get_post_meta($orderId, '_cardknox_xrefnum', true);
+		$this->log("Info: Beginning refund for order $orderId for the amount of {$amount}");
 
 		$response = WC_Cardknox_API::request($body);
 
@@ -525,14 +527,14 @@ class WC_Gateway_Cardknox_Applepay extends WC_Payment_Gateway_CC
 	 *
 	 * @version 3.1.0
 	 * @since 3.1.0
-	 * @param int $order_id
+	 * @param int $orderId
 	 * @return null
 	 */
-	public function send_failed_order_email($order_id)
+	public function send_failed_order_email($orderId)
 	{
 		$emails = WC()->mailer()->get_emails();
-		if (!empty($emails) && !empty($order_id)) {
-			$emails['WC_Email_Failed_Order']->trigger($order_id);
+		if (!empty($emails) && !empty($orderId)) {
+			$emails['WC_Email_Failed_Order']->trigger($orderId);
 		}
 	}
 

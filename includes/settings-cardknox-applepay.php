@@ -54,17 +54,17 @@ return apply_filters( 'wc_cardknox_apple_settings',
             ),
         ),
         'applepay_capture' => array(
-            'title'       => __( 'Apple Pay Capture', 'woocommerce-gateway-cardknox' ),
-            'label'       => __( 'Capture charge immediately', 'woocommerce-gateway-cardknox' ),
-            'type'        => 'checkbox',
-            'id'          => 'apple_cardknox_capture',
-            'description' => __(
-                'If the transaction is not immediately captured for Apple Pay, it will require capturing at a later stage.',
-                'woocommerce-gateway-cardknox'
-            ),
-            'default'     => 'yes',
-            'desc_tip'    => true,
-        ),
+			'title'       => __( 'Apple Pay Capture', 'woocommerce-gateway-cardknox' ),
+			'label'       => __( 'Capture charge immediately', 'woocommerce-gateway-cardknox' ),
+			'type'        => 'checkbox',
+			'id'          => 'apple_cardknox_capture',
+			'description' => __(
+				'If the transaction is not immediately captured for Apple Pay, it will require capturing at a later.',
+				'woocommerce-gateway-cardknox'
+			),
+			'default'     => 'yes',
+			'desc_tip'    => true,
+		),
         'applepay_auth_only_order_status' => array(
             'title'       => __( 'Authorize Only Order Status', 'woocommerce-gateway-cardknox' ),
             'type'        => 'select',

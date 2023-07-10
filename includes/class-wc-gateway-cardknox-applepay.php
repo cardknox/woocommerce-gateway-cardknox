@@ -138,7 +138,7 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 	 */
 	public function init_form_fields()
 	{
-		$this->form_fields = include_once('settings-cardknox-applepay.php');
+		$this->form_fields = include_once 'settings-cardknox-applepay.php';
 	}
 
 	/**
@@ -166,8 +166,14 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 			return;
 		}
 
-		wp_enqueue_script('woocommerce_cardknox_apple_pay', plugins_url('assets/js/cardknox-apple-pay.min.js', WC_CARDKNOX_MAIN_FILE), array('jquery-payment'), filemtime(plugin_dir_path(dirname(__FILE__)) . 'assets/js/cardknox-apple-pay.min.js'), true);
-
+		wp_enqueue_script(
+			'woocommerce_cardknox_apple_pay',
+			plugins_url('assets/js/cardknox-apple-pay.min.js', WC_CARDKNOX_MAIN_FILE),
+			array('jquery-payment'),
+			filemtime(plugin_dir_path(dirname(__FILE__)) . 'assets/js/cardknox-apple-pay.min.js'),
+			true
+		);
+		
 		$cardknoxApplepaySettings = array(
 			'enabled'     			=> $this->enabled,
 			'title'           		=> $this->title,

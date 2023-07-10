@@ -26,38 +26,12 @@ if (!defined('ABSPATH')) {
  */
 class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 {
-
 	/**
 	 * Should we capture Credit cards
 	 *
 	 * @var bool
 	 */
-	public $capture;
-	/**
-	 * Should we store the users credit cards?
-	 *
-	 * @var bool
-	 */
-	public $saved_cards;
-	/**
-	 * API access secret key
-	 *
-	 * @var string
-	 */
-	public $transaction_key;
-	/**
-	 * Api access publishable key
-	 *
-	 * @var string
-	 */
-	public $token_key;
-	/**
-	 * Logging enabled?
-	 *
-	 * @var bool
-	 */
-	public $logging;
-	public $authonly_status;
+	public $capture;	
 
 	public function __construct()
 	{
@@ -75,14 +49,11 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 			'subscription_reactivation',
 			'subscription_suspension',
 			'subscription_amount_changes',
-			'subscription_payment_method_change', // Subs 1.n compatibility.
+			'subscription_payment_method_change',
 			'subscription_payment_method_change_customer',
 			'subscription_payment_method_change_admin',
 			'subscription_date_changes',
 			'multiple_subscriptions',
-			//'pre-orders',
-			//'tokenization',
-			//'add_payment_method'
 		);
 
 		// Load the form fields.
@@ -105,7 +76,6 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 		
 		// Hooks.
 		add_action('wp_enqueue_scripts', array($this, 'payment_scripts'));
-		//add_action('admin_notices', array($this, 'admin_notices'));
 		add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
 
 		add_action(	'woocommerce_review_order_after_submit', array($this, 'cardknox_review_order_after_submit') );
@@ -120,7 +90,7 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 		if ($this->description) {
 			echo apply_filters('wc_cardknox_description', wpautop(wp_kses_post($this->description)));
 		}
-	?>
+		?>
 		<input type="hidden" name="xCardNumToken" value="" id="applePaytoken">
 	<?php
 	}
@@ -168,7 +138,7 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 	 */
 	public function init_form_fields()
 	{
-		$this->form_fields = include('settings-cardknox-applepay.php');
+		$this->form_fields = include_once('settings-cardknox-applepay.php');
 	}
 
 	/**
@@ -198,21 +168,21 @@ class WC_Gateway_Cardknox_ApplePay extends WC_Payment_Gateway_CC
 
 		wp_enqueue_script('woocommerce_cardknox_apple_pay', plugins_url('assets/js/cardknox-apple-pay.min.js', WC_CARDKNOX_MAIN_FILE), array('jquery-payment'), filemtime(plugin_dir_path(dirname(__FILE__)) . 'assets/js/cardknox-apple-pay.min.js'), true);
 
-		$cardknox_applepay_settings = array(
+		$cardknoxApplepaySettings = array(
 			'enabled'     			=> $this->enabled,
 			'title'           		=> $this->title,
 			'merchant_identifier' 	=> $this->applepay_merchant_identifier,
 			'environment'			=> $this->applepay_environment,
 			'button_style'			=> $this->applepay_button_style,
 			'button_type'			=> $this->applepay_button_type,
-			'payment_action'		=> $this->applepay_payment_action,
+			'payment_action'		=> $this->capture,
 			'applicable_countries'	=> $this->applepay_applicable_countries,
 			'specific_countries'	=> $this->applepay_specific_countries,
 			'total'					=> WC()->cart->total
 		);
 
-		$cardknox_applepay_settings = array_merge($cardknox_applepay_settings, $this->get_localized_messages());
-		wp_localize_script('woocommerce_cardknox_apple_pay', 'applePaysettings', $cardknox_applepay_settings);
+		$cardknoxApplepaySettings = array_merge($cardknoxApplepaySettings, $this->get_localized_messages());
+		wp_localize_script('woocommerce_cardknox_apple_pay', 'applePaysettings', $cardknoxApplepaySettings);
 	}
 
 	/**

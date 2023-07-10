@@ -20,15 +20,16 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     {
         $this->id                   = 'cardknox-applepay';
         $this->method_title         = __('Cardknox', 'woocommerce-gateway-cardknox');
-        $this->title                 = __('Cardknox', 'woocommerce-other-payment-gateway');
+        $this->title                = __('Cardknox', 'woocommerce-other-payment-gateway');
 
         $methodDescription = '<strong class="important-label" style="color: #e22626;">';
         $methodDescription .= 'Please complete the Apple Pay Domain Registration ';
-        $methodDescription .= '<a target="_blank" href="https://portal.cardknox.com/account-settings/payment-methods">here</a> ';
+        $methodDescription .= '<a target="_blank" href="https://portal.cardknox.com/account-settings/payment-methods">';
+        $methodDescription .= 'here</a> ';
         $methodDescription .= 'prior to enabling Cardknox Apple Pay.';
 
         $this->method_description = sprintf(
-            __(    $methodDescription, 'woocommerce-gateway-cardknox'),
+            __($methodDescription, 'woocommerce-gateway-cardknox'),
             'https://www.cardknox.com'
         );
         $this->has_fields           = true;
@@ -246,84 +247,34 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         $wcVersionLessThanThree = version_compare(WC_VERSION, '3.0.0', '<');
 
         // Billing info
-        $postData['xBillCompany'] = $wcVersionLessThanThree
-            ? $order->billing_company
-            : $order->get_billing_company();
-
-        $postData['xBillFirstName'] = $wcVersionLessThanThree
-            ? $order->billing_first_name
-            : $order->get_billing_first_name();
-
-        $postData['xBillLastName'] = $wcVersionLessThanThree
-            ? $order->billing_last_name
-            : $order->get_billing_last_name();
-
-        $postData['xBillStreet'] = $wcVersionLessThanThree
-            ? $order->billing_address_1
-            : $order->get_billing_address_1();
-
-        $postData['xBillStreet2'] = $wcVersionLessThanThree
-            ? $order->billing_address_2
-            : $order->get_billing_address_2();
-
-        $postData['xBillCity'] = $wcVersionLessThanThree
-            ? $order->billing_city
-            : $order->get_billing_city();
-
-        $postData['xBillState'] = $wcVersionLessThanThree
-            ? $order->billing_state
-            : $order->get_billing_state();
-
-        $postData['xBillZip'] = $wcVersionLessThanThree
-            ? $order->billing_postcode
-            : $order->get_billing_postcode();
-
-        $postData['xBillCountry'] = $wcVersionLessThanThree
-            ? $order->billing_country
-            : $order->get_billing_country();
-
-        $postData['xBillPhone'] = $wcVersionLessThanThree
-            ? $order->billing_phone
-            : $order->get_billing_phone();
+        $postData['xBillCompany'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_company');
+        $postData['xBillFirstName'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_first_name');
+        $postData['xBillLastName'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_last_name');
+        $postData['xBillStreet'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_address_1');
+        $postData['xBillStreet2'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_address_2');
+        $postData['xBillCity'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_city');
+        $postData['xBillState'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_state');
+        $postData['xBillZip'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_postcode');
+        $postData['xBillCountry'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_country');
+        $postData['xBillPhone'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_phone');
 
         // Shipping info
-        $postData['xShipCompany'] = $wcVersionLessThanThree
-            ? $order->shipping_company
-            : $order->get_shipping_company();
-
-        $postData['xShipFirstName'] = $wcVersionLessThanThree
-            ? $order->shipping_first_name
-            : $order->get_shipping_first_name();
-
-        $postData['xShipLastName'] = $wcVersionLessThanThree
-            ? $order->shipping_last_name
-            : $order->get_shipping_last_name();
-
-        $postData['xShipStreet'] = $wcVersionLessThanThree
-            ? $order->shipping_address_1
-            : $order->get_shipping_address_1();
-
-        $postData['xShipStreet2'] = $wcVersionLessThanThree
-            ? $order->shipping_address_2
-            : $order->get_shipping_address_2();
-
-        $postData['xShipCity'] = $wcVersionLessThanThree
-            ? $order->shipping_city
-            : $order->get_shipping_city();
-
-        $postData['xShipState'] = $wcVersionLessThanThree
-            ? $order->shipping_state
-            : $order->get_shipping_state();
-
-        $postData['xShipZip'] = $wcVersionLessThanThree
-            ? $order->shipping_postcode
-            : $order->get_shipping_postcode();
-
-        $postData['xShipCountry'] = $wcVersionLessThanThree
-            ? $order->shipping_country
-            : $order->get_shipping_country();
+        $postData['xShipCompany'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_company');
+        $postData['xShipFirstName'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_first_name');
+        $postData['xShipLastName'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_last_name');
+        $postData['xShipStreet'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_address_1');
+        $postData['xShipStreet2'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_address_2');
+        $postData['xShipCity'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_city');
+        $postData['xShipState'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_state');
+        $postData['xShipZip'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_postcode');
+        $postData['xShipCountry'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_country');
 
         return $postData;
+    }
+
+    private function get_billing_info($order, $wcVersionLessThanThree, $field)
+    {
+        return $wcVersionLessThanThree ? $order->$field : $order->{"get_$field"}();
     }
     /**
      * Process the payment
@@ -348,10 +299,14 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             if ($order->get_total() > 0) {
 
                 if ($order->get_total() < WC_Cardknox::get_minimum_amount() / 100) {
-                    throw new Exception(sprintf(
-                        __('Sorry, the minimum allowed order total is %1$s to use this payment method.',
-                        'woocommerce-gateway-cardknox'),
-                        wc_price(WC_Cardknox::get_minimum_amount() / 100))
+                    throw new Exception(
+                        sprintf(
+                            __(
+                                'Sorry, the minimum allowed order total is %1$s to use this payment method.',
+                                'woocommerce-gateway-cardknox'
+                            ),
+                            wc_price(WC_Cardknox::get_minimum_amount() / 100)
+                        )
                     );
                 }
 
@@ -428,8 +383,10 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             $order->payment_complete($response['xRefNum']);
 
             $message = sprintf(
-                __('Cardknox transaction captured (capture RefNum: %s)',
-                'woocommerce-gateway-cardknox'),
+                __(
+                    'Cardknox transaction captured (capture RefNum: %s)',
+                    'woocommerce-gateway-cardknox'
+                ),
                 $response['xRefNum']
             );
             $order->add_order_note($message);
@@ -438,23 +395,35 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             update_post_meta($orderId, '_transaction_id', $response['xRefNum'], true);
 
             if ($order->has_status(array('pending', 'failed'))) {
-                version_compare(WC_VERSION, '3.0.0', '<') ? $order->reduce_order_stock() : wc_reduce_stock_levels($orderId);
+                if (version_compare(WC_VERSION, '3.0.0', '<')) {
+                    $order->reduce_order_stock();
+                } else {
+                    wc_reduce_stock_levels($orderId);
+                }
             }
             $xRefNum =  $response['xRefNum'];
 
             if ($this->authonly_status == "on-hold") {
-                $order->update_status('on-hold', sprintf(
-                    __('Cardknox charge authorized (Charge ID: %s).
+                $order->update_status(
+                    'on-hold',
+                    sprintf(
+                        __(
+                            'Cardknox charge authorized (Charge ID: %s).
                     Process order to take payment, or cancel to remove the pre-authorization.',
-                    'woocommerce-gateway-cardknox'),
-                    $response['xRefNum'])
+                            'woocommerce-gateway-cardknox'
+                        ),
+                        $response['xRefNum']
+                    )
                 );
             } else {
                 $order->update_status('processing', sprintf(
-                    __('Cardknox charge authorized (Charge ID: %s).
+                    __(
+                        'Cardknox charge authorized (Charge ID: %s).
                     Complete order to take payment, or cancel to remove the pre-authorization.',
-                    'woocommerce-gateway-cardknox'),
-                    $response['xRefNum']));
+                        'woocommerce-gateway-cardknox'
+                    ),
+                    $response['xRefNum']
+                ));
             }
 
             $this->log("Successful auth: $xRefNum");
@@ -515,7 +484,8 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
                 __('Refunded %1$s - Refund ID: %2$s - Reason: %3$s', 'woocommerce-gateway-cardknox'),
                 wc_price($response['xAuthAmount']),
                 $response['xRefNum'],
-                $reason);
+                $reason
+            );
             $order->add_order_note($refund_message);
             $this->log('Success: ' . html_entity_decode(strip_tags((string) $refund_message)));
             return true;
@@ -567,7 +537,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             echo '<div class="messages">';
             echo '<div class="message message-error error applepay-error" style="display: none;"></div>';
             echo '</div>';
-        }        
+        }
     }
 
     /**

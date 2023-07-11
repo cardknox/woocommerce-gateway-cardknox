@@ -5,6 +5,7 @@ if (!defined('ABSPATH')) {
 
 $textType = 'text';
 $selectType = 'select';
+$buttonPrefix = 'Apple Pay Button';
 
 return apply_filters(
     'wc_cardknox_apple_settings',
@@ -36,7 +37,7 @@ return apply_filters(
             ),
         ),
         'applepay_button_style' => array(
-            'title'       => __('Button Style', 'woocommerce-gateway-cardknox'),
+            'title'       => __($buttonPrefix . ' Style', 'woocommerce-gateway-cardknox'),
             'type'        => $selectType,
             'options'     => array(
                 'black'          => __('Black', 'woocommerce-gateway-cardknox'),
@@ -45,7 +46,7 @@ return apply_filters(
             ),
         ),
         'applepay_button_type' => array(
-            'title'       => __('Button Type', 'woocommerce-gateway-cardknox'),
+            'title'       => __($buttonPrefix . ' Type', 'woocommerce-gateway-cardknox'),
             'type'        => $selectType,
             'options'     => array(
                 'buy'            => __('Buy', 'woocommerce-gateway-cardknox'),
@@ -58,7 +59,7 @@ return apply_filters(
             ),
         ),
         'applepay_capture' => array(
-            'title'       => __('Capture', 'woocommerce-gateway-cardknox'),
+            'title'       => __('Apple Pay Capture', 'woocommerce-gateway-cardknox'),
             'label'       => __('Capture charge immediately', 'woocommerce-gateway-cardknox'),
             'type'        => 'checkbox',
             'id'          => 'apple_cardknox_capture',

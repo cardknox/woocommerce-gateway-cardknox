@@ -5,6 +5,7 @@ if (!defined('ABSPATH')) {
 
 $textType = 'text';
 $selectType = 'select';
+$applePrefix = 'Apple Pay';
 $buttonPrefix = 'Apple Pay Button';
 
 return apply_filters(
@@ -59,7 +60,7 @@ return apply_filters(
             ),
         ),
         'applepay_capture' => array(
-            'title'       => __('Apple Pay Capture', 'woocommerce-gateway-cardknox'),
+            'title'       => __($applePrefix . ' Capture', 'woocommerce-gateway-cardknox'),
             'label'       => __('Capture charge immediately', 'woocommerce-gateway-cardknox'),
             'type'        => 'checkbox',
             'id'          => 'apple_cardknox_capture',

@@ -3,12 +3,15 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+$textType = 'text';
+$selectType = 'select';
+
 return apply_filters(
     'wc_cardknox_apple_settings',
     array(
         'applepay_enabled' => array(
             'title'       => __('Enabled', 'woocommerce-gateway-cardknox'),
-            'type'        => 'select',
+            'type'        => $selectType,
             'options'     => array(
                 'yes'    => __('Yes', 'woocommerce-gateway-cardknox'),
                 'no'     => __('No', 'woocommerce-gateway-cardknox'),
@@ -16,17 +19,17 @@ return apply_filters(
         ),
         'applepay_title' => array(
             'title'       => __('Title', 'woocommerce-gateway-cardknox'),
-            'type'        => 'text',
+            'type'        => $textType,
             'default'     => __('Apple Pay', 'woocommerce-gateway-cardknox'),
         ),
         'applepay_merchant_identifier' => array(
             'title'       => __('Merchant Identifier', 'woocommerce-gateway-cardknox'),
-            'type'        => 'text',
+            'type'        => $textType,
             'default'     => __('merchant.cardknox.com', 'woocommerce-gateway-cardknox'),
         ),
         'applepay_environment' => array(
             'title'       => __('Environment', 'woocommerce-gateway-cardknox'),
-            'type'        => 'select',
+            'type'        => $selectType,
             'options'     => array(
                 'TEST'          => __('Test', 'woocommerce-gateway-cardknox'),
                 'PRODUCTION'    => __('Production', 'woocommerce-gateway-cardknox'),
@@ -34,7 +37,7 @@ return apply_filters(
         ),
         'applepay_button_style' => array(
             'title'       => __('Apple Pay Button Style', 'woocommerce-gateway-cardknox'),
-            'type'        => 'select',
+            'type'        => $selectType,
             'options'     => array(
                 'black'          => __('Black', 'woocommerce-gateway-cardknox'),
                 'white'          => __('White', 'woocommerce-gateway-cardknox'),
@@ -43,7 +46,7 @@ return apply_filters(
         ),
         'applepay_button_type' => array(
             'title'       => __('Apple Pay Button Type', 'woocommerce-gateway-cardknox'),
-            'type'        => 'select',
+            'type'        => $selectType,
             'options'     => array(
                 'buy'            => __('Buy', 'woocommerce-gateway-cardknox'),
                 'pay'            => __('Pay', 'woocommerce-gateway-cardknox'),
@@ -68,7 +71,7 @@ return apply_filters(
         ),
         'applepay_auth_only_order_status' => array(
             'title'       => __('Authorize Only Order Status', 'woocommerce-gateway-cardknox'),
-            'type'        => 'select',
+            'type'        => $selectType,
             'class'       => 'wc-enhanced-select',
             'id'          => 'apple_cardknox_authonly_status',
             'description' => __(
@@ -90,7 +93,7 @@ return apply_filters(
         ),
         'applepay_applicable_countries' => array(
             'title'       => __('Payment From Applicable Countries', 'woocommerce-gateway-cardknox'),
-            'type'        => 'select',
+            'type'        => $selectType,
             'options'     => array(
                 '0'      => __('All Allowed Countries', 'woocommerce-gateway-cardknox'),
                 '1'      => __('Specific Countries', 'woocommerce-gateway-cardknox'),

@@ -7,15 +7,15 @@ return apply_filters(
     'wc_cardknox_apple_settings',
     array(
         'applepay_enabled' => array(
-            'title'       => __('On/Off', 'woocommerce-gateway-cardknox'),
+            'title'       => __('Enabled', 'woocommerce-gateway-cardknox'),
             'type'        => 'select',
             'options'     => array(
-                'yes'    => __('On', 'woocommerce-gateway-cardknox'),
-                'no'     => __('Off', 'woocommerce-gateway-cardknox'),
+                'yes'    => __('Yes', 'woocommerce-gateway-cardknox'),
+                'no'     => __('No', 'woocommerce-gateway-cardknox'),
             ),
         ),
         'applepay_title' => array(
-            'title'       => __('ApplePay Title', 'woocommerce-gateway-cardknox'),
+            'title'       => __('Title', 'woocommerce-gateway-cardknox'),
             'type'        => 'text',
             'default'     => __('Apple Pay', 'woocommerce-gateway-cardknox'),
         ),
@@ -28,8 +28,8 @@ return apply_filters(
             'title'       => __('Environment', 'woocommerce-gateway-cardknox'),
             'type'        => 'select',
             'options'     => array(
-                'TEST'          => __('Sandbox', 'woocommerce-gateway-cardknox'),
-                'PRODUCTION'    => __('Live', 'woocommerce-gateway-cardknox'),
+                'TEST'          => __('Test', 'woocommerce-gateway-cardknox'),
+                'PRODUCTION'    => __('Production', 'woocommerce-gateway-cardknox'),
             ),
         ),
         'applepay_button_style' => array(

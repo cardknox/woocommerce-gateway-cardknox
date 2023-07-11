@@ -250,32 +250,32 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         $wcVersionLessThanThree = $this->wcVersion;
 
         // Billing info
-        $postData['xBillCompany'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_company');
-        $postData['xBillFirstName'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_first_name');
-        $postData['xBillLastName'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_last_name');
-        $postData['xBillStreet'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_address_1');
-        $postData['xBillStreet2'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_address_2');
-        $postData['xBillCity'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_city');
-        $postData['xBillState'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_state');
-        $postData['xBillZip'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_postcode');
-        $postData['xBillCountry'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_country');
-        $postData['xBillPhone'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'billing_phone');
+        $postData['xBillCompany'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'billing_company');
+        $postData['xBillFirstName'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'billing_first_name');
+        $postData['xBillLastName'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'billing_last_name');
+        $postData['xBillStreet'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'billing_address_1');
+        $postData['xBillStreet2'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'billing_address_2');
+        $postData['xBillCity'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'billing_city');
+        $postData['xBillState'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'billing_state');
+        $postData['xBillZip'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'billing_postcode');
+        $postData['xBillCountry'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'billing_country');
+        $postData['xBillPhone'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'billing_phone');
 
         // Shipping info
-        $postData['xShipCompany'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_company');
-        $postData['xShipFirstName'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_first_name');
-        $postData['xShipLastName'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_last_name');
-        $postData['xShipStreet'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_address_1');
-        $postData['xShipStreet2'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_address_2');
-        $postData['xShipCity'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_city');
-        $postData['xShipState'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_state');
-        $postData['xShipZip'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_postcode');
-        $postData['xShipCountry'] = $this->get_billing_info($order, $wcVersionLessThanThree, 'shipping_country');
+        $postData['xShipCompany'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'shipping_company');
+        $postData['xShipFirstName'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'shipping_first_name');
+        $postData['xShipLastName'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'shipping_last_name');
+        $postData['xShipStreet'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'shipping_address_1');
+        $postData['xShipStreet2'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'shipping_address_2');
+        $postData['xShipCity'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'shipping_city');
+        $postData['xShipState'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'shipping_state');
+        $postData['xShipZip'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'shipping_postcode');
+        $postData['xShipCountry'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'shipping_country');
 
         return $postData;
     }
 
-    private function get_billing_info($order, $wcVersionLessThanThree, $field)
+    private function getBillingInfo($order, $wcVersionLessThanThree, $field)
     {
         return $wcVersionLessThanThree ? $order->$field : $order->{"get_$field"}();
     }

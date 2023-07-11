@@ -22,7 +22,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         $this->method_title         = __('Cardknox', 'woocommerce-gateway-cardknox');
         $this->title                = __('Cardknox', 'woocommerce-other-payment-gateway');
 
-        $methodDescription = '<strong class="important-label" style="color: #e22626;">';
+        $methodDescription = '<strong class="important-label" style="color: #e22626;">Important: </strong>';
         $methodDescription .= 'Please complete the Apple Pay Domain Registration ';
         $methodDescription .= '<a target="_blank" href="https://portal.cardknox.com/account-settings/payment-methods">';
         $methodDescription .= 'here</a> ';

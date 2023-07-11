@@ -7,50 +7,55 @@ $textType = 'text';
 $selectType = 'select';
 $applePrefix = 'Apple Pay';
 $keyPrefix = 'applepay';
+$keyTitle = 'title';
+$keyType = 'type';
+$keyOptions = 'options';
+$keyDefault = 'default';
+$keyDescTip = 'desc_tip';
 $buttonPrefix = 'Apple Pay Button';
 
 return apply_filters(
     'wc_cardknox_apple_settings',
     array(
         $keyPrefix . '_enabled' => array(
-            'title'       => __('Enabled', 'woocommerce-gateway-cardknox'),
-            'type'        => $selectType,
-            'options'     => array(
+            $keyTitle       => __('Enabled', 'woocommerce-gateway-cardknox'),
+            $keyType        => $selectType,
+            $keyOptions     => array(
                 'yes'    => __('Yes', 'woocommerce-gateway-cardknox'),
                 'no'     => __('No', 'woocommerce-gateway-cardknox'),
             ),
         ),
         $keyPrefix . '_title' => array(
-            'title'       => __('Title', 'woocommerce-gateway-cardknox'),
-            'type'        => $textType,
-            'default'     => __('Apple Pay', 'woocommerce-gateway-cardknox'),
+            $keyTitle       => __('Title', 'woocommerce-gateway-cardknox'),
+            $keyType        => $textType,
+            $keyDefault     => __('Apple Pay', 'woocommerce-gateway-cardknox'),
         ),
         $keyPrefix . '_merchant_identifier' => array(
-            'title'       => __('Merchant Identifier', 'woocommerce-gateway-cardknox'),
-            'type'        => $textType,
-            'default'     => __('merchant.cardknox.com', 'woocommerce-gateway-cardknox'),
+            $keyTitle       => __('Merchant Identifier', 'woocommerce-gateway-cardknox'),
+            $keyType        => $textType,
+            $keyDefault     => __('merchant.cardknox.com', 'woocommerce-gateway-cardknox'),
         ),
         $keyPrefix . '_environment' => array(
-            'title'       => __('Environment', 'woocommerce-gateway-cardknox'),
-            'type'        => $selectType,
-            'options'     => array(
+            $keyTitle       => __('Environment', 'woocommerce-gateway-cardknox'),
+            $keyType        => $selectType,
+            $keyOptions     => array(
                 'TEST'          => __('Test', 'woocommerce-gateway-cardknox'),
                 'PRODUCTION'    => __('Production', 'woocommerce-gateway-cardknox'),
             ),
         ),
         $keyPrefix . '_button_style' => array(
-            'title'       => __($buttonPrefix . ' Style', 'woocommerce-gateway-cardknox'),
-            'type'        => $selectType,
-            'options'     => array(
+            $keyTitle       => __($buttonPrefix . ' Style', 'woocommerce-gateway-cardknox'),
+            $keyType        => $selectType,
+            $keyOptions     => array(
                 'black'          => __('Black', 'woocommerce-gateway-cardknox'),
                 'white'          => __('White', 'woocommerce-gateway-cardknox'),
                 'whiteOutline'   => __('WhiteOutline', 'woocommerce-gateway-cardknox'),
             ),
         ),
         $keyPrefix . '_button_type' => array(
-            'title'       => __($buttonPrefix . ' Type', 'woocommerce-gateway-cardknox'),
-            'type'        => $selectType,
-            'options'     => array(
+            $keyTitle       => __($buttonPrefix . ' Type', 'woocommerce-gateway-cardknox'),
+            $keyType        => $selectType,
+            $keyOptions     => array(
                 'buy'            => __('Buy', 'woocommerce-gateway-cardknox'),
                 'pay'            => __('Pay', 'woocommerce-gateway-cardknox'),
                 'plain'          => __('Plain', 'woocommerce-gateway-cardknox'),
@@ -61,29 +66,29 @@ return apply_filters(
             ),
         ),
         $keyPrefix . '_capture' => array(
-            'title'       => __($applePrefix . ' Capture', 'woocommerce-gateway-cardknox'),
+            $keyTitle       => __($applePrefix . ' Capture', 'woocommerce-gateway-cardknox'),
             'label'       => __('Capture charge immediately', 'woocommerce-gateway-cardknox'),
-            'type'        => 'checkbox',
+            $keyType        => 'checkbox',
             'id'          => 'apple_cardknox_capture',
             'description' => __(
                 'If the transaction is not immediately captured for Apple Pay, it will require capturing at a later.',
                 'woocommerce-gateway-cardknox'
             ),
-            'default'     => 'yes',
-            'desc_tip'    => true,
+            $keyDefault     => 'yes',
+            $keyDescTip    => true,
         ),
         $keyPrefix . '_auth_only_order_status' => array(
-            'title'       => __('Authorize Only Order Status', 'woocommerce-gateway-cardknox'),
-            'type'        => $selectType,
+            $keyTitle       => __('Authorize Only Order Status', 'woocommerce-gateway-cardknox'),
+            $keyType        => $selectType,
             'class'       => 'wc-enhanced-select',
             'id'          => 'apple_cardknox_authonly_status',
             'description' => __(
                 'Defines the intended order status after an authorization-only transaction for Apple Pay.',
                 'woocommerce-gateway-cardknox'
             ),
-            'default'     => 'on-hold',
-            'desc_tip'    => true,
-            'options'     => array(
+            $keyDefault     => 'on-hold',
+            $keyDescTip    => true,
+            $keyOptions     => array(
                 'on-hold'        => __(
                     'Set order status to on-hold when payment is authorized',
                     'woocommerce-gateway-cardknox'
@@ -95,17 +100,17 @@ return apply_filters(
             ),
         ),
         $keyPrefix . '_applicable_countries' => array(
-            'title'       => __('Payment From Applicable Countries', 'woocommerce-gateway-cardknox'),
-            'type'        => $selectType,
-            'options'     => array(
+            $keyTitle       => __('Payment From Applicable Countries', 'woocommerce-gateway-cardknox'),
+            $keyType        => $selectType,
+            $keyOptions     => array(
                 '0'      => __('All Allowed Countries', 'woocommerce-gateway-cardknox'),
                 '1'      => __('Specific Countries', 'woocommerce-gateway-cardknox'),
             ),
         ),
         $keyPrefix . '_specific_countries' => array(
-            'title'       => __('Payment From Specific Countries', 'woocommerce-gateway-cardknox'),
-            'type'        => 'multiselect',
-            'options'     => WC()->countries->get_countries()
+            $keyTitle       => __('Payment From Specific Countries', 'woocommerce-gateway-cardknox'),
+            $keyType        => 'multiselect',
+            $keyOptions     => WC()->countries->get_countries()
         ),
     )
 );

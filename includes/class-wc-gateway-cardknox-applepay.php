@@ -55,15 +55,15 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         // Load the settings.
         $this->init_settings();
 
-        $this->enabled                             = $this->get_option('applepay_enabled');
+        $this->enabled                          = $this->get_option('applepay_enabled');
         $this->title                            = $this->get_option('applepay_title');
-        $this->description                         = __('Pay with your apple card.', 'woocommerce-gateway-cardknox');
+        $this->description                      = __('Pay with your apple card.', 'woocommerce-gateway-cardknox');
         $this->applepay_merchant_identifier     = $this->get_option('applepay_merchant_identifier');
-        $this->applepay_environment                = $this->get_option('applepay_environment');
+        $this->applepay_environment             = $this->get_option('applepay_environment');
         $this->applepay_button_style            = $this->get_option('applepay_button_style');
-        $this->applepay_button_type                = $this->get_option('applepay_button_type');
-        $this->capture                            = $this->get_option('applepay_capture');
-        $this->authonly_status                    = $this->get_option('applepay_auth_only_order_status');
+        $this->applepay_button_type             = $this->get_option('applepay_button_type');
+        $this->capture                          = $this->get_option('applepay_capture');
+        $this->authonly_status                  = $this->get_option('applepay_auth_only_order_status');
         $this->applepay_applicable_countries    = $this->get_option('applepay_applicable_countries');
         $this->applepay_specific_countries      = $this->get_option('applepay_specific_countries');
 
@@ -172,13 +172,13 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             'enabled'                 => $this->enabled,
             'title'                   => $this->title,
             'merchant_identifier'     => $this->applepay_merchant_identifier,
-            'environment'            => $this->applepay_environment,
+            'environment'             => $this->applepay_environment,
             'button_style'            => $this->applepay_button_style,
-            'button_type'            => $this->applepay_button_type,
-            'payment_action'        => $this->capture,
+            'button_type'             => $this->applepay_button_type,
+            'payment_action'          => $this->capture,
             'applicable_countries'    => $this->applepay_applicable_countries,
-            'specific_countries'    => $this->applepay_specific_countries,
-            'total'                    => WC()->cart->total
+            'specific_countries'      => $this->applepay_specific_countries,
+            'total'                   => WC()->cart->total
         );
 
         $cardknoxApplepaySettings = array_merge($cardknoxApplepaySettings, $this->get_localized_messages());
@@ -238,8 +238,8 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     {
         if (isset($_POST['xCardNumToken'])) {
 
-            $postData['xCardNum']                 = wc_clean($_POST['xCardNumToken']);
-            $postData['xAmount']                 = WC()->cart->total;
+            $postData['xCardNum']               = wc_clean($_POST['xCardNumToken']);
+            $postData['xAmount']                = WC()->cart->total;
             $postData['xDigitalWalletType']     = 'applepay';
         }
         return $postData;
@@ -447,61 +447,71 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     public function process_refund($orderId, $amount = null, $reason = '')
     {
         $order = wc_get_order($orderId);
-        $result = false;
 
         if (!$order || !get_post_meta($orderId, '_cardknox_xrefnum', true)) {
-            $result = false;
-        } else {
-            $captured = get_post_meta($orderId, '_cardknox_transaction_captured', true);
-            $body = array();
+            return false;
+        }
 
-            if (!is_null($amount)) {
-                // Check if amount is set to 0
-                if ($amount < .01) {
-                    $this->log('Error: Amount Required ' . $amount);
-                    $result = new WP_Error('Error', 'Refund Amount Required ' . $amount);
-                } else {
-                    $body['xAmount'] = $this->get_cardknox_amount($amount);
-                }
-            }
+        $captured = get_post_meta($orderId, '_cardknox_transaction_captured', true);
+        $body = array();
 
-            $command = 'cc:voidrefund';
-            $total = $order->get_total();
-
-            if ($total != $amount) {
-                $command = 'cc:refund';
-                if ($captured === "no") {
-                    $result = new WP_Error('Error', 'Partial Refund Not Allowed On Authorize Only Transactions');
-                }
-            }
-
-            if (!$result) {
-                $body['xCommand'] = $command;
-                $body['xRefNum'] = get_post_meta($orderId, '_cardknox_xrefnum', true);
-                $this->log("Info: Beginning refund for order $orderId for the amount of {$amount}");
-
-                $response = WC_Cardknox_API::request($body);
-
-                if (is_wp_error($response)) {
-                    $this->log('Error: ' . $response->get_error_message());
-                    $result = $response;
-                } elseif (!empty($response['xRefNum'])) {
-                    $refundMessage = sprintf(
-                        __('Refunded %1$s - Refund ID: %2$s - Reason: %3$s', 'woocommerce-gateway-cardknox'),
-                        wc_price($response['xAuthAmount']),
-                        $response['xRefNum'],
-                        $reason
-                    );
-                    $order->add_order_note($refundMessage);
-                    $this->log('Success: ' . html_entity_decode(strip_tags((string) $refundMessage)));
-                    $result = true;
-                } else {
-                    $result = new WP_Error("refund failed", 'woocommerce-gateway-cardknox');
-                }
+        if (!is_null($amount)) {
+            if ($amount < .01) {
+                $this->log('Error: Amount Required ' . $amount);
+                return new WP_Error('Error', 'Refund Amount Required ' . $amount);
+            } else {
+                $body['xAmount'] = $this->get_cardknox_amount($amount);
             }
         }
 
-        return $result;
+        $command = $this->get_refund_command($amount, $order, $captured);
+
+        if (is_wp_error($command)) {
+            return $command;
+        }
+
+        $body['xCommand'] = $command;
+        $body['xRefNum'] = get_post_meta($orderId, '_cardknox_xrefnum', true);
+        $this->log("Info: Beginning refund for order $orderId for the amount of {$amount}");
+
+        $response = WC_Cardknox_API::request($body);
+
+        if (is_wp_error($response)) {
+            $this->log('Error: ' . $response->get_error_message());
+            return $response;
+        } elseif (!empty($response['xRefNum'])) {
+            $refundMessage = $this->get_refund_message($response, $reason);
+            $order->add_order_note($refundMessage);
+            $this->log('Success: ' . html_entity_decode(strip_tags((string) $refundMessage)));
+            return true;
+        } else {
+            return new WP_Error("refund failed", 'woocommerce-gateway-cardknox');
+        }
+    }
+
+    private function get_refund_command($amount, $order, $captured)
+    {
+        $total = $order->get_total();
+
+        if ($total != $amount) {
+            if ($captured === "no") {
+                return new WP_Error('Error', 'Partial Refund Not Allowed On Authorize Only Transactions');
+            } else {
+                return 'cc:refund';
+            }
+        } else {
+            return 'cc:voidrefund';
+        }
+    }
+
+    private function get_refund_message($response, $reason)
+    {
+        return sprintf(
+            __('Refunded %1$s - Refund ID: %2$s - Reason: %3$s', 'woocommerce-gateway-cardknox'),
+            wc_price($response['xAuthAmount']),
+            $response['xRefNum'],
+            $reason
+        );
     }
 
     /**

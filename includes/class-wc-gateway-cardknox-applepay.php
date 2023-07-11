@@ -447,49 +447,52 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     public function process_refund($orderId, $amount = null, $reason = '')
     {
         $order = wc_get_order($orderId);
+        $result = false;
 
         if (!$order || !get_post_meta($orderId, '_cardknox_xrefnum', true)) {
-            return false;
-        }
+            $result = false;
+        } else {
+            $captured = get_post_meta($orderId, '_cardknox_transaction_captured', true);
+            $body = array();
 
-        $captured = get_post_meta($orderId, '_cardknox_transaction_captured', true);
-        $body = array();
+            if (!is_null($amount)) {
+                if ($amount < .01) {
+                    $this->log('Error: Amount Required ' . $amount);
+                    return new WP_Error('Error', 'Refund Amount Required ' . $amount);
+                } else {
+                    $body['xAmount'] = $this->get_cardknox_amount($amount);
+                }
+            }
 
-        if (!is_null($amount)) {
-            if ($amount < .01) {
-                $this->log('Error: Amount Required ' . $amount);
-                return new WP_Error('Error', 'Refund Amount Required ' . $amount);
+            $command = $this->getRefundCommand($amount, $order, $captured);
+
+            if (is_wp_error($command)) {
+                $result = $command;
             } else {
-                $body['xAmount'] = $this->get_cardknox_amount($amount);
+                $body['xCommand'] = $command;
+                $body['xRefNum'] = get_post_meta($orderId, '_cardknox_xrefnum', true);
+                $this->log("Info: Beginning refund for order $orderId for the amount of {$amount}");
+
+                $response = WC_Cardknox_API::request($body);
+
+                if (is_wp_error($response)) {
+                    $this->log('Error: ' . $response->get_error_message());
+                    $result = $response;
+                } elseif (!empty($response['xRefNum'])) {
+                    $refundMessage = $this->getRefundMessage($response, $reason);
+                    $order->add_order_note($refundMessage);
+                    $this->log('Success: ' . html_entity_decode(strip_tags((string) $refundMessage)));
+                    $result = true;
+                } else {
+                    $result = new WP_Error("refund failed", 'woocommerce-gateway-cardknox');
+                }
             }
         }
 
-        $command = $this->get_refund_command($amount, $order, $captured);
-
-        if (is_wp_error($command)) {
-            return $command;
-        }
-
-        $body['xCommand'] = $command;
-        $body['xRefNum'] = get_post_meta($orderId, '_cardknox_xrefnum', true);
-        $this->log("Info: Beginning refund for order $orderId for the amount of {$amount}");
-
-        $response = WC_Cardknox_API::request($body);
-
-        if (is_wp_error($response)) {
-            $this->log('Error: ' . $response->get_error_message());
-            return $response;
-        } elseif (!empty($response['xRefNum'])) {
-            $refundMessage = $this->get_refund_message($response, $reason);
-            $order->add_order_note($refundMessage);
-            $this->log('Success: ' . html_entity_decode(strip_tags((string) $refundMessage)));
-            return true;
-        } else {
-            return new WP_Error("refund failed", 'woocommerce-gateway-cardknox');
-        }
+        return $result;
     }
 
-    private function get_refund_command($amount, $order, $captured)
+    private function getRefundCommand($amount, $order, $captured)
     {
         $total = $order->get_total();
 
@@ -504,7 +507,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         }
     }
 
-    private function get_refund_message($response, $reason)
+    private function getRefundMessage($response, $reason)
     {
         return sprintf(
             __('Refunded %1$s - Refund ID: %2$s - Reason: %3$s', 'woocommerce-gateway-cardknox'),

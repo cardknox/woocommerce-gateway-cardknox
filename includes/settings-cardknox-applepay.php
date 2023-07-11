@@ -36,7 +36,7 @@ return apply_filters(
             ),
         ),
         'applepay_button_style' => array(
-            'title'       => __('Apple Pay Button Style', 'woocommerce-gateway-cardknox'),
+            'title'       => __('Button Style', 'woocommerce-gateway-cardknox'),
             'type'        => $selectType,
             'options'     => array(
                 'black'          => __('Black', 'woocommerce-gateway-cardknox'),
@@ -45,7 +45,7 @@ return apply_filters(
             ),
         ),
         'applepay_button_type' => array(
-            'title'       => __('Apple Pay Button Type', 'woocommerce-gateway-cardknox'),
+            'title'       => __('Button Type', 'woocommerce-gateway-cardknox'),
             'type'        => $selectType,
             'options'     => array(
                 'buy'            => __('Buy', 'woocommerce-gateway-cardknox'),
@@ -58,7 +58,7 @@ return apply_filters(
             ),
         ),
         'applepay_capture' => array(
-            'title'       => __('Apple Pay Capture', 'woocommerce-gateway-cardknox'),
+            'title'       => __('Capture', 'woocommerce-gateway-cardknox'),
             'label'       => __('Capture charge immediately', 'woocommerce-gateway-cardknox'),
             'type'        => 'checkbox',
             'id'          => 'apple_cardknox_capture',

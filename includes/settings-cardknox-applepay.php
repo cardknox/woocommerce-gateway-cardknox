@@ -6,12 +6,13 @@ if (!defined('ABSPATH')) {
 $textType = 'text';
 $selectType = 'select';
 $applePrefix = 'Apple Pay';
+$keyPrefix = 'applepay';
 $buttonPrefix = 'Apple Pay Button';
 
 return apply_filters(
     'wc_cardknox_apple_settings',
     array(
-        'applepay_enabled' => array(
+        $keyPrefix . '_enabled' => array(
             'title'       => __('Enabled', 'woocommerce-gateway-cardknox'),
             'type'        => $selectType,
             'options'     => array(
@@ -19,17 +20,17 @@ return apply_filters(
                 'no'     => __('No', 'woocommerce-gateway-cardknox'),
             ),
         ),
-        'applepay_title' => array(
+        $keyPrefix . '_title' => array(
             'title'       => __('Title', 'woocommerce-gateway-cardknox'),
             'type'        => $textType,
             'default'     => __('Apple Pay', 'woocommerce-gateway-cardknox'),
         ),
-        'applepay_merchant_identifier' => array(
+        $keyPrefix . '_merchant_identifier' => array(
             'title'       => __('Merchant Identifier', 'woocommerce-gateway-cardknox'),
             'type'        => $textType,
             'default'     => __('merchant.cardknox.com', 'woocommerce-gateway-cardknox'),
         ),
-        'applepay_environment' => array(
+        $keyPrefix . '_environment' => array(
             'title'       => __('Environment', 'woocommerce-gateway-cardknox'),
             'type'        => $selectType,
             'options'     => array(
@@ -37,7 +38,7 @@ return apply_filters(
                 'PRODUCTION'    => __('Production', 'woocommerce-gateway-cardknox'),
             ),
         ),
-        'applepay_button_style' => array(
+        $keyPrefix . '_button_style' => array(
             'title'       => __($buttonPrefix . ' Style', 'woocommerce-gateway-cardknox'),
             'type'        => $selectType,
             'options'     => array(
@@ -46,7 +47,7 @@ return apply_filters(
                 'whiteOutline'   => __('WhiteOutline', 'woocommerce-gateway-cardknox'),
             ),
         ),
-        'applepay_button_type' => array(
+        $keyPrefix . '_button_type' => array(
             'title'       => __($buttonPrefix . ' Type', 'woocommerce-gateway-cardknox'),
             'type'        => $selectType,
             'options'     => array(
@@ -59,7 +60,7 @@ return apply_filters(
                 'checkout '      => __('Checkout', 'woocommerce-gateway-cardknox'),
             ),
         ),
-        'applepay_capture' => array(
+        $keyPrefix . '_capture' => array(
             'title'       => __($applePrefix . ' Capture', 'woocommerce-gateway-cardknox'),
             'label'       => __('Capture charge immediately', 'woocommerce-gateway-cardknox'),
             'type'        => 'checkbox',
@@ -71,7 +72,7 @@ return apply_filters(
             'default'     => 'yes',
             'desc_tip'    => true,
         ),
-        'applepay_auth_only_order_status' => array(
+        $keyPrefix . '_auth_only_order_status' => array(
             'title'       => __('Authorize Only Order Status', 'woocommerce-gateway-cardknox'),
             'type'        => $selectType,
             'class'       => 'wc-enhanced-select',
@@ -93,7 +94,7 @@ return apply_filters(
                 ),
             ),
         ),
-        'applepay_applicable_countries' => array(
+        $keyPrefix . '_applicable_countries' => array(
             'title'       => __('Payment From Applicable Countries', 'woocommerce-gateway-cardknox'),
             'type'        => $selectType,
             'options'     => array(
@@ -101,7 +102,7 @@ return apply_filters(
                 '1'      => __('Specific Countries', 'woocommerce-gateway-cardknox'),
             ),
         ),
-        'applepay_specific_countries' => array(
+        $keyPrefix . '_specific_countries' => array(
             'title'       => __('Payment From Specific Countries', 'woocommerce-gateway-cardknox'),
             'type'        => 'multiselect',
             'options'     => WC()->countries->get_countries()

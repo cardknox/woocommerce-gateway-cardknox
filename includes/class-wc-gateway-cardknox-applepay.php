@@ -2,6 +2,8 @@
 if (!defined('ABSPATH')) {
     exit;
 }
+include_once 'settings-cardknox-applepay.php';
+
 /**
  * WC_Gateway_Cardknox class.
  *
@@ -132,7 +134,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
      */
     public function init_form_fields()
     {
-        $this->form_fields = include 'settings-cardknox-applepay.php';
+        $this->form_fields = $GLOBALS['wc_cardknox_apple_pay_settings'];
     }
 
     /**

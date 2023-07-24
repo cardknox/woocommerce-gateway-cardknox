@@ -73,7 +73,7 @@ $wc_cardknox_apple_pay_settings = array(
         $keyType        => 'checkbox',
         'id'          => 'apple_cardknox_capture',
         'description' => __(
-            'If the transaction is not immediately captured for Apple Pay, it will require capturing at a later.',
+            'If the transaction is not immediately captured for Apple Pay, it will require capturing at a later time.',
             'woocommerce-gateway-cardknox'
         ),
         $keyDefault     => 'yes',

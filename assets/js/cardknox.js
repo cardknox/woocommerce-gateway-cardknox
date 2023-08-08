@@ -163,12 +163,30 @@ jQuery(function ($) {
         .getElementById("cardknox-card-expiry")
         .value.replace(/\s|\//g, "");
       if (xExp.length != 4) {
+        $(document).trigger("cardknoxError", "Invalid expiration date");
+        return false;
+      }
+
+      // Extract the month and year from the expiration date
+      let month = parseInt(xExp.substr(0, 2));
+      let year = parseInt(xExp.substr(2));
+
+      // Validate the expiration month and year
+      let currentDate = new Date();
+      let currentYear = currentDate.getFullYear() % 100; // Get the last two digits of the current year
+      let currentMonth = currentDate.getMonth() + 1; // January is month 0 in JavaScript
+
+      if (
+        year < currentYear ||
+        (year === currentYear && month < currentMonth)
+      ) {
         $(document).trigger(
           "cardknoxError",
-          "Invalid expiration date"
+          "Incorrect credit card expiration date."
         );
         return false;
       }
+
       console.log("onCardknoxResponse");
       wc_cardknox_form.form.append(
         "<input type='hidden' class='xExp' name='xExp' value='" + xExp + "'/>"

@@ -182,7 +182,7 @@ jQuery(function ($) {
       ) {
         $(document).trigger(
           "cardknoxError",
-          "Incorrect credit card expiration date."
+          "Expiration must be in the future"
         );
         return false;
       }

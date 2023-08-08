@@ -165,7 +165,7 @@ jQuery(function ($) {
       if (xExp.length != 4) {
         $(document).trigger(
           "cardknoxError",
-          "Expiration must be in the future"
+          "Invalid expiration date"
         );
         return false;
       }

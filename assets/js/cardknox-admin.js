@@ -45,3 +45,26 @@ jQuery( function( $ ) {
 
 	wc_cardknox_admin.init();
 });
+
+jQuery(function(a){(function(){a("input#woocommerce_cardknox-applepay_applepay_capture").change(function(){a(this).is(":checked")?a("#woocommerce_cardknox-applepay_applepay_auth_only_order_status").closest("tr").hide():a("#woocommerce_cardknox-applepay_applepay_auth_only_order_status").closest("tr").show()}).change()})()});
+
+jQuery(document).ready(function($) {
+    // Target the first select box
+    var select1 = $('#woocommerce_cardknox-applepay_applepay_applicable_countries');
+    // Target the second select box
+    var select2 = $('#woocommerce_cardknox-applepay_applepay_specific_countries');
+    // Disable the second select box initially
+    if (select1.val() == 0) {
+        select2.prop('disabled', true);
+    }else{
+        select2.prop('disabled', false);
+    }
+    // Enable or disable the second select box based on the value of the first select box    
+    select1.on('change', function() {
+        if (select1.val() == 0) {
+            select2.prop('disabled', true);
+        } else {
+            select2.prop('disabled', false);
+        }
+    });
+});

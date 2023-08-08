@@ -209,3 +209,36 @@ jQuery(function ($) {
     wc_cardknox_form.init();
   });
   
+  jQuery(document).ready(function() {
+    // Listen for the 'updated_checkout' event triggered by WooCommerce
+    jQuery(document.body).on('updated_checkout', function() {
+      
+    jQuery("#ap-container").hide();
+        var paymentMethodSelect = 'input[name="payment_method"]'; // Replace with your payment method selector
+        var placeOrderButton = 'button[name="woocommerce_checkout_place_order"]'; // Replace with your "Place Order" button selector
+        
+        // Initial check on page load
+        hidePlaceOrderButton();
+    
+        // Check on payment method change
+        jQuery(document).on('change', paymentMethodSelect, function(){
+            hidePlaceOrderButton();
+        });
+            
+        // Function to hide/show "Place Order" button
+        function hidePlaceOrderButton() {
+            var selectedPaymentMethod = jQuery(paymentMethodSelect + ':checked').val();
+    
+            if (selectedPaymentMethod === 'cardknox-applepay') { // Replace 'your_payment_method_slug' with your payment method value
+                jQuery(placeOrderButton).hide();
+                jQuery("#ap-container").show();
+                jQuery(".applepay-error").show();
+            } else {
+                jQuery(placeOrderButton).show();
+                jQuery("#ap-container").hide();
+                jQuery(".applepay-error").hide();
+            }
+        }
+
+    });
+});  

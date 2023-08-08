@@ -136,7 +136,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $cvc_field = '<p class="form-row form-row-last">
 			<label for="' . esc_attr($this->id) . '-card-cvc">' . esc_html__('Card Code', 'woocommerce') . ' <span class="required">*</span></label>
 			<iframe data-ifields-id="cvv" data-ifields-placeholder="CVV"
-                        src="https://cdn.cardknox.com/ifields/2.15.2211.1401/ifield.htm?" + "' . esc_attr($timestamp) . '" frameBorder="0" width="100%"
+                        src="https://cdn.cardknox.com/ifields/2.15.2302.0801/ifield.htm?" + "' . esc_attr($timestamp) . '" frameBorder="0" width="100%"
                         height="55" id="cvv-frame"></iframe>
             <label data-ifields-id="card-data-error" style="color: red;"></label>
 		</p><input data-ifields-id="cvv-token" name="xCVV" id="cardknox-card-cvc" type="hidden"/>';
@@ -147,7 +147,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 				<label for="' . esc_attr($this->id) . '-card-number">' . esc_html__('Card Number', 'woocommerce') . ' <span class="required">*</span></label>
 
 				<iframe data-ifields-id="card-number" data-ifields-placeholder="Card Number"
-                        src="https://cdn.cardknox.com/ifields/2.15.2211.1401/ifield.htm?" + "' . esc_attr($timestamp) . '" frameBorder="0" width="100%"
+                        src="https://cdn.cardknox.com/ifields/2.15.2302.0801/ifield.htm?" + "' . esc_attr($timestamp) . '" frameBorder="0" width="100%"
                         height="55"></iframe>
 			</p> <input data-ifields-id="card-number-token" name="xCardNum" id="cardknox-card-number" type="hidden"/>',
             'card-expiry-field' => '<p class="form-row form-row-first">
@@ -396,7 +396,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
         $suffix = defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? '' : '.min';
 
-        wp_enqueue_script('cardknox', 'https://cdn.cardknox.com/ifields/2.9.2110.1901/ifields.min.js', '', '1.0.0', false);
+        wp_enqueue_script('cardknox', 'https://cdn.cardknox.com/ifields/2.15.2302.0801/ifields.min.js', '', '1.0.0', false);
         wp_enqueue_script('woocommerce_cardknox', plugins_url('assets/js/cardknox' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE), array('jquery-payment'), filemtime(plugin_dir_path(dirname(__FILE__)) . 'assets/js/cardknox' . $suffix . '.js'), true);
         $cardknox_params = array(
             'key'                  => $this->token_key,

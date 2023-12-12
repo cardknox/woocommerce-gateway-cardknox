@@ -328,13 +328,11 @@ jQuery(document).ready(function () {
       ).val();
 
       if (selectedPaymentMethod === "cardknox-applepay") {
-        // Replace 'your_payment_method_slug' with your payment method value
         jQuery(placeOrderButton).hide();
         jQuery("div#divGpay").hide();
         jQuery("#ap-container").show();
         jQuery(".applepay-error").show();
       } else if (selectedPaymentMethod === "cardknox-googlepay") {
-        // Replace 'your_payment_method_slug' with your payment method value
         jQuery(placeOrderButton).hide();
         jQuery("div#divGpay").show();
         jQuery("#ap-container").hide();

@@ -75,7 +75,7 @@ window.gpRequest = {
   onProcessPayment: function (paymentResponse) {
     paymentResponse = JSON.parse(JSON.stringify(paymentResponse));
 
-    var xAmount = paymentResponse.transactionInfo.totalPrice;
+    let xAmount = paymentResponse.transactionInfo.totalPrice;
     if (xAmount <= 0) {
       jQuery(".gpay-error")
         .html(
@@ -89,7 +89,7 @@ window.gpRequest = {
         "Payment is not authorized. Amount must be greater than 0"
       );
     } else {
-      var token = btoa(
+      let token = btoa(
         paymentResponse.paymentData.paymentMethodData.tokenizationData.token
       );
       jQuery("#googlePaytoken").val(token);
@@ -157,6 +157,6 @@ function setGPPayload(value) {
 }
 
 function getAmount() {
-  var totals = googlePaysettings.total;
+  let totals = googlePaysettings.total;
   return parseFloat(totals).toFixed(2);
 }

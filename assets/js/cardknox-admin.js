@@ -81,11 +81,11 @@ jQuery(function (a) {
 
 jQuery(document).ready(function ($) {
   // Target the first select box
-  var select1 = $(
+  let select1 = $(
     "#woocommerce_cardknox-applepay_applepay_applicable_countries"
   );
   // Target the second select box
-  var select2 = $("#woocommerce_cardknox-applepay_applepay_specific_countries");
+  let select2 = $("#woocommerce_cardknox-applepay_applepay_specific_countries");
   // Disable the second select box initially
   if (select1.val() == 0) {
     select2.prop("disabled", true);
@@ -102,11 +102,11 @@ jQuery(document).ready(function ($) {
   });
 
   // Target the first select box
-  var select3 = $(
+  let select3 = $(
     "#woocommerce_cardknox-googlepay_googlepay_applicable_countries"
   );
   // Target the second select box
-  var select4 = $(
+  let select4 = $(
     "#woocommerce_cardknox-googlepay_googlepay_specific_countries"
   );
   // Disable the second select box initially

@@ -9,7 +9,7 @@ $countries   = $countries_obj->__get('countries');
 
 $textType = 'text';
 $selectType = 'select';
-$applePrefix = 'Google Pay';
+$googlePrefix = 'Google Pay';
 $keyPrefix = 'googlepay';
 $keyTitle = 'title';
 $keyType = 'type';
@@ -59,7 +59,7 @@ $wc_cardknox_google_pay_settings = array(
         ),
     ),
     $keyPrefix . '_capture' => array(
-        $keyTitle       => __($applePrefix . ' Capture', 'woocommerce-gateway-cardknox'),
+        $keyTitle       => __($googlePrefix . ' Capture', 'woocommerce-gateway-cardknox'),
         'label'       => __('Capture charge immediately', 'woocommerce-gateway-cardknox'),
         $keyType        => 'checkbox',
         'id'          => 'google_cardknox_capture',

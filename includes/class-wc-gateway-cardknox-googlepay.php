@@ -65,7 +65,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
 
         add_action('woocommerce_review_order_after_submit', array($this, 'cardknox_review_order_after_submit'));
-        add_filter('woocommerce_available_payment_gateways', array($this, 'cardknox_allow_gpay_payment_method_by_country'));
+        add_filter('woocommerce_available_payment_gateways', array($this, 'cardknox_allow_gpay_method_by_country'));
     }
 
     /**
@@ -149,7 +149,16 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
             return;
         }
 
-        wp_enqueue_style('woocommerce_cardknox_google_pay', plugins_url('/assets/css/google-pay.css', WC_CARDKNOX_MAIN_FILE), false, '1.0', 'all');
+        wp_enqueue_style(
+            'woocommerce_cardknox_gpay',
+            plugins_url(
+                '/assets/css/google-pay.css',
+                WC_CARDKNOX_MAIN_FILE
+            ),
+            false,
+            '1.0',
+            'all'
+        );
 
         wp_enqueue_script(
             'woocommerce_cardknox_google_pay',
@@ -564,7 +573,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
      * @param [type] $available_gateways
      * @return void
      */
-    public function cardknox_allow_gpay_payment_method_by_country($available_gateways)
+    public function cardknox_allow_gpay_method_by_country($available_gateways)
     {
 
         if (is_admin()) return $available_gateways;

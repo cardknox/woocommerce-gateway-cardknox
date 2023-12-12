@@ -478,8 +478,6 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             $postData['xCardNum'] = wc_clean($_POST['xCardNum']);
             $postData['xCVV'] = wc_clean($_POST['xCVV']);
             $postData['xExp'] = wc_clean($_POST['xExp']);
-            $postData['x3dsReferenceId'] = wc_clean($_POST['x3dsReferenceId']);
-            $postData['x3dsInitializeStatus'] = wc_clean($_POST['x3dsInitializeStatus']);
         }
 
         $this->validate_payment_data($postData);

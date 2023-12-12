@@ -41,63 +41,6 @@ jQuery(function ($) {
     }
   );
 
-  function handle3DSResults(
-    actionCode,
-    xCavv,
-    xEciFlag,
-    xRefNum,
-    xAuthenticateStatus,
-    xSignatureVerification
-  ) {
-    // alert("submitting verify form with verification results");
-
-    let url = "https://x1.cardknox.com/verify";
-    var postData = {
-      xKey: wc_cardknox_params.key,
-      xRefNum: xRefNum,
-      xCavv: xCavv,
-      xEci: xEciFlag,
-      x3dsAuthenticationStatus: xAuthenticateStatus,
-      x3dsSignatureVerificationStatus: xSignatureVerification,
-      x3dsActionCode: actionCode,
-      x3dsError: ck3DS.error,
-      xVersion: wc_cardknox_params.xVersion,
-      xSoftwareName: wc_cardknox_params.xSoftwareName,
-      xSoftwareVersion: wc_cardknox_params.xSoftwareVersion,
-      xAllowDuplicate: 1,
-    };
-
-    $.ajax({
-      method: "POST",
-      url: url,
-      data: postData,
-    })
-      .done(function (resp) {
-        // handle the server response
-        console.log(resp);
-        if (resp.Status == "S") {
-          // handle success, eg. show receipt
-        } else {
-          // handle error
-        }
-      })
-      .fail(function (xhr, status, err) {
-        // handle a failure
-        var errorMessage = xhr.status + ": " + xhr.statusText;
-        console.log(errorMessage);
-      });
-  }
-
-  function urlEncodedToJson(data) {
-    return JSON.parse(
-      '{"' +
-        decodeURI(data)
-          .replace(/"/g, '\\"')
-          .replace(/&/g, '","')
-          .replace(/=/g, '":"') +
-        '"}'
-    );
-  }
   /**
    * Object to handle Cardknox payment forms.
    */
@@ -196,12 +139,6 @@ jQuery(function ($) {
               return false;
             }
 
-            if (wc_cardknox_params.enable_3ds == "yes") {
-              $("#x3dsReferenceId").val(ck3DS.referenceId);
-              $("#x3dsInitializeStatus").val(ck3DS.initializeStatus);
-            }
-
-            // console.log("Success");
             wc_cardknox_form.onCardknoxResponse();
           },
           function () {
@@ -363,12 +300,6 @@ jQuery(function ($) {
             : invalidStyle
         );
       });
-
-      if (wc_cardknox_params.enable_3ds == "yes") {
-        enable3DS(wc_cardknox_params.threeds_env, handle3DSResults);
-      } else {
-        enable3DS(wc_cardknox_params.threeds_env, null);
-      }
     },
   };
 

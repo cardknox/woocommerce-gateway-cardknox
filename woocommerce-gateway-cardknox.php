@@ -259,10 +259,12 @@ if (!class_exists('WC_Cardknox')) :
         {
             $setting_link = $this->get_setting_link();
             $applepay_setting_link = $this->get_setting_applepay_link();
+            $googlepay_setting_link = $this->get_setting_googlepay_link();
 
             $plugin_links = array(
                 '<a href="' . $setting_link . '">' . __('Settings', 'woocommerce-gateway-cardknox') . '</a>',
                 '<a href="' . $applepay_setting_link . '">' . __('Apple Pay', 'woocommerce-gateway-cardknox') . '</a>',
+                '<a href="' . $googlepay_setting_link . '">' . __('Google Pay', 'woocommerce-gateway-cardknox') . '</a>',
                 '<a href="https://docs.woocommerce.com/document/cardknox/">' . __('Docs', 'woocommerce-gateway-cardknox') . '</a>',
                 '<a href="https://woocommerce.com/contact-us/">' . __('Support', 'woocommerce-gateway-cardknox') . '</a>',
             );
@@ -302,6 +304,22 @@ if (!class_exists('WC_Cardknox')) :
         }
 
         /**
+         * Get google pay setting link.
+         *
+         * @since 1.0.15
+         *
+         * @return string Setting link
+         */
+        public function get_setting_googlepay_link()
+        {
+            $use_id_as_section = function_exists('WC') ? version_compare(WC()->version, '2.6', '>=') : false;
+
+            $section_slug = $use_id_as_section ? 'cardknox-googlepay' : strtolower('WC_Gateway_Cardknox');
+
+            return admin_url('admin.php?page=wc-settings&tab=checkout&section=' . $section_slug);
+        }
+
+        /**
          * Display any notices we've collected thus far (e.g. for connection, disconnection)
          */
         public function admin_notices()
@@ -336,6 +354,7 @@ if (!class_exists('WC_Cardknox')) :
             if (class_exists('WC_Payment_Gateway_CC')) {
                 include_once(dirname(__FILE__) . '/includes/class-wc-gateway-cardknox.php');
                 include_once(dirname(__FILE__) . '/includes/class-wc-gateway-cardknox-applepay.php');
+                include_once(dirname(__FILE__) . '/includes/class-wc-gateway-cardknox-googlepay.php');
             } else {
                 include_once(dirname(__FILE__) . '/includes/legacy/class-wc-gateway-cardknox.php');
             }
@@ -365,6 +384,7 @@ if (!class_exists('WC_Cardknox')) :
             } else {
                 $methods[] = 'WC_Gateway_Cardknox';
                 $methods[] = 'WCCardknoxApplepay';
+                $methods[] = 'WCCardknoxGooglepay';
             }
             return $methods;
         }

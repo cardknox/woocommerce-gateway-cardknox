@@ -102,6 +102,27 @@ $wc_cardknox_settings = array(
         'class'       => 'colorpick',
         'css'          => 'width: 6em'
     ),
+    'enable-3ds' => array(
+        'title'       => __('Enable 3DS', 'woocommerce-gateway-cardknox'),
+        'label'       => __('Enable 3DS', 'woocommerce-gateway-cardknox'),
+        'type'        => 'checkbox',
+        'description' => __('Enable 3DS', 'woocommerce-gateway-cardknox'),
+        'default'     => 'no',
+        'desc_tip'    => true,
+    ),
+    '3ds-env' => array(
+        'title'       => __('3DS environment', 'woocommerce-gateway-cardknox'),
+        'type'     => 'select',
+        'class'    => 'wc-enhanced-select',
+        'id'       => '3ds-env',
+        'description' => __('If you already set up 3DS or entered a card number, you cannot change the environment - please refresh the page in order to change the environment.', 'woocommerce-gateway-cardknox'),
+        'default'     => 'staging',
+        'desc_tip'    => true,
+        'options'  => array(
+            'staging'    => __('Staging', 'woocommerce-gateway-cardknox'),
+            'production' => __('Production', 'woocommerce-gateway-cardknox'),
+        ),
+    ),
 );
 
 $GLOBALS["wc_cardknox_settings"] = $wc_cardknox_settings;

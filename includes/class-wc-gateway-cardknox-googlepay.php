@@ -42,7 +42,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         );
 
         // Load the form fields.
-        $this->init_form_fields();
+        $this->init_gform_fields();
 
         // Load the settings.
         $this->init_settings();
@@ -61,10 +61,10 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
 
         $this->wcVersion = version_compare(WC_VERSION, '3.0.0', '<');
         // Hooks.
-        add_action('wp_enqueue_scripts', array($this, 'payment_scripts'));
+        add_action('wp_enqueue_scripts', array($this, 'gpayment_scripts'));
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
 
-        add_action('woocommerce_review_order_after_submit', array($this, 'cardknox_review_order_after_submit'));
+        add_action('woocommerce_review_order_after_submit', array($this, 'cardknox_gpay_order_after_submit'));
         add_filter('woocommerce_available_payment_gateways', array($this, 'cardknox_allow_gpay_method_by_country'));
     }
 
@@ -88,7 +88,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
      *
      * @return float|int
      */
-    public function get_cardknox_amount($total, $currency = '')
+    public function get_cardknox_gamount($total, $currency = '')
     {
         if (!$currency) {
             $currency = get_woocommerce_currency();
@@ -121,7 +121,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
     /**
      * Initialise Gateway Settings Form Fields
      */
-    public function init_form_fields()
+    public function init_gform_fields()
     {
         $this->form_fields = $GLOBALS['wc_cardknox_google_pay_settings'];
     }
@@ -132,7 +132,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
      * @version 3.0.6
      * @return array
      */
-    public function get_localized_messages()
+    public function get_localized_gmessages()
     {
         return apply_filters('wc_cardknox_localized_messages', array());
     }
@@ -143,7 +143,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
      *
      * @access public
      */
-    public function payment_scripts()
+    public function gpayment_scripts()
     {
         if (!is_cart() && !is_checkout() && !isset($_GET['pay_for_order']) && !is_add_payment_method_page()) {
             return;
@@ -181,7 +181,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
             'currencyCode'            => get_woocommerce_currency(),
         );
 
-        $cardknoxGooglepaySettings = array_merge($cardknoxGooglepaySettings, $this->get_localized_messages());
+        $cardknoxGooglepaySettings = array_merge($cardknoxGooglepaySettings, $this->get_localized_gmessages());
         wp_localize_script('woocommerce_cardknox_google_pay', 'googlePaysettings', $cardknoxGooglepaySettings);
     }
 
@@ -191,14 +191,14 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
      * @param  object $source
      * @return array()
      */
-    protected function generate_payment_request($order)
+    protected function generate_payment_grequest($order)
     {
         $postData                = array();
         $postData['xCommand']    = $this->capture ? 'cc:sale' : 'cc:authonly';
 
-        $postData = self::get_order_data($postData, $order);
-        $postData = self::get_billing_shiping_info($postData, $order);
-        $postData = self::get_payment_data($postData);
+        $postData = self::get_order_gdata($postData, $order);
+        $postData = self::get_billing_shiping_ginfo($postData, $order);
+        $postData = self::get_payment_gdata($postData);
 
         /**
          * Filter the return value of the WC_Payment_Gateway_CC::generate_payment_request.
@@ -211,7 +211,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         return apply_filters('wc_cardknox_generate_payment_request', $postData, $order);
     }
 
-    public function get_order_data($postData, $order)
+    public function get_order_gdata($postData, $order)
     {
         $wcVersionLessThanThree = $this->wcVersion;
 
@@ -221,7 +221,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
                 ? $order->get_order_currency()
                 : $order->get_currency()
         );
-        $postData['xAmount'] = $this->get_cardknox_amount($order->get_total());
+        $postData['xAmount'] = $this->get_cardknox_gamount($order->get_total());
         $postData['xEmail'] = $billingEmail;
         $postData['xInvoice'] = $wcVersionLessThanThree ? $order->id : $order->get_id();
         $postData['xIP'] = $wcVersionLessThanThree
@@ -234,7 +234,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         return $postData;
     }
 
-    public function get_payment_data($postData)
+    public function get_payment_gdata($postData)
     {
         if (isset($_POST['xCardNumToken'])) {
 
@@ -245,37 +245,37 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         return $postData;
     }
 
-    public function get_billing_shiping_info($postData, $order)
+    public function get_billing_shiping_ginfo($postData, $order)
     {
         $wcVersionLessThanThree = $this->wcVersion;
 
         // Billing info
-        $postData['xBillCompany'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'billing_company');
-        $postData['xBillFirstName'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'billing_first_name');
-        $postData['xBillLastName'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'billing_last_name');
-        $postData['xBillStreet'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'billing_address_1');
-        $postData['xBillStreet2'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'billing_address_2');
-        $postData['xBillCity'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'billing_city');
-        $postData['xBillState'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'billing_state');
-        $postData['xBillZip'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'billing_postcode');
-        $postData['xBillCountry'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'billing_country');
-        $postData['xBillPhone'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'billing_phone');
+        $postData['xBillCompany'] = $this->getBillingInfog($order, $wcVersionLessThanThree, 'billing_company');
+        $postData['xBillFirstName'] = $this->getBillingInfog($order, $wcVersionLessThanThree, 'billing_first_name');
+        $postData['xBillLastName'] = $this->getBillingInfog($order, $wcVersionLessThanThree, 'billing_last_name');
+        $postData['xBillStreet'] = $this->getBillingInfog($order, $wcVersionLessThanThree, 'billing_address_1');
+        $postData['xBillStreet2'] = $this->getBillingInfog($order, $wcVersionLessThanThree, 'billing_address_2');
+        $postData['xBillCity'] = $this->getBillingInfog($order, $wcVersionLessThanThree, 'billing_city');
+        $postData['xBillState'] = $this->getBillingInfog($order, $wcVersionLessThanThree, 'billing_state');
+        $postData['xBillZip'] = $this->getBillingInfog($order, $wcVersionLessThanThree, 'billing_postcode');
+        $postData['xBillCountry'] = $this->getBillingInfog($order, $wcVersionLessThanThree, 'billing_country');
+        $postData['xBillPhone'] = $this->getBillingInfog($order, $wcVersionLessThanThree, 'billing_phone');
 
         // Shipping info
-        $postData['xShipCompany'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'shipping_company');
-        $postData['xShipFirstName'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'shipping_first_name');
-        $postData['xShipLastName'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'shipping_last_name');
-        $postData['xShipStreet'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'shipping_address_1');
-        $postData['xShipStreet2'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'shipping_address_2');
-        $postData['xShipCity'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'shipping_city');
-        $postData['xShipState'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'shipping_state');
-        $postData['xShipZip'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'shipping_postcode');
-        $postData['xShipCountry'] = $this->getBillingInfo($order, $wcVersionLessThanThree, 'shipping_country');
+        $postData['xShipCompany'] = $this->getBillingInfog($order, $wcVersionLessThanThree, 'shipping_company');
+        $postData['xShipFirstName'] = $this->getBillingInfog($order, $wcVersionLessThanThree, 'shipping_first_name');
+        $postData['xShipLastName'] = $this->getBillingInfog($order, $wcVersionLessThanThree, 'shipping_last_name');
+        $postData['xShipStreet'] = $this->getBillingInfog($order, $wcVersionLessThanThree, 'shipping_address_1');
+        $postData['xShipStreet2'] = $this->getBillingInfog($order, $wcVersionLessThanThree, 'shipping_address_2');
+        $postData['xShipCity'] = $this->getBillingInfog($order, $wcVersionLessThanThree, 'shipping_city');
+        $postData['xShipState'] = $this->getBillingInfog($order, $wcVersionLessThanThree, 'shipping_state');
+        $postData['xShipZip'] = $this->getBillingInfog($order, $wcVersionLessThanThree, 'shipping_postcode');
+        $postData['xShipCountry'] = $this->getBillingInfog($order, $wcVersionLessThanThree, 'shipping_country');
 
         return $postData;
     }
 
-    private function getBillingInfo($order, $wcVersionLessThanThree, $field)
+    private function getBillingInfog($order, $wcVersionLessThanThree, $field)
     {
         return $wcVersionLessThanThree ? $order->$field : $order->{"get_$field"}();
     }
@@ -317,7 +317,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
                 $this->log("Info: Begin processing payment for order $orderId for the amount of {$order->get_total()}");
 
                 // Make the request.
-                $response = WC_Cardknox_API::request($this->generate_payment_request($order));
+                $response = WC_Cardknox_API::request($this->generate_payment_grequest($order));
 
                 if (is_wp_error($response)) {
                     $order->add_order_note($response->get_error_message());
@@ -460,7 +460,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
                     $this->log('Error: Amount Required ' . $amount);
                     return new WP_Error('Error', 'Refund Amount Required ' . $amount);
                 } else {
-                    $body['xAmount'] = $this->get_cardknox_amount($amount);
+                    $body['xAmount'] = $this->get_cardknox_gamount($amount);
                 }
             }
 
@@ -552,7 +552,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
      *
      * @return void
      */
-    public function cardknox_review_order_after_submit()
+    public function cardknox_gpay_order_after_submit()
     {
         if ($this->enabled == 'yes') {
         ?>

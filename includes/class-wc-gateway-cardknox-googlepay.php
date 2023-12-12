@@ -369,15 +369,15 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
      */
     public function process_gresponse($response, $order)
     {
-        $orderId = $this->wcVersion ? $order->id : $order->get_id();
+        $orderGpayId = $this->wcVersion ? $order->id : $order->get_id();
 
         // Store charge data
-        update_post_meta($orderId, '_cardknox_xrefnum', $response['xRefNum']);
-        update_post_meta($orderId, '_cardknox_transaction_captured', $this->capture ? 'yes' : 'no');
+        update_post_meta($orderGpayId, '_cardknox_xrefnum', $response['xRefNum']);
+        update_post_meta($orderGpayId, '_cardknox_transaction_captured', $this->capture ? 'yes' : 'no');
 
         if ($this->capture) {
-            update_post_meta($orderId, '_transaction_id', $response['xRefNum'], true);
-            update_post_meta($orderId, '_cardknox_masked_card', $response['xMaskedCardNumber']);
+            update_post_meta($orderGpayId, '_transaction_id', $response['xRefNum'], true);
+            update_post_meta($orderGpayId, '_cardknox_masked_card', $response['xMaskedCardNumber']);
             $order->payment_complete($response['xRefNum']);
 
             $message = sprintf(
@@ -390,13 +390,13 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
             $order->add_order_note($message);
             $this->glog('Success: ' . $message);
         } else {
-            update_post_meta($orderId, '_transaction_id', $response['xRefNum'], true);
+            update_post_meta($orderGpayId, '_transaction_id', $response['xRefNum'], true);
 
             if ($order->has_status(array('pending', 'failed'))) {
                 if ($this->wcVersion) {
                     $order->reduce_order_stock();
                 } else {
-                    wc_reduce_stock_levels($orderId);
+                    wc_reduce_stock_levels($orderGpayId);
                 }
             }
             $xRefNum =  $response['xRefNum'];

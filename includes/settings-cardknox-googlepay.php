@@ -64,7 +64,7 @@ $wc_cardknox_google_pay_settings = array(
         $keyType        => 'checkbox',
         'id'          => 'google_cardknox_capture',
         'description' => __(
-            'If the transaction is not immediately captured for Apple Pay, it will require capturing at a later time.',
+            'If the transaction is not immediately captured for Google Pay, it will require capturing at a later time.',
             'woocommerce-gateway-cardknox'
         ),
         $keyDefault     => 'yes',
@@ -74,9 +74,9 @@ $wc_cardknox_google_pay_settings = array(
         $keyTitle       => __('Authorize Only Order Status', 'woocommerce-gateway-cardknox'),
         $keyType        => $selectType,
         'class'       => 'wc-enhanced-select',
-        'id'          => 'apple_cardknox_authonly_status',
+        'id'          => 'google_cardknox_authonly_status',
         'description' => __(
-            'Defines the intended order status after an authorization-only transaction for Apple Pay.',
+            'Defines the intended order status after an authorization-only transaction for Google Pay.',
             'woocommerce-gateway-cardknox'
         ),
         $keyDefault     => 'on-hold',

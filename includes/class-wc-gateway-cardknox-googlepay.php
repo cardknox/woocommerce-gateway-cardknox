@@ -186,7 +186,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
     }
 
     /**
-     * Generate the request for the payment.
+     * Generate the request for the google payment.
      * @param  WC_Order $order
      * @param  object $source
      * @return array()
@@ -281,7 +281,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
     }
 
     /**
-     * Process the payment
+     * Process the google payment
      *
      * @param int  $orderId Reference.
      * @param bool $retry Should we retry on fail.
@@ -314,7 +314,9 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
                     );
                 }
 
-                $this->glog("Info: Begin processing payment for order $orderId for the amount of {$order->get_total()}");
+                $this->glog("Info: Begin processing payment for order $orderId for the amount of " .
+                    "{$order->get_total()}");
+
 
                 // Make the request.
                 $response = WC_Cardknox_API::request($this->generate_payment_grequest($order));
@@ -450,45 +452,43 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         $result = false;
 
         if (!$order || !get_post_meta($orderId, '_cardknox_xrefnum', true)) {
-            return false;
-        }
-
-        $captured = get_post_meta($orderId, '_cardknox_transaction_captured', true);
-        $body = [];
-
-        if (!is_null($amount) && $amount < .01) {
-            $this->glog('Error: Amount Required ' . $amount);
-            return new WP_Error('Error', 'Refund Amount Required ' . $amount);
-        }
-
-        if (!is_null($amount)) {
-            $body['xAmount'] = $this->get_cardknox_gamount($amount);
-        }
-
-        $command = $this->getRefundCommandg($amount, $order, $captured);
-
-        if (is_wp_error($command)) {
-            return $command;
-        }
-
-        $body['xCommand'] = $command;
-        $body['xRefNum'] = get_post_meta($orderId, '_cardknox_xrefnum', true);
-        $this->glog("Info: Beginning refund for order $orderId for the amount of {$amount}");
-
-        $response = WC_Cardknox_API::request($body);
-
-        if (is_wp_error($response)) {
-            $this->glog('Error: ' . $response->get_error_message());
-            return $response;
-        }
-
-        if (!empty($response['xRefNum'])) {
-            $refundMessage = $this->getRefundMessageg($response, $reason);
-            $order->add_order_note($refundMessage);
-            $this->glog('Success: ' . html_entity_decode(strip_tags((string) $refundMessage)));
-            $result = true;
+            $result = false;
         } else {
-            $result = new WP_Error("refund failed", 'woocommerce-gateway-cardknox');
+            $captured = get_post_meta($orderId, '_cardknox_transaction_captured', true);
+            $body = [];
+
+            if (!is_null($amount) && $amount < 0.01) {
+                $this->glog('Error: Amount Required ' . $amount);
+                $result = new WP_Error('Error', 'Refund Amount Required ' . $amount);
+            } else {
+                if (!is_null($amount)) {
+                    $body['xAmount'] = $this->get_cardknox_gamount($amount);
+                }
+
+                $command = $this->getRefundCommandg($amount, $order, $captured);
+
+                if (is_wp_error($command)) {
+                    $result = $command;
+                } else {
+                    $body['xCommand'] = $command;
+                    $body['xRefNum'] = get_post_meta($orderId, '_cardknox_xrefnum', true);
+                    $this->glog("Info: Beginning refund for order $orderId for the amount of {$amount}");
+
+                    $response = WC_Cardknox_API::request($body);
+
+                    if (is_wp_error($response)) {
+                        $this->glog('Error: ' . $response->get_error_message());
+                        $result = $response;
+                    } elseif (!empty($response['xRefNum'])) {
+                        $refundMessage = $this->getRefundMessageg($response, $reason);
+                        $order->add_order_note($refundMessage);
+                        $this->glog('Success: ' . html_entity_decode(strip_tags((string) $refundMessage)));
+                        $result = true;
+                    } else {
+                        $result = new WP_Error("refund failed", 'woocommerce-gateway-cardknox');
+                    }
+                }
+            }
         }
 
         return $result;

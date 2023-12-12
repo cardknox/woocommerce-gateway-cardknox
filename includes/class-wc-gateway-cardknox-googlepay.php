@@ -329,7 +329,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
 
                 // Process valid response.
                 $this->log("Info: process_response");
-                $this->process_response($response, $order);
+                $this->process_gresponse($response, $order);
             } else {
                 $order->payment_complete();
             }
@@ -353,7 +353,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
             $this->log(sprintf(__('Error: %s', 'woocommerce-gateway-cardknox'), $e->getMessage()));
 
             if ($order->has_status(array('pending', 'failed'))) {
-                $this->send_failed_order_email($orderId);
+                $this->send_failed_order_gemailg($orderId);
 
                 $orderStatus = $order->get_status();
                 if ('pending' == $orderStatus) {
@@ -373,7 +373,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
     /**
      * Store extra meta data for an order from a Cardknox Response.
      */
-    public function process_response($response, $order)
+    public function process_gresponse($response, $order)
     {
         $orderId = $this->wcVersion ? $order->id : $order->get_id();
 
@@ -464,7 +464,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
                 }
             }
 
-            $command = $this->getRefundCommand($amount, $order, $captured);
+            $command = $this->getRefundCommandg($amount, $order, $captured);
 
             if (is_wp_error($command)) {
                 $result = $command;
@@ -479,7 +479,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
                     $this->log('Error: ' . $response->get_error_message());
                     $result = $response;
                 } elseif (!empty($response['xRefNum'])) {
-                    $refundMessage = $this->getRefundMessage($response, $reason);
+                    $refundMessage = $this->getRefundMessageg($response, $reason);
                     $order->add_order_note($refundMessage);
                     $this->log('Success: ' . html_entity_decode(strip_tags((string) $refundMessage)));
                     $result = true;
@@ -492,7 +492,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         return $result;
     }
 
-    private function getRefundCommand($amount, $order, $captured)
+    private function getRefundCommandg($amount, $order, $captured)
     {
         $total = $order->get_total();
 
@@ -507,7 +507,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         }
     }
 
-    private function getRefundMessage($response, $reason)
+    private function getRefundMessageg($response, $reason)
     {
         return sprintf(
             __('Refunded %1$s - Refund ID: %2$s - Reason: %3$s', 'woocommerce-gateway-cardknox'),
@@ -525,7 +525,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
      * @param int $orderId
      * @return null
      */
-    public function send_failed_order_email($orderId)
+    public function send_failed_order_gemailg($orderId)
     {
         $emails = WC()->mailer()->get_emails();
         if (!empty($emails) && !empty($orderId)) {

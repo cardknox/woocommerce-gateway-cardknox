@@ -282,27 +282,19 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
 
     /**
      * Process the google payment
-     *
-     * @param int  $orderId Reference.
-     * @param bool $retry Should we retry on fail.
-     * @param bool $forceCustomer Force user creation.
-     *
-     * @throws Exception If payment will not be accepted.
-     *
-     * @return array|void
      */
     public function process_payment($orderId, $retry = true, $forceCustomer = false)
     {
         try {
-            $order  = wc_get_order($orderId);
+            $orderGooglePay = wc_get_order($orderId);
 
             // Result from Cardknox API request.
             $response = null;
 
             // Handle payment.
-            if ($order->get_total() > 0) {
+            if ($orderGooglePay->get_total() > 0) {
 
-                if ($order->get_total() < WC_Cardknox::get_minimum_amount() / 100) {
+                if ($orderGooglePay->get_total() < WC_Cardknox::get_minimum_amount() / 100) {
                     throw new Exception(
                         sprintf(
                             __(
@@ -315,25 +307,25 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
                 }
 
                 $this->glog("Info: Begin processing payment for order $orderId for the amount of " .
-                    "{$order->get_total()}");
+                    "{$orderGooglePay->get_total()}");
 
 
                 // Make the request.
-                $response = WC_Cardknox_API::request($this->generate_payment_grequest($order));
+                $response = WC_Cardknox_API::request($this->generate_payment_grequest($orderGooglePay));
 
                 if (is_wp_error($response)) {
-                    $order->add_order_note($response->get_error_message());
+                    $orderGooglePay->add_order_note($response->get_error_message());
                     throw new Exception("The transaction was declined please try again");
                 }
 
                 $this->glog("Info: set_transaction_id");
-                $order->set_transaction_id($response['xRefNum']);
+                $orderGooglePay->set_transaction_id($response['xRefNum']);
 
                 // Process valid response.
                 $this->glog("Info: process_response");
-                $this->process_gresponse($response, $order);
+                $this->process_gresponse($response, $orderGooglePay);
             } else {
-                $order->payment_complete();
+                $orderGooglePay->payment_complete();
             }
 
             $this->glog("Info: empty_cart");
@@ -342,28 +334,28 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
             WC()->cart->empty_cart();
 
             $this->glog("Info: wc_gateway_cardknox_process_payment");
-            do_action('wc_gateway_cardknox_process_payment', $response, $order);
+            do_action('wc_gateway_cardknox_process_payment', $response, $orderGooglePay);
 
             $this->glog("Info: thank you page redirect");
             // Return thank you page redirect.
             return array(
                 'result'   => 'success',
-                'redirect' => $this->get_return_url($order),
+                'redirect' => $this->get_return_url($orderGooglePay),
             );
         } catch (Exception $e) {
             wc_add_notice($e->getMessage(), 'error');
             $this->glog(sprintf(__('Error: %s', 'woocommerce-gateway-cardknox'), $e->getMessage()));
 
-            if ($order->has_status(array('pending', 'failed'))) {
+            if ($orderGooglePay->has_status(array('pending', 'failed'))) {
                 $this->send_failed_order_gemailg($orderId);
 
-                $orderStatus = $order->get_status();
+                $orderStatus = $orderGooglePay->get_status();
                 if ('pending' == $orderStatus) {
-                    $order->update_status('failed');
+                    $orderGooglePay->update_status('failed');
                 }
             }
 
-            do_action('wc_gateway_cardknox_process_payment_error', $e, $order);
+            do_action('wc_gateway_cardknox_process_payment_error', $e, $orderGooglePay);
 
             return array(
                 'result'   => 'fail',

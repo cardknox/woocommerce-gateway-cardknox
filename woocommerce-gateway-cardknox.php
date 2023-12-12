@@ -146,6 +146,8 @@ if (!class_exists('WC_Cardknox')) :
 
             add_action('woocommerce_order_status_processing_to_cancelled', array($this, 'refund_payment'));
             add_action('woocommerce_order_status_processing_to_completed', array($this, 'capture_payment'));
+
+            $this->settingPage = 'admin.php?page=wc-settings';
         }
 
         /**
@@ -259,7 +261,7 @@ if (!class_exists('WC_Cardknox')) :
         {
             $setting_link = $this->get_setting_link();
             $applepay_setting_link = $this->get_setting_applepay_link();
-            $googlepay_setting_link = $this->get_setting_googlepay_link();
+            $googlepay_setting_link = $this->getSettingGooglepayLink();
 
             $plugin_links = array(
                 '<a href="' . $setting_link . '">' . __('Settings', 'woocommerce-gateway-cardknox') . '</a>',
@@ -284,7 +286,7 @@ if (!class_exists('WC_Cardknox')) :
 
             $section_slug = $use_id_as_section ? 'cardknox' : strtolower('WC_Gateway_Cardknox');
 
-            return admin_url('admin.php?page=wc-settings&tab=checkout&section=' . $section_slug);
+            return admin_url($this->settingPage . '&tab=checkout&section=' . $section_slug);
         }
 
         /**
@@ -300,7 +302,7 @@ if (!class_exists('WC_Cardknox')) :
 
             $section_slug = $use_id_as_section ? 'cardknox-applepay' : strtolower('WC_Gateway_Cardknox');
 
-            return admin_url('admin.php?page=wc-settings&tab=checkout&section=' . $section_slug);
+            return admin_url($this->settingPage . '&tab=checkout&section=' . $section_slug);
         }
 
         /**
@@ -310,13 +312,13 @@ if (!class_exists('WC_Cardknox')) :
          *
          * @return string Setting link
          */
-        public function get_setting_googlepay_link()
+        public function getSettingGooglepayLink()
         {
             $use_id_as_section = function_exists('WC') ? version_compare(WC()->version, '2.6', '>=') : false;
 
             $section_slug = $use_id_as_section ? 'cardknox-googlepay' : strtolower('WC_Gateway_Cardknox');
 
-            return admin_url('admin.php?page=wc-settings&tab=checkout&section=' . $section_slug);
+            return admin_url($this->settingPage . '&tab=checkout&section=' . $section_slug);
         }
 
         /**

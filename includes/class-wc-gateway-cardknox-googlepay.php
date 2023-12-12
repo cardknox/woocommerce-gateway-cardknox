@@ -314,7 +314,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
                     );
                 }
 
-                $this->log("Info: Begin processing payment for order $orderId for the amount of {$order->get_total()}");
+                $this->glog("Info: Begin processing payment for order $orderId for the amount of {$order->get_total()}");
 
                 // Make the request.
                 $response = WC_Cardknox_API::request($this->generate_payment_grequest($order));
@@ -324,25 +324,25 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
                     throw new Exception("The transaction was declined please try again");
                 }
 
-                $this->log("Info: set_transaction_id");
+                $this->glog("Info: set_transaction_id");
                 $order->set_transaction_id($response['xRefNum']);
 
                 // Process valid response.
-                $this->log("Info: process_response");
+                $this->glog("Info: process_response");
                 $this->process_gresponse($response, $order);
             } else {
                 $order->payment_complete();
             }
 
-            $this->log("Info: empty_cart");
+            $this->glog("Info: empty_cart");
 
             // Remove cart.
             WC()->cart->empty_cart();
 
-            $this->log("Info: wc_gateway_cardknox_process_payment");
+            $this->glog("Info: wc_gateway_cardknox_process_payment");
             do_action('wc_gateway_cardknox_process_payment', $response, $order);
 
-            $this->log("Info: thank you page redirect");
+            $this->glog("Info: thank you page redirect");
             // Return thank you page redirect.
             return array(
                 'result'   => 'success',
@@ -350,7 +350,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
             );
         } catch (Exception $e) {
             wc_add_notice($e->getMessage(), 'error');
-            $this->log(sprintf(__('Error: %s', 'woocommerce-gateway-cardknox'), $e->getMessage()));
+            $this->glog(sprintf(__('Error: %s', 'woocommerce-gateway-cardknox'), $e->getMessage()));
 
             if ($order->has_status(array('pending', 'failed'))) {
                 $this->send_failed_order_gemailg($orderId);
@@ -394,7 +394,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
                 $response['xRefNum']
             );
             $order->add_order_note($message);
-            $this->log('Success: ' . $message);
+            $this->glog('Success: ' . $message);
         } else {
             update_post_meta($orderId, '_transaction_id', $response['xRefNum'], true);
 
@@ -430,7 +430,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
                 ));
             }
 
-            $this->log("Successful auth: $xRefNum");
+            $this->glog("Successful auth: $xRefNum");
         }
 
         do_action('wc_gateway_cardknox_process_response', $response, $order);
@@ -457,7 +457,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
 
             if (!is_null($amount)) {
                 if ($amount < .01) {
-                    $this->log('Error: Amount Required ' . $amount);
+                    $this->glog('Error: Amount Required ' . $amount);
                     return new WP_Error('Error', 'Refund Amount Required ' . $amount);
                 } else {
                     $body['xAmount'] = $this->get_cardknox_gamount($amount);
@@ -471,17 +471,17 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
             } else {
                 $body['xCommand'] = $command;
                 $body['xRefNum'] = get_post_meta($orderId, '_cardknox_xrefnum', true);
-                $this->log("Info: Beginning refund for order $orderId for the amount of {$amount}");
+                $this->glog("Info: Beginning refund for order $orderId for the amount of {$amount}");
 
                 $response = WC_Cardknox_API::request($body);
 
                 if (is_wp_error($response)) {
-                    $this->log('Error: ' . $response->get_error_message());
+                    $this->glog('Error: ' . $response->get_error_message());
                     $result = $response;
                 } elseif (!empty($response['xRefNum'])) {
                     $refundMessage = $this->getRefundMessageg($response, $reason);
                     $order->add_order_note($refundMessage);
-                    $this->log('Success: ' . html_entity_decode(strip_tags((string) $refundMessage)));
+                    $this->glog('Success: ' . html_entity_decode(strip_tags((string) $refundMessage)));
                     $result = true;
                 } else {
                     $result = new WP_Error("refund failed", 'woocommerce-gateway-cardknox');
@@ -534,14 +534,14 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
     }
 
     /**
-     * Logs
+     * Google Pay Logs
      *
      * @since 3.1.0
      * @version 3.1.0
      *
      * @param string $message
      */
-    public function log($message)
+    public function glog($message)
     {
         if ($this->logging) {
             WC_Cardknox::log($message);
@@ -576,7 +576,9 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
     public function cardknox_allow_gpay_method_by_country($available_gateways)
     {
 
-        if (is_admin()) return $available_gateways;
+        if (is_admin()) {
+            return $available_gateways;
+        }
 
         $applicable_countries  = $this->googlepay_applicable_countries;
         $specific_countries    = $this->googlepay_specific_countries;

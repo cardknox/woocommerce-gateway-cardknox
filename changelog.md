@@ -1,5 +1,13 @@
 # Changelog
 
+## changelog for version 1.0.16
+
+- Add support for GooglePay
+- Add support for ApplePay
+- Security updates
+- Fix for expiration field issue
+- Updated iFields version
+
 ## changelog for version 1.0.14
 
 - Added SDK Name and Version

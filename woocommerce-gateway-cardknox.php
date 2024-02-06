@@ -387,6 +387,8 @@ if (!class_exists('WC_Cardknox')) :
         {
             if ($this->subscription_support_enabled || $this->pre_order_enabled) {
                 $methods[] = 'WC_Gateway_Cardknox_Addons';
+                $methods[] = 'WCCardknoxApplepay';
+                $methods[] = 'WCCardknoxGooglepay';
             } else {
                 $methods[] = 'WC_Gateway_Cardknox';
                 $methods[] = 'WCCardknoxApplepay';

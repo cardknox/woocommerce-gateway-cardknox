@@ -158,52 +158,24 @@ jQuery(function ($) {
       return true;
     },
 
-    onCardknoxResponse: function () {
-      var xExp = document
-        .getElementById("cardknox-card-expiry")
-        .value.replace(/\s|\//g, "");
-      if (xExp.length != 4) {
-        $(document).trigger("cardknoxError", "Invalid expiration date");
-        return false;
-      }
-
-      // Extract the month and year from the expiration date
-      let month = parseInt(xExp.substr(0, 2));
-      let year = parseInt(xExp.substr(2));
-
-      // Validate the expiration month and year
-      let currentDate = new Date();
-      let currentYear = currentDate.getFullYear() % 100; // Get the last two digits of the current year
-      let currentMonth = currentDate.getMonth() + 1; // January is month 0 in JavaScript
-
-      if (
-        year < currentYear ||
-        (year === currentYear && month < currentMonth)
-      ) {
-        $(document).trigger(
-          "cardknoxError",
-          "Expiration must be in the future"
-        );
-        return false;
-      }
-      wc_cardknox_form.form.append(
-        "<input type='hidden' class='xExp' id='xExp' name='xExp' value='" +
-          xExp +
-          "'/>"
-      );
-      wc_cardknox_form.form.submit();
-    },
-
-    reset: function () {
-      $("#cardknox-card-cvc, #cardknox-card-number").val("");
-      $(".xExp").remove();
-    },
-
     onIfieldloaded: function () {
       enableLogging();
       setAccount(wc_cardknox_params.key, "wordpress", "0.1.2");
+      setupCardStyles();
+      enableAutoFormatting();
+      addIfieldCallback("input", handleInput);
+      addIfieldCallback("issuerupdated", handleIssuerUpdate);
+    },
 
-      var card_style = {
+    setupCardStyles: function () {
+      var card_style = getCardStyle();
+      var cvv_style = getCvvStyle();
+      setIfieldStyle("card-number", card_style);
+      setIfieldStyle("cvv", cvv_style);
+    },
+
+    getCardStyle: function () {
+      return {
         outline: "none",
         border: "0",
         "border-left-color": "rgb(67, 69, 75)",
@@ -213,7 +185,10 @@ jQuery(function ($) {
         "background-color": wc_cardknox_params.bgcolor,
         "font-weight": "inherit",
       };
-      var cvv_style = {
+    },
+
+    getCvvStyle: function () {
+      return {
         outline: "none",
         border: "0",
         "border-left-color": "rgb(67, 69, 75)",
@@ -223,58 +198,29 @@ jQuery(function ($) {
         "background-color": wc_cardknox_params.bgcolor,
         "font-weight": "inherit",
       };
-      setIfieldStyle("card-number", card_style);
-      setIfieldStyle("cvv", cvv_style);
+    },
 
-      enableAutoFormatting();
+    handleInput: function (data) {
+      if (data.ifieldValueChanged) {
+        updateCardNumberStyle(data);
+        updateCvvStyle(data);
+        updateAchStyle(data);
+      }
+    },
 
-      addIfieldCallback("input", function (data) {
-        if (data.ifieldValueChanged) {
-          setIfieldStyle(
-            "card-number",
-            data.cardNumberFormattedLength <= 0
-              ? defaultStyle
-              : data.cardNumberIsValid
-              ? validStyle
-              : invalidStyle
-          );
-          if (data.lastIfieldChanged === "cvv") {
-            setIfieldStyle(
-              "cvv",
-              data.issuer === "unknown" || data.cvvLength <= 0
-                ? defaultStyle
-                : data.cvvIsValid
-                ? validStyle
-                : invalidStyle
-            );
-          } else if (data.lastIfieldChanged === "card-number") {
-            if (data.issuer === "unknown" || data.cvvLength <= 0) {
-              setIfieldStyle("cvv", defaultStyle);
-            } else if (data.issuer === "amex") {
-              setIfieldStyle(
-                "cvv",
-                data.cvvLength === 4 ? validStyle : invalidStyle
-              );
-            } else {
-              setIfieldStyle(
-                "cvv",
-                data.cvvLength === 3 ? validStyle : invalidStyle
-              );
-            }
-          } else if (data.lastIfieldChanged === "ach") {
-            setIfieldStyle(
-              "ach",
-              data.achLength === 0
-                ? defaultStyle
-                : data.achIsValid
-                ? validStyle
-                : invalidStyle
-            );
-          }
-        }
-      });
+    updateCardNumberStyle: function (data) {
+      setIfieldStyle(
+        "card-number",
+        data.cardNumberFormattedLength <= 0
+          ? defaultStyle
+          : data.cardNumberIsValid
+          ? validStyle
+          : invalidStyle
+      );
+    },
 
-      addIfieldCallback("issuerupdated", function (data) {
+    updateCvvStyle: function (data) {
+      if (data.lastIfieldChanged === "cvv") {
         setIfieldStyle(
           "cvv",
           data.issuer === "unknown" || data.cvvLength <= 0
@@ -283,7 +229,44 @@ jQuery(function ($) {
             ? validStyle
             : invalidStyle
         );
-      });
+      } else if (data.lastIfieldChanged === "card-number") {
+        // update cvv style based on card number changes
+        updateCvvStyleFromCardNumber(data);
+      } else if (data.lastIfieldChanged === "ach") {
+        setIfieldStyle(
+          "ach",
+          data.achLength === 0
+            ? defaultStyle
+            : data.achIsValid
+            ? validStyle
+            : invalidStyle
+        );
+      }
+    },
+
+    updateCvvStyleFromCardNumber: function (data) {
+      if (data.issuer === "unknown" || data.cvvLength <= 0) {
+        setIfieldStyle("cvv", defaultStyle);
+      } else if (data.issuer === "amex") {
+        setIfieldStyle("cvv", data.cvvLength === 4 ? validStyle : invalidStyle);
+      } else {
+        setIfieldStyle("cvv", data.cvvLength === 3 ? validStyle : invalidStyle);
+      }
+    },
+
+    updateAchStyle: function (data) {
+      setIfieldStyle(
+        "ach",
+        data.achLength === 0
+          ? defaultStyle
+          : data.achIsValid
+          ? validStyle
+          : invalidStyle
+      );
+    },
+
+    handleIssuerUpdate: function (data) {
+      updateCvvStyle(data);
     },
   };
 

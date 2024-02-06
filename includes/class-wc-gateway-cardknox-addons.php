@@ -93,12 +93,14 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox {
 		$this->log( "Info: Begin processing subscription payment for order {$order_id} for the amount of {$amount}" );
 
 		// Make the request
-		$request             = $this->generate_payment_request( $order );
+        $request = [];
+		$request              = $this->generate_payment_request_for_subscription($request, $order );
 		$request['xAmount']   = $this->get_cardknox_amount( $amount, $request['currency'] );
-		$request['xInvoice'] = $order_id;
+		$request['xInvoice']  = $order_id;
 		$request['xCustom02'] = 'recurring';
-		$request['xToken'] = $my_token;
-		$response            = WC_Cardknox_API::request( $request );
+		$request['xToken']    = $my_token;
+        
+		$response = WC_Cardknox_API::request( $request );
 
 		// Process valid response
 		if ( is_wp_error( $response ) ) {
@@ -109,6 +111,55 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox {
 
 		return $response;
 	}
+
+    /**
+     * Generate the request for the payment.
+     * @param  WC_Order $order
+     * @param  object $source
+     * @return array()
+     */
+    protected function generate_payment_request_for_subscription($request, $order)
+    {
+        $request['xCommand']     = 'cc:sale';
+        $request = self::get_order_data($request, $order);
+        $request = self::get_billing_shiping_info($request, $order);
+
+        return $request;
+    }
+
+    public function get_billing_shiping_info($request, $order)
+    {
+        $request['xBillCompany'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_company : $order->get_billing_company();
+        $request['xBillFirstName'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_first_name : $order->get_billing_first_name();
+        $request['xBillLastName']  = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_last_name : $order->get_billing_last_name();
+        $request['xBillStreet'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_address_1 : $order->get_billing_address_1();
+        $request['xBillStreet2'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_address_2 : $order->get_billing_address_2();
+        $request['xBillCity'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_city : $order->get_billing_city();
+        $request['xBillState'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_state : $order->get_billing_state();
+        $request['xBillZip'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_postcode : $order->get_billing_postcode();
+        $request['xBillCountry'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_country : $order->get_billing_country();
+        $request['xBillPhone'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_phone : $order->get_billing_phone();
+
+        $request['xShipCompany'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->shipping_company : $order->get_shipping_company();
+        $request['xShipFirstName'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->shipping_first_name : $order->get_shipping_first_name();
+        $request['xShipLastName'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->shipping_last_name : $order->get_shipping_last_name();
+        $request['xShipStreet'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->shipping_address_1 : $order->get_shipping_address_1();
+        $request['xShipStreet2'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->shipping_address_2 : $order->get_shipping_address_2();
+        $request['xShipCity'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->shipping_city : $order->get_shipping_city();
+        $request['xShipState'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->shipping_state : $order->get_shipping_state();
+        $request['xShipZip'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->shipping_postcode : $order->get_shipping_postcode();
+        $request['xShipCountry'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->shipping_country : $order->get_shipping_country();
+        return $request;
+    }
+
+    public function get_order_data($request, $order)
+    {
+        $billing_email    = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_email : $order->get_billing_email();
+        $request['xCurrency']    = strtolower(version_compare(WC_VERSION, '3.0.0', '<') ? $order->get_order_currency() : $order->get_currency());
+        $request['xEmail'] = $billing_email;
+        $request['xIP'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->customer_ip_address : $order->get_customer_ip_address();
+        return $request;
+    }
 
 	/**
 	 */

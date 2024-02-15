@@ -136,9 +136,16 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
 
     public function get_billing_shipping_info($request, $order)
     {
-
         $version_comparison = version_compare(WC_VERSION, WC_VERSION_THRESHOLD, '<');
 
+        $request = $this->get_billing_info($request, $order, $version_comparison);
+        $request = $this->get_shipping_info($request, $order, $version_comparison);
+
+        return $request;
+    }
+
+    protected function get_billing_info($request, $order, $version_comparison)
+    {
         $request['xBillCompany'] = $version_comparison ? $order->billing_company : $order->get_billing_company();
         $request['xBillFirstName'] = $version_comparison ? $order->billing_first_name : $order->get_billing_first_name();
         $request['xBillLastName']  = $version_comparison ? $order->billing_last_name : $order->get_billing_last_name();
@@ -150,6 +157,11 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
         $request['xBillCountry'] = $version_comparison ? $order->billing_country : $order->get_billing_country();
         $request['xBillPhone'] = $version_comparison ? $order->billing_phone : $order->get_billing_phone();
 
+        return $request;
+    }
+
+    protected function get_shipping_info($request, $order, $version_comparison)
+    {
         $request['xShipCompany'] = $version_comparison ? $order->shipping_company : $order->get_shipping_company();
         $request['xShipFirstName'] = $version_comparison ? $order->shipping_first_name : $order->get_shipping_first_name();
         $request['xShipLastName'] = $version_comparison ? $order->shipping_last_name : $order->get_shipping_last_name();
@@ -162,6 +174,7 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
 
         return $request;
     }
+
 
     public function get_order_data($request, $order)
     {

@@ -162,41 +162,43 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
         return $request;
     }
 
-
     public function get_order_data($request, $order)
     {
-        $billing_email    = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_email : $order->get_billing_email();
-        $request['xCurrency']    = strtolower(version_compare(WC_VERSION, '3.0.0', '<') ? $order->get_order_currency() : $order->get_currency());
+        define('WC_VERSION_THRESHOLD', '3.0.0');
+
+        $billing_email = version_compare(WC_VERSION, WC_VERSION_THRESHOLD, '<') ? $order->billing_email : $order->get_billing_email();
+        $currency = version_compare(WC_VERSION, WC_VERSION_THRESHOLD, '<') ? $order->get_order_currency() : $order->get_currency();
+        $customer_ip_address = version_compare(WC_VERSION, WC_VERSION_THRESHOLD, '<') ? $order->customer_ip_address : $order->get_customer_ip_address();
+
+        $request['xCurrency'] = strtolower($currency);
         $request['xEmail'] = $billing_email;
-        $request['xIP'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->customer_ip_address : $order->get_customer_ip_address();
+        $request['xIP'] = $customer_ip_address;
+
         return $request;
     }
 
-    /**
-     */
     protected function get_order_token($order = null)
     {
-        $token   = false;
+        define('WC_VERSION_THRESHOLD', '3.0.0');
+
+        $token = false;
 
         if ($order) {
-            $order_id = version_compare(WC_VERSION, '3.0.0', '<') ? $order->id : $order->get_id();
+            $order_id = version_compare(WC_VERSION, WC_VERSION_THRESHOLD, '<') ? $order->id : $order->get_id();
             if ($meta_value = get_post_meta($order_id, '_cardknox_token', true)) {
                 $token = $meta_value;
             }
         }
+
         return $token;
     }
 
-    /**
-     */
     public function delete_resubscribe_meta($resubscribe_order)
     {
         delete_post_meta(($this->wc_pre_30 ? $resubscribe_order->id : $resubscribe_order->get_id()), '_cardknox_token');
         $this->delete_renewal_meta($resubscribe_order);
     }
 
-    /**
-     */
     public function delete_renewal_meta($renewal_order)
     {
         delete_post_meta(($this->wc_pre_30 ? $renewal_order->id : $renewal_order->get_id()), 'Cardknox Payment ID');

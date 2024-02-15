@@ -19,6 +19,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+define('WC_VERSION_THRESHOLD', '3.0.0');
+
 /**
  * WC_Gateway_Cardknox_Addons class.
  *
@@ -50,7 +52,7 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
             add_filter('woocommerce_subscription_validate_payment_meta', array($this, 'validate_subscription_payment_meta'), 10, 2);
         }
 
-        $this->wc_pre_30 = version_compare(WC_VERSION, '3.0.0', '<');
+        $this->wc_pre_30 = version_compare(WC_VERSION, WC_VERSION_THRESHOLD, '<');
     }
 
     /**
@@ -134,7 +136,6 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
 
     public function get_billing_shipping_info($request, $order)
     {
-        define('WC_VERSION_THRESHOLD', '3.0.0');
 
         $version_comparison = version_compare(WC_VERSION, WC_VERSION_THRESHOLD, '<');
 
@@ -164,7 +165,6 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
 
     public function get_order_data($request, $order)
     {
-        define('WC_VERSION_THRESHOLD', '3.0.0');
 
         $billing_email = version_compare(WC_VERSION, WC_VERSION_THRESHOLD, '<') ? $order->billing_email : $order->get_billing_email();
         $currency = version_compare(WC_VERSION, WC_VERSION_THRESHOLD, '<') ? $order->get_order_currency() : $order->get_currency();
@@ -179,7 +179,6 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
 
     protected function get_order_token($order = null)
     {
-        define('WC_VERSION_THRESHOLD', '3.0.0');
 
         $token = false;
 

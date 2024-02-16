@@ -175,7 +175,6 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
         return $request;
     }
 
-
     public function get_order_data($request, $order)
     {
 

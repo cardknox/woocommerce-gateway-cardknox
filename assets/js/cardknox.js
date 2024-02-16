@@ -138,7 +138,7 @@ jQuery(function ($) {
               $(document).trigger("cardknoxError", "CVV Required");
               return false;
             }
-            console.log("Success");
+
             wc_cardknox_form.onCardknoxResponse();
           },
           function () {
@@ -186,9 +186,10 @@ jQuery(function ($) {
         );
         return false;
       }
-      console.log("onCardknoxResponse");
       wc_cardknox_form.form.append(
-        "<input type='hidden' class='xExp' name='xExp' value='" + xExp + "'/>"
+        "<input type='hidden' class='xExp' id='xExp' name='xExp' value='" +
+          xExp +
+          "'/>"
       );
       wc_cardknox_form.form.submit();
     },
@@ -201,6 +202,7 @@ jQuery(function ($) {
     onIfieldloaded: function () {
       enableLogging();
       setAccount(wc_cardknox_params.key, "wordpress", "0.1.2");
+
       var card_style = {
         outline: "none",
         border: "0",
@@ -223,6 +225,65 @@ jQuery(function ($) {
       };
       setIfieldStyle("card-number", card_style);
       setIfieldStyle("cvv", cvv_style);
+
+      enableAutoFormatting();
+
+      addIfieldCallback("input", function (data) {
+        if (data.ifieldValueChanged) {
+          setIfieldStyle(
+            "card-number",
+            data.cardNumberFormattedLength <= 0
+              ? defaultStyle
+              : data.cardNumberIsValid
+              ? validStyle
+              : invalidStyle
+          );
+          if (data.lastIfieldChanged === "cvv") {
+            setIfieldStyle(
+              "cvv",
+              data.issuer === "unknown" || data.cvvLength <= 0
+                ? defaultStyle
+                : data.cvvIsValid
+                ? validStyle
+                : invalidStyle
+            );
+          } else if (data.lastIfieldChanged === "card-number") {
+            if (data.issuer === "unknown" || data.cvvLength <= 0) {
+              setIfieldStyle("cvv", defaultStyle);
+            } else if (data.issuer === "amex") {
+              setIfieldStyle(
+                "cvv",
+                data.cvvLength === 4 ? validStyle : invalidStyle
+              );
+            } else {
+              setIfieldStyle(
+                "cvv",
+                data.cvvLength === 3 ? validStyle : invalidStyle
+              );
+            }
+          } else if (data.lastIfieldChanged === "ach") {
+            setIfieldStyle(
+              "ach",
+              data.achLength === 0
+                ? defaultStyle
+                : data.achIsValid
+                ? validStyle
+                : invalidStyle
+            );
+          }
+        }
+      });
+
+      addIfieldCallback("issuerupdated", function (data) {
+        setIfieldStyle(
+          "cvv",
+          data.issuer === "unknown" || data.cvvLength <= 0
+            ? defaultStyle
+            : data.cvvIsValid
+            ? validStyle
+            : invalidStyle
+        );
+      });
     },
   };
 
@@ -251,12 +312,18 @@ jQuery(document).ready(function () {
       ).val();
 
       if (selectedPaymentMethod === "cardknox-applepay") {
-        // Replace 'your_payment_method_slug' with your payment method value
         jQuery(placeOrderButton).hide();
+        jQuery("div#divGpay").hide();
         jQuery("#ap-container").show();
         jQuery(".applepay-error").show();
+      } else if (selectedPaymentMethod === "cardknox-googlepay") {
+        jQuery(placeOrderButton).hide();
+        jQuery("div#divGpay").show();
+        jQuery("#ap-container").hide();
+        jQuery(".applepay-error").hide();
       } else {
         jQuery(placeOrderButton).show();
+        jQuery("div#divGpay").hide();
         jQuery("#ap-container").hide();
         jQuery(".applepay-error").hide();
       }

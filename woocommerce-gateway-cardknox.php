@@ -146,6 +146,8 @@ if (!class_exists('WC_Cardknox')) :
 
             add_action('woocommerce_order_status_processing_to_cancelled', array($this, 'refund_payment'));
             add_action('woocommerce_order_status_processing_to_completed', array($this, 'capture_payment'));
+
+            $this->settingPage = 'admin.php?page=wc-settings&tab=checkout&section=';
         }
 
         /**
@@ -250,6 +252,10 @@ if (!class_exists('WC_Cardknox')) :
             return false;
         }
 
+        public function generateLink($link)
+        {
+            return '<a href="' . $link . '">';
+        }
         /**
          * Adds plugin action links
          *
@@ -259,10 +265,12 @@ if (!class_exists('WC_Cardknox')) :
         {
             $setting_link = $this->get_setting_link();
             $applepay_setting_link = $this->get_setting_applepay_link();
+            $googlepay_setting_link = $this->getSettingGooglepayLink();
 
             $plugin_links = array(
-                '<a href="' . $setting_link . '">' . __('Settings', 'woocommerce-gateway-cardknox') . '</a>',
-                '<a href="' . $applepay_setting_link . '">' . __('Apple Pay', 'woocommerce-gateway-cardknox') . '</a>',
+                $this->generateLink($setting_link) . __('Settings', 'woocommerce-gateway-cardknox') . '</a>',
+                $this->generateLink($applepay_setting_link) . __('Apple Pay', 'woocommerce-gateway-cardknox') . '</a>',
+                $this->generateLink($googlepay_setting_link) . __('Google Pay', 'woocommerce-gateway-cardknox') . '</a>',
                 '<a href="https://docs.woocommerce.com/document/cardknox/">' . __('Docs', 'woocommerce-gateway-cardknox') . '</a>',
                 '<a href="https://woocommerce.com/contact-us/">' . __('Support', 'woocommerce-gateway-cardknox') . '</a>',
             );
@@ -282,7 +290,7 @@ if (!class_exists('WC_Cardknox')) :
 
             $section_slug = $use_id_as_section ? 'cardknox' : strtolower('WC_Gateway_Cardknox');
 
-            return admin_url('admin.php?page=wc-settings&tab=checkout&section=' . $section_slug);
+            return admin_url($this->settingPage . $section_slug);
         }
 
         /**
@@ -298,7 +306,23 @@ if (!class_exists('WC_Cardknox')) :
 
             $section_slug = $use_id_as_section ? 'cardknox-applepay' : strtolower('WC_Gateway_Cardknox');
 
-            return admin_url('admin.php?page=wc-settings&tab=checkout&section=' . $section_slug);
+            return admin_url($this->settingPage . $section_slug);
+        }
+
+        /**
+         * Get google pay setting link.
+         *
+         * @since 1.0.15
+         *
+         * @return string Setting link
+         */
+        public function getSettingGooglepayLink()
+        {
+            $use_id_as_section = function_exists('WC') ? version_compare(WC()->version, '2.6', '>=') : false;
+
+            $section_slug = $use_id_as_section ? 'cardknox-googlepay' : strtolower('WC_Gateway_Cardknox');
+
+            return admin_url($this->settingPage . $section_slug);
         }
 
         /**
@@ -336,6 +360,7 @@ if (!class_exists('WC_Cardknox')) :
             if (class_exists('WC_Payment_Gateway_CC')) {
                 include_once(dirname(__FILE__) . '/includes/class-wc-gateway-cardknox.php');
                 include_once(dirname(__FILE__) . '/includes/class-wc-gateway-cardknox-applepay.php');
+                include_once(dirname(__FILE__) . '/includes/class-wc-gateway-cardknox-googlepay.php');
             } else {
                 include_once(dirname(__FILE__) . '/includes/legacy/class-wc-gateway-cardknox.php');
             }
@@ -362,9 +387,12 @@ if (!class_exists('WC_Cardknox')) :
         {
             if ($this->subscription_support_enabled || $this->pre_order_enabled) {
                 $methods[] = 'WC_Gateway_Cardknox_Addons';
+                $methods[] = 'WCCardknoxApplepay';
+                $methods[] = 'WCCardknoxGooglepay';
             } else {
                 $methods[] = 'WC_Gateway_Cardknox';
                 $methods[] = 'WCCardknoxApplepay';
+                $methods[] = 'WCCardknoxGooglepay';
             }
             return $methods;
         }

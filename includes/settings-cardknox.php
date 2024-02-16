@@ -101,7 +101,7 @@ $wc_cardknox_settings = array(
         'desc_tip'    => true,
         'class'       => 'colorpick',
         'css'          => 'width: 6em'
-    ),
+    )
 );
 
 $GLOBALS["wc_cardknox_settings"] = $wc_cardknox_settings;

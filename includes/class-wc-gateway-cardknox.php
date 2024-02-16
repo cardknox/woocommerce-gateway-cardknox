@@ -111,7 +111,8 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $this->logging                 = 'yes' === $this->get_option('logging');
         $this->authonly_status         = $this->get_option('auth_only_order_status');
         $this->bgcolor                 = $this->get_option('bgcolor');
-
+        $this->enable_3ds              = $this->get_option('enable-3ds');
+        $this->threeds_env             = $this->get_option('3ds-env');
 
         WC_Cardknox_API::set_transaction_key($this->transaction_key);
 
@@ -153,7 +154,9 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             'card-expiry-field' => '<p class="form-row form-row-first">
 				<label for="' . esc_attr($this->id) . '-card-expiry">' . esc_html__('Expiry (MM/YY)', 'woocommerce') . ' <span class="required">*</span></label>
 				<input id="' . esc_attr($this->id) . '-card-expiry" class="input-text wc-credit-card-form-card-expiry" inputmode="numeric" autocomplete="cc-exp" autocorrect="no" autocapitalize="no" spellcheck="no" type="tel" placeholder="' . esc_attr__('MM / YY', 'woocommerce') . '" ' . $this->field_name('card-expiry') . ' style="font-size:inherit; line-height:1.1" />
-			</p>',
+                <input type="hidden" id="x3dsReferenceId" name="x3dsReferenceId" value="">
+                <input type="hidden" id="x3dsInitializeStatus" name="x3dsInitializeStatus" value="">
+                </p>',
         );
 
         if (!$this->supports('credit_card_form_cvc_on_saved_method')) {
@@ -390,19 +393,30 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
      */
     public function payment_scripts()
     {
+        global $woocommerce;
+
         if (!is_cart() && !is_checkout() && !isset($_GET['pay_for_order']) && !is_add_payment_method_page()) {
             return;
         }
 
         $suffix = defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? '' : '.min';
 
-        wp_enqueue_script('cardknox', 'https://cdn.cardknox.com/ifields/2.15.2302.0801/ifields.min.js', '', '1.0.0', false);
+        wp_enqueue_script('cardknox', 'https://cdn.cardknox.com/ifields/2.15.2309.2601/ifields.min.js', '', '1.0.0', false);
         wp_enqueue_script('woocommerce_cardknox', plugins_url('assets/js/cardknox' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE), array('jquery-payment'), filemtime(plugin_dir_path(dirname(__FILE__)) . 'assets/js/cardknox' . $suffix . '.js'), true);
+
         $cardknox_params = array(
             'key'                  => $this->token_key,
+            'transaction_key'      => $this->transaction_key,
             'i18n_terms'           => __('Please accept the terms and conditions first', 'woocommerce-gateway-cardknox'),
             'i18n_required_fields' => __('Please fill in required checkout fields first', 'woocommerce-gateway-cardknox'),
-            'bgcolor'               => $this->bgcolor
+            'bgcolor'              => $this->bgcolor,
+            'enable_3ds'           => $this->enable_3ds,
+            'threeds_env'          => $this->threeds_env,
+            'xVersion'             => '4.5.8',
+            'xSoftwareVersion'     => WC()->version,
+            'xSoftwareName'        => 'Wordpress_WooCommerce',
+            'xCommand'             => $this->capture ? 'cc:sale' : 'cc:authonly',
+            'xAmount'              => $woocommerce->cart->get_cart_contents_total()
         );
 
         // merge localized messages to be use in JS
@@ -420,7 +434,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
     protected function generate_payment_request($order)
     {
         $postData                = array();
-        $postData['xCommand']     = $this->capture ? 'cc:sale' : 'cc:authonly';
+        $postData['xCommand']    = $this->capture ? 'cc:sale' : 'cc:authonly';
 
         $postData = self::get_order_data($postData, $order);
         $postData = self::get_billing_shiping_info($postData, $order);
@@ -465,6 +479,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             $postData['xCVV'] = wc_clean($_POST['xCVV']);
             $postData['xExp'] = wc_clean($_POST['xExp']);
         }
+
         $this->validate_payment_data($postData);
         return $postData;
     }

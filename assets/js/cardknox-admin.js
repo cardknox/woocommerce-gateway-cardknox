@@ -48,28 +48,28 @@ jQuery(function ($) {
   wc_cardknox_admin.init();
 });
 
-jQuery(function (a) {
+jQuery(function ($) {
   (function () {
-    a("input#woocommerce_cardknox-applepay_applepay_capture")
+    $("input#woocommerce_cardknox-applepay_applepay_capture")
       .change(function () {
-        a(this).is(":checked")
-          ? a("#woocommerce_cardknox-applepay_applepay_auth_only_order_status")
+        $(this).is(":checked")
+          ? $("#woocommerce_cardknox-applepay_applepay_auth_only_order_status")
               .closest("tr")
               .hide()
-          : a("#woocommerce_cardknox-applepay_applepay_auth_only_order_status")
+          : $("#woocommerce_cardknox-applepay_applepay_auth_only_order_status")
               .closest("tr")
               .show();
       })
       .change();
-    a("input#woocommerce_cardknox-googlepay_googlepay_capture")
+    $("input#woocommerce_cardknox-googlepay_googlepay_capture")
       .change(function () {
-        a(this).is(":checked")
-          ? a(
+        $(this).is(":checked")
+          ? $(
               "#woocommerce_cardknox-googlepay_googlepay_auth_only_order_status"
             )
               .closest("tr")
               .hide()
-          : a(
+          : $(
               "#woocommerce_cardknox-googlepay_googlepay_auth_only_order_status"
             )
               .closest("tr")

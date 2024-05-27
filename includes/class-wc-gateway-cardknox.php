@@ -553,7 +553,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                 // Make the request.
                 $response = WC_Cardknox_API::request($this->generate_payment_request($order));
 
-                if ($response['xResult'] == 'V') {
+                if (isset($response['xResult']) && $response['xResult'] == 'V') {
                     return array(
                         'result'   => 'success',
                         'response' => $response

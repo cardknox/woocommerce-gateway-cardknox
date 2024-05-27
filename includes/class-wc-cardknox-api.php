@@ -30,7 +30,7 @@ class WC_Cardknox_API
     /**
      * Cardknox API Endpoint
      */
-    const ENDPOINT = 'https://x3.cardknox.com/gateway';
+    const ENDPOINT = 'https://x1.cardknox.com/gateway';
 
     /**
      * Secret API Key.
@@ -101,7 +101,10 @@ class WC_Cardknox_API
 
         if (!empty($parsed_response['xResult'])) {
 
-            if ('yes' === $options['enable-3ds']) {
+            $orderID = $parsed_response['xInvoice'];
+            $paymentName = get_post_meta( $orderID, '_payment_method', true );
+
+            if ('yes' === $options['enable-3ds'] && $paymentName == 'cardknox') {
                 if ($parsed_response['xResult'] != "V") {
                     return new WP_Error("cardknox_error", "{$parsed_response['xStatus']}: {$parsed_response['xError']}({$parsed_response['xRefNum']})", 'woocommerce-gateway-cardknox');
                 } else {

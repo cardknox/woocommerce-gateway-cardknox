@@ -114,7 +114,6 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $this->enable_3ds              = $this->get_option('enable-3ds');
         $this->threeds_env             = $this->get_option('3ds-env');
 
-
         WC_Cardknox_API::set_transaction_key($this->transaction_key);
 
         // Hooks.
@@ -155,7 +154,9 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             'card-expiry-field' => '<p class="form-row form-row-first">
 				<label for="' . esc_attr($this->id) . '-card-expiry">' . esc_html__('Expiry (MM/YY)', 'woocommerce') . ' <span class="required">*</span></label>
 				<input id="' . esc_attr($this->id) . '-card-expiry" class="input-text wc-credit-card-form-card-expiry" inputmode="numeric" autocomplete="cc-exp" autocorrect="no" autocapitalize="no" spellcheck="no" type="tel" placeholder="' . esc_attr__('MM / YY', 'woocommerce') . '" ' . $this->field_name('card-expiry') . ' style="font-size:inherit; line-height:1.1" />
-			</p>',
+                <input type="hidden" id="x3dsReferenceId" name="x3dsReferenceId" value="">
+                <input type="hidden" id="x3dsInitializeStatus" name="x3dsInitializeStatus" value="">
+                </p>',
         );
 
         if (!$this->supports('credit_card_form_cvc_on_saved_method')) {
@@ -434,7 +435,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
     protected function generate_payment_request($order)
     {
         $postData                = array();
-        $postData['xCommand']     = $this->capture ? 'cc:sale' : 'cc:authonly';
+        $postData['xCommand']    = $this->capture ? 'cc:sale' : 'cc:authonly';
 
         $postData = self::get_order_data($postData, $order);
         $postData = self::get_billing_shiping_info($postData, $order);
@@ -478,6 +479,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             $postData['xCVV'] = wc_clean($_POST['xCVV']);
             $postData['xExp'] = wc_clean($_POST['xExp']);
         }
+
         $this->validate_payment_data($postData);
         return $postData;
     }

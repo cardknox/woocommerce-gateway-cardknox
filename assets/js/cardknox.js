@@ -343,7 +343,9 @@ jQuery(function ($) {
         return false;
       }
       wc_cardknox_form.form.append(
-        "<input type='hidden' class='xExp' name='xExp' value='" + xExp + "'/>"
+        "<input type='hidden' class='xExp' id='xExp' name='xExp' value='" +
+          xExp +
+          "'/>"
       );
 
       if (wc_cardknox_params.enable_3ds == "yes") {
@@ -430,12 +432,18 @@ jQuery(document).ready(function () {
       ).val();
 
       if (selectedPaymentMethod === "cardknox-applepay") {
-        // Replace 'your_payment_method_slug' with your payment method value
         jQuery(placeOrderButton).hide();
+        jQuery("div#divGpay").hide();
         jQuery("#ap-container").show();
         jQuery(".applepay-error").show();
+      } else if (selectedPaymentMethod === "cardknox-googlepay") {
+        jQuery(placeOrderButton).hide();
+        jQuery("div#divGpay").show();
+        jQuery("#ap-container").hide();
+        jQuery(".applepay-error").hide();
       } else {
         jQuery(placeOrderButton).show();
+        jQuery("div#divGpay").hide();
         jQuery("#ap-container").hide();
         jQuery(".applepay-error").hide();
       }

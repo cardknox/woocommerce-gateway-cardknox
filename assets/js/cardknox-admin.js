@@ -14,57 +14,113 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-jQuery( function( $ ) {
-	'use strict';
+jQuery(function ($) {
+  "use strict";
 
-	/**
-	 * Object to handle Cardknox admin functions.
-	 */
-	var wc_cardknox_admin = {
+  /**
+   * Object to handle Cardknox admin functions.
+   */
+  var wc_cardknox_admin = {
+    getSecretKey: function () {
+      return $("#woocommerce_cardknox_transaction_key").val();
+    },
 
-		getSecretKey: function() {
-			return $( '#woocommerce_cardknox_transaction_key' ).val();
-		},
+    /**
+     * Initialize.
+     */
+    init: function () {
+      $("input#woocommerce_cardknox_capture")
+        .change(function () {
+          if ($(this).is(":checked")) {
+            $("#woocommerce_cardknox_auth_only_order_status")
+              .closest("tr")
+              .hide();
+          } else {
+            $("#woocommerce_cardknox_auth_only_order_status")
+              .closest("tr")
+              .show();
+          }
+        })
+        .change();
+    },
+  };
 
-		/**
-		 * Initialize.
-		 */
-		init: function() {
-
-			$( 'input#woocommerce_cardknox_capture' ).change(function() {
-				if ( $( this ).is( ':checked' ) ) {
-					$( '#woocommerce_cardknox_auth_only_order_status' ).closest( 'tr' ).hide();
-				} else {
-					$( '#woocommerce_cardknox_auth_only_order_status' ).closest( 'tr' ).show();
-				}
-			}).change();
-		}
-
-
-	};
-
-	wc_cardknox_admin.init();
+  wc_cardknox_admin.init();
 });
 
-jQuery(function(a){(function(){a("input#woocommerce_cardknox-applepay_applepay_capture").change(function(){a(this).is(":checked")?a("#woocommerce_cardknox-applepay_applepay_auth_only_order_status").closest("tr").hide():a("#woocommerce_cardknox-applepay_applepay_auth_only_order_status").closest("tr").show()}).change()})()});
+jQuery(function ($) {
+  (function () {
+    $("input#woocommerce_cardknox-applepay_applepay_capture")
+      .change(function () {
+        $(this).is(":checked")
+          ? $("#woocommerce_cardknox-applepay_applepay_auth_only_order_status")
+              .closest("tr")
+              .hide()
+          : $("#woocommerce_cardknox-applepay_applepay_auth_only_order_status")
+              .closest("tr")
+              .show();
+      })
+      .change();
+    $("input#woocommerce_cardknox-googlepay_googlepay_capture")
+      .change(function () {
+        $(this).is(":checked")
+          ? $(
+              "#woocommerce_cardknox-googlepay_googlepay_auth_only_order_status"
+            )
+              .closest("tr")
+              .hide()
+          : $(
+              "#woocommerce_cardknox-googlepay_googlepay_auth_only_order_status"
+            )
+              .closest("tr")
+              .show();
+      })
+      .change();
+  })();
+});
 
-jQuery(document).ready(function($) {
-    // Target the first select box
-    var select1 = $('#woocommerce_cardknox-applepay_applepay_applicable_countries');
-    // Target the second select box
-    var select2 = $('#woocommerce_cardknox-applepay_applepay_specific_countries');
-    // Disable the second select box initially
+jQuery(document).ready(function ($) {
+  // Target the first select box
+  let select1 = $(
+    "#woocommerce_cardknox-applepay_applepay_applicable_countries"
+  );
+  // Target the second select box
+  let select2 = $("#woocommerce_cardknox-applepay_applepay_specific_countries");
+  // Disable the second select box initially
+  if (select1.val() == 0) {
+    select2.prop("disabled", true);
+  } else {
+    select2.prop("disabled", false);
+  }
+  // Enable or disable the second select box based on the value of the first select box
+  select1.on("change", function () {
     if (select1.val() == 0) {
-        select2.prop('disabled', true);
-    }else{
-        select2.prop('disabled', false);
+      select2.prop("disabled", true);
+    } else {
+      select2.prop("disabled", false);
     }
-    // Enable or disable the second select box based on the value of the first select box    
-    select1.on('change', function() {
-        if (select1.val() == 0) {
-            select2.prop('disabled', true);
-        } else {
-            select2.prop('disabled', false);
-        }
-    });
+  });
+
+  // Target the first select box
+  let select3 = $(
+    "#woocommerce_cardknox-googlepay_googlepay_applicable_countries"
+  );
+  // Target the second select box
+  let select4 = $(
+    "#woocommerce_cardknox-googlepay_googlepay_specific_countries"
+  );
+  // Disable the second select box initially
+  if (select3.val() == 0) {
+    select4.prop("disabled", true);
+  } else {
+    select4.prop("disabled", false);
+  }
+  // Enable or disable the second select box based on the value of the first select box
+  select3.on("change", function () {
+    if (select3.val() == 0) {
+      select4.prop("disabled", true);
+    } else {
+      select4.prop("disabled", false);
+    }
+  });
 });

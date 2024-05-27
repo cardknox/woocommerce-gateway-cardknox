@@ -2,7 +2,7 @@
 Contributors: dlehren
 Tags: credit card, gateway, cardknox, woocommerce
 Requires at least: 4.4
-Tested up to: 6.0.3
+Tested up to: 6.4.2
 Requires PHP: 5.6.0
 Stable tag: trunk
 License: GNU GPL 3.0

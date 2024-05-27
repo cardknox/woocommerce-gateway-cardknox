@@ -147,6 +147,9 @@ if (!class_exists('WC_Cardknox')) :
 
             add_action('woocommerce_order_status_processing_to_cancelled', array($this, 'refund_payment'));
             add_action('woocommerce_order_status_processing_to_completed', array($this, 'capture_payment'));
+
+            add_action('wp_ajax_nopriv_get_data', array($this, 'threeds_ajax_handler'));
+            add_action('wp_ajax_get_data', array($this, 'threeds_ajax_handler'));
         }
 
         /**
@@ -489,6 +492,79 @@ if (!class_exists('WC_Cardknox')) :
             }
 
             self::$log->add('woocommerce-gateway-cardknox', $message);
+        }
+
+        /**
+         * 3ds API verificaion
+         */
+        public function threeds_ajax_handler()
+        {
+
+            $apiUrl = "https://x1.cardknox.com/verify";
+
+            $request = $_POST;
+            unset($request['action']);
+
+            $response = wp_safe_remote_post(
+                $apiUrl,
+                array(
+                    'method'     => 'POST',
+                    'body'       => $request,
+                    'timeout'    => 70
+                )
+            );
+
+            $parsedResponse = [];
+            parse_str($response['body'], $parsedResponse);
+
+            try {
+                if ($parsedResponse['xResult'] == "E") {
+                    wc_add_notice($parsedResponse['xError'], 'error');
+                    $this->log(sprintf(__('Error: %s', 'woocommerce-gateway-cardknox'), $parsedResponse['xError']));
+
+                    return wp_send_json($parsedResponse);
+                } else {
+
+                    $paymentInfo = new WC_Gateway_Cardknox();
+
+                    $order  = wc_get_order($parsedResponse['xInvoice']);
+                    $redirect = $order->get_checkout_order_received_url();
+
+                    if (is_wp_error($parsedResponse)) {
+                        $order->add_order_note($parsedResponse->get_error_message());
+                        throw new Exception("The transaction was declined please try again");
+                    }
+
+                    $this->log("Info: set_transaction_id");
+                    $order->set_transaction_id($parsedResponse['xRefNum']);
+
+                    $this->log("Info: save_payment");
+                    $paymentInfo->save_payment($forceCustomer, $parsedResponse);
+
+                    $this->log("Info: process_response");
+                    $paymentInfo->process_response($parsedResponse, $order);
+
+                    $this->log("Info: empty_cart");
+
+                    WC()->cart->empty_cart();
+
+                    $this->log("Info: wc_gateway_cardknox_process_payment");
+                    do_action('wc_gateway_cardknox_process_payment', $parsedResponse, $order);
+
+                    $this->log("Info: thank you page redirect");
+
+                    $parsedResponse['redirect'] = $redirect;
+
+                    return wp_send_json($parsedResponse);
+                }
+            } catch (Exception $e) {
+                wc_add_notice($e->getMessage(), 'error');
+                $this->log(sprintf(__('Error: %s', 'woocommerce-gateway-cardknox'), $e->getMessage()));
+
+                return $e->getMessage();
+            }
+
+            die();
         }
     }
 

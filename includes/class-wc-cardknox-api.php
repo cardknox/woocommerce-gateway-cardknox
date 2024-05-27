@@ -30,7 +30,7 @@ class WC_Cardknox_API
     /**
      * Cardknox API Endpoint
      */
-    const ENDPOINT = 'https://x1.cardknox.com/gateway';
+    const ENDPOINT = 'https://x3.cardknox.com/gateway';
 
     /**
      * Secret API Key.
@@ -70,16 +70,15 @@ class WC_Cardknox_API
     public static function request($request, $method = 'POST')
     {
         $request['xKey'] =  self::get_transaction_key();
-        $request['xVersion'] =  '4.5.8';
+        $request['xVersion'] =  '5.0.0';
         $request['xSoftwareVersion'] =  WC()->version;
         $request['xSoftwareName'] =  'Wordpress_WooCommerce';
         $request['xSDKVersion'] =  WC_CARDKNOX_VERSION;
         $request['xSDKName'] =  'CardknoxWooCommerce';
         $request['xSupports64BitRefnum'] = true;
-        $request['x3dsReferenceId'] = $request['x3dsReferenceId'];
-        $request['x3dsInitializeStatus'] = $request['x3dsInitializeStatus'];
         $request['xAllowDuplicate'] = 1;
         self::log(" request: " . print_r($request, true));
+        self::log(" endpoint: " . self::ENDPOINT);
         $response = wp_safe_remote_post(
             self::ENDPOINT,
             array(
@@ -98,7 +97,18 @@ class WC_Cardknox_API
         parse_str($response['body'], $parsed_response);
         self::log(" reponse: " . print_r($parsed_response, true));
 
+        $options = get_option('woocommerce_cardknox_settings');
+
         if (!empty($parsed_response['xResult'])) {
+
+            if ('yes' === $options['enable-3ds']) {
+                if ($parsed_response['xResult'] != "V") {
+                    return new WP_Error("cardknox_error", "{$parsed_response['xStatus']}: {$parsed_response['xError']}({$parsed_response['xRefNum']})", 'woocommerce-gateway-cardknox');
+                } else {
+                    return $parsed_response;
+                }
+            }
+
             if ($parsed_response['xResult'] != "A") {
                 //				if ( ! empty( $parsed_response['xError'] ) ) {
                 //					if ( ! empty( $parsed_response['xErrorCode'] ) ) {

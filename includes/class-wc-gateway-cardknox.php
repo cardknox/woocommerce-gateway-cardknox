@@ -402,8 +402,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $suffix = defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? '' : '.min';
 
         wp_enqueue_script('cardknox', 'https://cdn.cardknox.com/ifields/2.15.2401.3101/ifields.min.js', '', '1.0.0', false);
-        // wp_enqueue_script('woocommerce_cardknox', plugins_url('assets/js/cardknox' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE), array('jquery-payment'), filemtime(plugin_dir_path(dirname(__FILE__)) . 'assets/js/cardknox' . $suffix . '.js'), true);
-        wp_enqueue_script('woocommerce_cardknox', plugins_url('assets/js/cardknox.js', WC_CARDKNOX_MAIN_FILE), array('jquery-payment'), filemtime(plugin_dir_path(dirname(__FILE__)) . 'assets/js/cardknox' . $suffix . '.js'), true);
+        wp_enqueue_script('woocommerce_cardknox', plugins_url('assets/js/cardknox' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE), array('jquery-payment'), filemtime(plugin_dir_path(dirname(__FILE__)) . 'assets/js/cardknox' . $suffix . '.js'), true);
 
         $cardknox_params = array(
             'key'                  => $this->token_key,
@@ -554,7 +553,9 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                 // Make the request.
                 $response = WC_Cardknox_API::request($this->generate_payment_request($order));
 
-                if (isset($response['xResult']) && $response['xResult'] == 'V') {
+                $paymentName = get_post_meta( $orderId, '_payment_method', true );
+
+                if (isset($response['xResult']) && $response['xResult'] === 'V' && $paymentName === 'cardknox') {
                     return array(
                         'result'   => 'success',
                         'response' => $response

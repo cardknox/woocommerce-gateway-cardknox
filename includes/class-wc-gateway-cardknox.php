@@ -558,7 +558,6 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                         'result'   => 'success',
                         'response' => $response
                     );
-                    wp_die();
                 }
 
                 if (is_wp_error($response)) {

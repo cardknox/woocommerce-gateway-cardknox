@@ -555,13 +555,6 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
                 $paymentName = get_post_meta($orderId, '_payment_method', true);
 
-                // if (isset($response['xResult']) && $response['xResult'] === 'V' && $paymentName === 'cardknox') {
-                //     return array(
-                //         'result'   => 'success',
-                //         'response' => $response
-                //     );
-                // }
-
                 if (is_wp_error($response)) {
                     //					$localized_messages = $this->get_localized_messages();
                     //

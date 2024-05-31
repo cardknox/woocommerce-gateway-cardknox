@@ -148,6 +148,8 @@ if (!class_exists('WC_Cardknox')) :
             add_action('woocommerce_order_status_processing_to_cancelled', array($this, 'refund_payment'));
             add_action('woocommerce_order_status_processing_to_completed', array($this, 'capture_payment'));
 
+            $this->settingPage = 'admin.php?page=wc-settings&tab=checkout&section=';
+
             add_action('wp_ajax_nopriv_get_data', array($this, 'threeds_ajax_handler'));
             add_action('wp_ajax_get_data', array($this, 'threeds_ajax_handler'));
         }

@@ -553,14 +553,14 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                 // Make the request.
                 $response = WC_Cardknox_API::request($this->generate_payment_request($order));
 
-                $paymentName = get_post_meta( $orderId, '_payment_method', true );
+                $paymentName = get_post_meta($orderId, '_payment_method', true);
 
-                if (isset($response['xResult']) && $response['xResult'] === 'V' && $paymentName === 'cardknox') {
-                    return array(
-                        'result'   => 'success',
-                        'response' => $response
-                    );
-                }
+                // if (isset($response['xResult']) && $response['xResult'] === 'V' && $paymentName === 'cardknox') {
+                //     return array(
+                //         'result'   => 'success',
+                //         'response' => $response
+                //     );
+                // }
 
                 if (is_wp_error($response)) {
                     //					$localized_messages = $this->get_localized_messages();
@@ -570,6 +570,11 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                     //					$order->add_order_note( $message );
                     $order->add_order_note($response->get_error_message());
                     throw new Exception("The transaction was declined please try again");
+                } elseif ($response['xResult'] === 'V' && $paymentName === 'cardknox') {
+                    return array(
+                        'result'   => 'success',
+                        'response' => $response
+                    );
                 }
 
                 $this->log("Info: set_transaction_id");

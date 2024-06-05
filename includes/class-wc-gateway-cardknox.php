@@ -477,7 +477,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         } else {
             $postData['xCardNum'] = wc_clean($_POST['xCardNum']);
             $postData['xCVV'] = wc_clean($_POST['xCVV']);
-            $postData['xExp'] = wc_clean($_POST['xExp']);
+            $postData['xExp'] = str_replace(' ', '', wc_clean($_POST['xExp']));
         }
 
         $this->validate_payment_data($postData);
@@ -728,7 +728,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                 'xCommand' => 'cc:save',
                 'xCardNum' => wc_clean($_POST['xCardNum']),
                 'xCVV'     => wc_clean($_POST['xCVV']),
-                'xExp'     => wc_clean($_POST['xExp']),
+                'xExp'     => str_replace(' ', '', wc_clean($_POST['xExp'])),
             )
         );
 
@@ -864,9 +864,9 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         if (get_current_user_id() && class_exists('WC_Payment_Token_CC')) {
             $myExp = '';
             if ($response['xExp']) {
-                $myExp = $response['xExp'];
+                $myExp = str_replace(' ', '', $response['xExp']);
             } elseif (wc_clean($_POST['xExp']) != '') {
-                $myExp = wc_clean($_POST['xExp']);
+                $myExp = str_replace(' ', '', wc_clean($_POST['xExp']));
             }
             if ($myExp) {
                 $token = new WC_Payment_Token_CC();

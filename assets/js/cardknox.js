@@ -348,57 +348,55 @@ jQuery(function ($) {
           "'/>"
       );
 
-      if (wc_cardknox_params.enable_3ds == "yes") {
-        $.ajax({
-          type: "POST",
-          url: "?wc-ajax=checkout", // Ensure this points to the correct URL
-          data: $("form.woocommerce-checkout").serialize(),
-          beforeSend: function () {
-            // Show the loader
-            //   $(".blockUI").show();
-          },
-          success: function (response) {
-            console.log("response", response);
+      $.ajax({
+        type: "POST",
+        url: "?wc-ajax=checkout", // Ensure this points to the correct URL
+        data: $("form.woocommerce-checkout").serialize(),
+        beforeSend: function () {
+          // Show the loader
+          //   $(".blockUI").show();
+        },
+        success: function (response) {
+          console.log("response", response);
 
-            if (response.result === "success") {
-              let jsonResp = response.response;
+          if (response.result === "success") {
+            let jsonResp = response.response;
 
-              if (
-                jsonResp.xResult == "V" &&
-                jsonResp.xVerifyPayload &&
-                jsonResp.xVerifyPayload !== "" &&
-                jsonResp.xVerifyURL &&
-                jsonResp.xVerifyURL !== ""
-              ) {
-                verify3DS(jsonResp);
-              }
-              //   if (jsonResp.xResult == "A") {
-              //     window.location.href = response.redirect;
-              //   }
-              // Handle success, such as showing a confirmation message
-            } else {
-              // Handle failure
-              $("form.woocommerce-checkout .blockUI.blockOverlay").hide();
-              wc_cardknox_form.form.prepend(response.messages);
-              return false;
+            if (
+              jsonResp.xResult == "V" &&
+              jsonResp.xVerifyPayload &&
+              jsonResp.xVerifyPayload !== "" &&
+              jsonResp.xVerifyURL &&
+              jsonResp.xVerifyURL !== ""
+            ) {
+              verify3DS(jsonResp);
             }
-            $("form.woocommerce-checkout .blockUI.blockOverlay").hide();
-          },
-          error: function (jqXHR, textStatus, errorThrown) {
-            // Handle error (e.g., show an error message)
-            console.log("Error placing order:", textStatus, errorThrown);
 
-            // Hide the loader
+            if (jsonResp.xResult == "A") {
+              window.location.href = response.redirect;
+            }
+
+            // Handle success, such as showing a confirmation message
+          } else {
+            // Handle failure
             $("form.woocommerce-checkout .blockUI.blockOverlay").hide();
-          },
-          complete: function () {
-            // Ensure loader is hidden after the request completes
-            $("form.woocommerce-checkout .blockUI.blockOverlay").hide();
-          },
-        });
-      } else {
-        wc_cardknox_form.form.submit();
-      }
+            wc_cardknox_form.form.prepend(response.messages);
+            //return false;
+          }
+          $("form.woocommerce-checkout .blockUI.blockOverlay").hide();
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+          // Handle error (e.g., show an error message)
+          console.log("Error placing order:", textStatus, errorThrown);
+
+          // Hide the loader
+          $("form.woocommerce-checkout .blockUI.blockOverlay").hide();
+        },
+        complete: function () {
+          // Ensure loader is hidden after the request completes
+          $("form.woocommerce-checkout .blockUI.blockOverlay").hide();
+        },
+      });
     },
 
     reset: function () {

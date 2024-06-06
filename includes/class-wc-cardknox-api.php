@@ -97,34 +97,12 @@ class WC_Cardknox_API
         parse_str($response['body'], $parsed_response);
         self::log(" reponse: " . print_r($parsed_response, true));
 
-        $options = get_option('woocommerce_cardknox_settings');
-
         if (!empty($parsed_response['xResult'])) {
 
-            $orderID = $parsed_response['xInvoice'];
-            $paymentName = get_post_meta( $orderID, '_payment_method', true );
-
-            if ('yes' === $options['enable-3ds'] && $paymentName === 'cardknox') {
-                if ($parsed_response['xResult'] != "V") {
-                    return new WP_Error("cardknox_error", "{$parsed_response['xStatus']}: {$parsed_response['xError']}({$parsed_response['xRefNum']})", 'woocommerce-gateway-cardknox');
-                } else {
-                    return $parsed_response;
-                }
-            }
-
-            if ($parsed_response['xResult'] != "A") {
-                //				if ( ! empty( $parsed_response['xError'] ) ) {
-                //					if ( ! empty( $parsed_response['xErrorCode'] ) ) {
-                //						$code = $parsed_response['xErrorCode'];
-                //					} else {
-                //						$code = 'cardknox_error';
-                //					}
-                return new WP_Error("cardknox_error", "{$parsed_response['xStatus']}: {$parsed_response['xError']}({$parsed_response['xRefNum']})", 'woocommerce-gateway-cardknox');
-                //				} else {
-                //					return new WP_Error( 'cardknox_error', __( 'There was a problem connecting to the payment gateway.', 'woocommerce-gateway-cardknox' ) );
-                //				}
-            } else {
+            if (($parsed_response['xResult'] == "A") || ($parsed_response['xResult'] == "V")) {
                 return $parsed_response;
+            } else {
+                return new WP_Error("cardknox_error", "{$parsed_response['xStatus']}: {$parsed_response['xError']}({$parsed_response['xRefNum']})", 'woocommerce-gateway-cardknox');
             }
         } else {
             return new WP_Error('cardknox_error', __('There was a problem connecting to the payment gateway.', 'woocommerce-gateway-cardknox'));

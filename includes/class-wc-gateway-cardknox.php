@@ -552,37 +552,39 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
                 // Make the request.
                 $response = WC_Cardknox_API::request($this->generate_payment_request($order));
-
                 $paymentName = get_post_meta($orderId, '_payment_method', true);
 
-                if (is_wp_error($response)) {
-                    //					$localized_messages = $this->get_localized_messages();
-                    //
-                    //					$message = isset( $localized_messages[ $response->get_error_code() ] ) ? $localized_messages[ $response->get_error_code() ] : $response->get_error_message();
-                    //
-                    //					$order->add_order_note( $message );
-                    $order->add_order_note($response->get_error_message());
-                    throw new Exception("The transaction was declined please try again");
-                } elseif ($response['xResult'] === 'V' && $paymentName === 'cardknox') {
+                if ($response['xResult'] === 'V' && $paymentName === 'cardknox') {
                     return array(
                         'result'   => 'success',
                         'response' => $response
                     );
+                } else {
+
+                    if (is_wp_error($response)) {
+                        //					$localized_messages = $this->get_localized_messages();
+                        //
+                        //					$message = isset( $localized_messages[ $response->get_error_code() ] ) ? $localized_messages[ $response->get_error_code() ] : $response->get_error_message();
+                        //
+                        //					$order->add_order_note( $message );
+                        $order->add_order_note($response->get_error_message());
+                        throw new Exception("The transaction was declined please try again");
+                    }
+
+                    $this->log("Info: set_transaction_id");
+                    $order->set_transaction_id($response['xRefNum']);
+
+                    $this->log("Info: save_payment");
+                    $this->save_payment($forceCustomer, $response);
+
+                    //the below get sets when a subscription charge gets fired
+                    if ($forceCustomer) {
+                        $this->save_payment_for_subscription($orderId, $response);
+                    }
+                    // Process valid response.
+                    $this->log("Info: process_response");
+                    $this->process_response($response, $order);
                 }
-
-                $this->log("Info: set_transaction_id");
-                $order->set_transaction_id($response['xRefNum']);
-
-                $this->log("Info: save_payment");
-                $this->save_payment($forceCustomer, $response);
-
-                //the below get sets when a subscription charge gets fired
-                if ($forceCustomer) {
-                    $this->save_payment_for_subscription($orderId, $response);
-                }
-                // Process valid response.
-                $this->log("Info: process_response");
-                $this->process_response($response, $order);
             } else {
                 // the below get sets when a subscription charge gets fired
                 if ($forceCustomer && wcs_is_subscription($orderId)) {

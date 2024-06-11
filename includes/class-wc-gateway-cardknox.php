@@ -107,7 +107,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $this->capture                 = 'yes' === $this->get_option('capture', 'yes');
         $this->saved_cards             = 'yes' === $this->get_option('saved_cards');
         $this->transaction_key         =  $this->get_option('transaction_key');
-        $this->token_key                =  $this->get_option('token_key');
+        $this->token_key               =  $this->get_option('token_key');
         $this->logging                 = 'yes' === $this->get_option('logging');
         $this->authonly_status         = $this->get_option('auth_only_order_status');
         $this->bgcolor                 = $this->get_option('bgcolor');
@@ -122,6 +122,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         add_action('admin_notices', array($this, 'admin_notices'));
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
         add_action('woocommerce_admin_order_data_after_order_details', array($this, 'cardknox_order_meta_general'));
+        add_filter('woocommerce_gateway_icon', array($this, 'cardknox_gateway_icon'), 10, 2);
     }
 
 
@@ -912,6 +913,16 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             <p><strong><?php echo __('Last 4 Digits Of Credit Card:', 'woocommerce-gateway-cardknox'); ?></strong><br>
                 <?php echo substr($cardknox_masked_card, -4); ?></p>
 <?php
+        }
+    }
+
+    public function cardknox_gateway_icon($icon, $id)
+    {
+        if ($id === 'cardknox') {
+            $icon = plugin_dir_url(__DIR__) . 'images/card-logos.png';
+            return '<img src="' . $icon . '"> ';
+        } else {
+            return $icon;
         }
     }
 }

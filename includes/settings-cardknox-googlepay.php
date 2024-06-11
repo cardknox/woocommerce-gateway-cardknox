@@ -18,10 +18,6 @@ $gkeyDefault = 'default';
 $gkeyDescTip = 'desc_tip';
 $gbuttonPrefix = 'Google Pay Button';
 
-global $woocommerce;
-$countries_obj   = new WC_Countries();
-$countries   = $countries_obj->__get('countries');
-
 $wc_cardknox_google_pay_settings = array(
     $gkeyPrefix . '_enabled' => array(
         $gkeyTitle       => __('Enabled', 'woocommerce-gateway-cardknox'),

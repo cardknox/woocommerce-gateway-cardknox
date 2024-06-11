@@ -123,4 +123,17 @@ jQuery(document).ready(function ($) {
       select4.prop("disabled", false);
     }
   });
+
+  $('tr[data-gateway_id="cardknox-applepay"]').hide();
+  $('tr[data-gateway_id="cardknox-googlepay"]').hide();
+
+  $("#wc-master-gateway-tabs .nav-tab").click(function (e) {
+    e.preventDefault();
+    $("#wc-master-gateway-tabs .nav-tab").removeClass("nav-tab-active");
+    $(this).addClass("nav-tab-active");
+    $(".panel").hide();
+    $($(this).attr("href")).show();
+  });
+  $(".panel").hide();
+  $(".panel:first").show();
 });

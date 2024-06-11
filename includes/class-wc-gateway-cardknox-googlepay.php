@@ -62,7 +62,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         $this->wcVersion = version_compare(WC_VERSION, '3.0.0', '<');
         // Hooks.
         add_action('wp_enqueue_scripts', array($this, 'gpayment_scripts'));
-        add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
+        add_action('woocommerce_update_options_payment_gateways_cardknox', array($this, 'process_admin_options'));
 
         add_action('woocommerce_review_order_after_submit', array($this, 'cardknox_gpay_order_after_submit'));
         add_filter('woocommerce_available_payment_gateways', array($this, 'cardknox_allow_gpay_method_by_country'));

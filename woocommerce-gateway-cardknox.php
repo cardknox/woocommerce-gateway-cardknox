@@ -269,8 +269,8 @@ if (!class_exists('WC_Cardknox')) :
 
             $plugin_links = array(
                 $this->generateLink($setting_link) . __('Settings', 'woocommerce-gateway-cardknox') . '</a>',
-                $this->generateLink($applepay_setting_link) . __('Apple Pay', 'woocommerce-gateway-cardknox') . '</a>',
-                $this->generateLink($googlepay_setting_link) . __('Google Pay', 'woocommerce-gateway-cardknox') . '</a>',
+                //$this->generateLink($applepay_setting_link) . __('Apple Pay', 'woocommerce-gateway-cardknox') . '</a>',
+                //$this->generateLink($googlepay_setting_link) . __('Google Pay', 'woocommerce-gateway-cardknox') . '</a>',
                 '<a href="https://docs.woocommerce.com/document/cardknox/">' . __('Docs', 'woocommerce-gateway-cardknox') . '</a>',
                 '<a href="https://woocommerce.com/contact-us/">' . __('Support', 'woocommerce-gateway-cardknox') . '</a>',
             );

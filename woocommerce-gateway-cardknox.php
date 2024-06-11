@@ -264,8 +264,6 @@ if (!class_exists('WC_Cardknox')) :
         public function plugin_action_links($links)
         {
             $setting_link = $this->get_setting_link();
-            $applepay_setting_link = $this->get_setting_applepay_link();
-            $googlepay_setting_link = $this->getSettingGooglepayLink();
 
             $plugin_links = array(
                 $this->generateLink($setting_link) . __('Settings', 'woocommerce-gateway-cardknox') . '</a>',

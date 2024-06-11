@@ -931,27 +931,48 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             <a href="#google-pay-settings" class="nav-tab"><?php _e('Google Pay', 'woocommerce'); ?></a>
         </div>
         <div id="credit-card-settings" class="panel">
-            <h3><?php _e('Credit Card Settings', 'woocommerce'); ?></h3>
             <table class="form-table">
-                <?php
-                $this->generate_settings_html();
-                ?>
+                <thead>
+                    <tr>
+                        <th><?php _e('Credit Card Settings', 'woocommerce'); ?></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $this->generate_settings_html();
+                    ?>
+                </tbody>
             </table>
         </div>
         <div id="apple-pay-settings" class="panel">
-            <h3><?php _e('Apple Pay Settings', 'woocommerce'); ?></h3>
             <table class="form-table">
-                <?php
-                $this->apple_pay_gateway->generate_settings_html();
-                ?>
+                <thead>
+                    <tr>
+                        <th><?php _e('Apple Pay Settings', 'woocommerce'); ?></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $this->apple_pay_gateway->generate_settings_html();
+                    ?>
+                </tbody>
             </table>
         </div>
         <div id="google-pay-settings" class="panel">
-            <h3><?php _e('Google Pay Settings', 'woocommerce'); ?></h3>
             <table class="form-table">
-                <?php
-                $this->google_pay_gateway->generate_settings_html();
-                ?>
+                <thead>
+                    <tr>
+                        <th><?php _e('Google Pay Settings', 'woocommerce'); ?></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $this->google_pay_gateway->generate_settings_html();
+                    ?>
+                </tbody>
             </table>
         </div>
 <?php

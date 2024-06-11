@@ -931,7 +931,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             <a href="#google-pay-settings" class="nav-tab"><?php _e('Google Pay', 'woocommerce'); ?></a>
         </div>
         <div id="credit-card-settings" class="panel">
-            <table class="form-table">
+            <table class="form-table" style="width:400px;">
                 <thead>
                     <tr>
                         <th><?php _e('Credit Card Settings', 'woocommerce'); ?></th>
@@ -946,7 +946,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             </table>
         </div>
         <div id="apple-pay-settings" class="panel">
-            <table class="form-table">
+            <table class="form-table" style="width:400px;">
                 <thead>
                     <tr>
                         <th><?php _e('Apple Pay Settings', 'woocommerce'); ?></th>
@@ -961,7 +961,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             </table>
         </div>
         <div id="google-pay-settings" class="panel">
-            <table class="form-table">
+            <table class="form-table" style="width:400px;">
                 <thead>
                     <tr>
                         <th><?php _e('Google Pay Settings', 'woocommerce'); ?></th>

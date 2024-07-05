@@ -121,6 +121,8 @@ if (!class_exists('WC_Cardknox')) :
             add_action('admin_init', array($this, 'check_environment'));
             add_action('admin_notices', array($this, 'admin_notices'), 15);
             add_action('plugins_loaded', array($this, 'init'));
+
+            add_action('wp_enqueue_scripts', array($this, 'load_payment_scripts'));
         }
 
         /**
@@ -516,6 +518,62 @@ if (!class_exists('WC_Cardknox')) :
             }
 
             self::$log->add('woocommerce-gateway-cardknox', $message);
+        }
+
+        /**
+         * 
+         */
+        public function load_payment_scripts()
+        {
+            if (is_cart()) {
+                wp_enqueue_style(
+                    'woocommerce_cardknox_gpay',
+                    plugins_url(
+                        '/assets/css/google-pay.css',
+                        WC_CARDKNOX_MAIN_FILE
+                    ),
+                    false,
+                    '1.0',
+                    'all'
+                );
+
+                wp_enqueue_script('cardknox', 'https://cdn.cardknox.com/ifields/2.15.2309.2601/ifields.min.js', '', '1.0.0', false);
+
+                wp_enqueue_script(
+                    'woocommerce_cardknox_google_pay',
+                    plugins_url('assets/js/cardknox-google-pay-cart.js', WC_CARDKNOX_MAIN_FILE),
+                    array('jquery-payment'),
+                    '1.0',
+                    true
+                );
+
+                $options = get_option('woocommerce_cardknox_settings');
+
+                $googlepay_enabled = $options['googlepay_enabled'];
+                $googlepay_title = $options['googlepay_title'];
+                $googlepay_merchant_name = $options['googlepay_merchant_name'];
+                $googlepay_environment = $options['googlepay_environment'];
+                $googlepay_button_style = $options['googlepay_button_style'];
+                $capture = $options['capture'];
+                $googlepay_applicable_countries = $options['googlepay_applicable_countries'];
+                $googlepay_specific_countries = $options['googlepay_specific_countries'];
+
+                $cardknoxGooglepaySettings = array(
+                    'enabled'                 => $googlepay_enabled,
+                    'title'                   => $googlepay_title,
+                    'merchant_name'           => $googlepay_merchant_name,
+                    'environment'             => $googlepay_environment,
+                    'button_style'            => $googlepay_button_style,
+                    'payment_action'          => $capture,
+                    'applicable_countries'    => $googlepay_applicable_countries,
+                    'specific_countries'      => $googlepay_specific_countries,
+                    'total'                   => WC()->cart->total,
+                    'currencyCode'            => get_woocommerce_currency(),
+                );
+
+                $cardknoxGooglepaySettings = array_merge($cardknoxGooglepaySettings);
+                wp_localize_script('woocommerce_cardknox_google_pay', 'googlePaysettings', $cardknoxGooglepaySettings);
+            }
         }
     }
 

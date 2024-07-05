@@ -66,6 +66,8 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
 
         add_action('woocommerce_review_order_after_submit', array($this, 'cardknox_gpay_order_after_submit'));
         add_filter('woocommerce_available_payment_gateways', array($this, 'cardknox_allow_gpay_method_by_country'));
+
+        add_action('woocommerce_proceed_to_checkout', array($this, 'cardknox_gpay_button'), 20);
     }
 
     /**
@@ -558,7 +560,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
                                  allow-forms allow-popups-to-escape-sandbox allow-top-navigation" title="GPay checkout page">
                 </iframe>
             </div>
-<?php
+        <?php
         }
     }
     /**
@@ -591,5 +593,25 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
             }
         }
         return $available_gateways;
+    }
+    /**
+     * Quick checkout Google Pay Button
+     *
+     * @return void
+     */
+    public function cardknox_gpay_button()
+    {
+        if ($this->enabled == 'yes') {
+        ?>
+            <div class="messages">
+                <div class="message message-error error gpay-error" style="display: none;"></div>
+            </div>
+            <div id="divGpay" class="gp hidden">
+                <iframe id="igp" class="gp" data-ifields-id="igp" data-ifields-oninit="gpRequest.initGP" src="https://cdn.cardknox.com/ifields/2.15.2302.0801/igp.htm" allowpaymentrequest sandbox="allow-popups allow-modals allow-scripts allow-same-origin
+                                     allow-forms allow-popups-to-escape-sandbox allow-top-navigation" title="GPay checkout page">
+                </iframe>
+            </div>
+<?php
+        }
     }
 }

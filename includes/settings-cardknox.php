@@ -19,6 +19,10 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+global $woocommerce;
+$countries_obj   = new WC_Countries();
+$countries   = $countries_obj->__get('countries');
+
 $wc_cardknox_settings = array(
     'enabled' => array(
         'title'       => __('Enable/Disable', 'woocommerce-gateway-cardknox'),
@@ -100,8 +104,21 @@ $wc_cardknox_settings = array(
         'default'     => '#F2F2F2',
         'desc_tip'    => true,
         'class'       => 'colorpick',
-        'css'          => 'width: 6em'
-    )
+        'css'         => 'width: 6em'
+    ),
+    'applicable_countries' => array(
+        'title'       => __('Payment From Applicable Countries', 'woocommerce-gateway-cardknox'),
+        'type'        => 'select',
+        'options'     => array(
+            '0'       => __('All Allowed Countries', 'woocommerce-gateway-cardknox'),
+            '1'       => __('Specific Countries', 'woocommerce-gateway-cardknox'),
+        ),
+    ),
+    'specific_countries' => array(
+        'title'          => __('Payment From Specific Countries', 'woocommerce-gateway-cardknox'),
+        'type'           => 'multiselect',
+        'options'        => $countries
+    ),
 );
 
 $GLOBALS["wc_cardknox_settings"] = $wc_cardknox_settings;

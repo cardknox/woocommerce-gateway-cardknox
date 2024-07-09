@@ -31,6 +31,16 @@ $wc_cardknox_google_pay_settings = array(
             'no'     => __('No', 'woocommerce-gateway-cardknox'),
         ),
     ),
+    $gkeyPrefix . '_quickcheckout' => array(
+        $gkeyTitle       => __('Disable Quick Checkout to Cart Page', 'woocommerce-gateway-cardknox'),
+        $gkeyType        => 'checkbox',
+        'description' => __(
+            'Disable Quick Checkout to Cart Page',
+            'woocommerce-gateway-cardknox'
+        ),
+        $gkeyDefault    => 'no',
+        $gkeyDescTip    => true,
+    ),
     $gkeyPrefix . '_title' => array(
         $gkeyTitle       => __('Title', 'woocommerce-gateway-cardknox'),
         $gkeyType        => $gtextType,

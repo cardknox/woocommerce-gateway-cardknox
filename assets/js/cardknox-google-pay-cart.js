@@ -34,7 +34,7 @@ window.gpRequest = {
     buttonSizeMode: GPButtonSizeMode.fill,
   },
   billingParams: {
-    //phoneNumberRequired: true,
+    phoneNumberRequired: true,
     emailRequired: true,
     billingAddressRequired: true,
     billingAddressFormat: GPBillingAddressFormat.full,
@@ -47,7 +47,7 @@ window.gpRequest = {
         label: "onGetShippingCosts",
         data: googlePaysettings.shippingData,
       });
-      return shippingCosts;
+      return googlePaysettings.shippingCosts;
     },
     onGetShippingOptions: function (shippingData) {
       logDebug({
@@ -124,6 +124,13 @@ window.gpRequest = {
     paymentResponse = JSON.parse(JSON.stringify(paymentResponse));
 
     let xAmount = paymentResponse.transactionInfo.totalPrice;
+
+    // Remove country code from telephone
+    let telephone = paymentResponse.paymentData.paymentMethodData.info.billingAddress.phoneNumber;
+    telephone = telephone.substring(telephone.indexOf(" ") + 1);
+
+    let shippingOptionData = paymentResponse.paymentData.shippingOptionData;
+
     if (xAmount <= 0) {
       jQuery(".gpay-error")
         .html(
@@ -141,7 +148,7 @@ window.gpRequest = {
         paymentResponse.paymentData.paymentMethodData.tokenizationData.token
       );
 
-      createWooCommerceOrder(token, xAmount, paymentResponse.paymentData.email, paymentResponse.paymentData.shippingAddress);
+      createWooCommerceOrder(token, xAmount, telephone, paymentResponse.paymentData.email, paymentResponse.paymentData.shippingAddress, shippingOptionData);
     }
   },
   onPaymentCanceled: function (respCanceled) {
@@ -223,8 +230,7 @@ function getAmount() {
 }
 
 
-function createWooCommerceOrder(token, amount, email, shippingAddress) {
-    console.log(shippingAddress);
+function createWooCommerceOrder(token, amount, telephone, email, shippingAddress, shippingOptionData) {
     jQuery.ajax({
         url: googlePaysettings.ajax_url,
         type: 'POST',
@@ -232,13 +238,15 @@ function createWooCommerceOrder(token, amount, email, shippingAddress) {
             action: 'cardknox_create_order',
             google_pay_token: token,
             amount: amount,
+            phone: telephone,
             email: email,
             shippingAddress: JSON.stringify(shippingAddress),
+            shippingOptionData: JSON.stringify(shippingOptionData),
             security: googlePaysettings.create_order_nonce  // Include nonce
         },
-        success: function (response) {
+        success: function (response) {            
             if (response.success) {
-                window.location.href = response.redirect_url;
+                window.location.href = response.data.redirect_url;
             } else {
                 jQuery(".gpay-error").html("<div> " + response.data + " </div>").show();
                 setTimeout(function () {

@@ -50,7 +50,7 @@ $wc_cardknox_google_pay_settings = array(
         ),
     ),
     $gkeyPrefix . '_button_style' => array(
-        $gkeyTitle       => __($gbuttonPrefix . ' Style', 'woocommerce-gateway-cardknox'),
+        $gkeyTitle       => __($gbuttonPrefix . 'Style', 'woocommerce-gateway-cardknox'),
         $gkeyType        => $gselectType,
         $gkeyOptions     => array(
             'black'          => __('Black', 'woocommerce-gateway-cardknox'),
@@ -58,7 +58,7 @@ $wc_cardknox_google_pay_settings = array(
         ),
     ),
     $gkeyPrefix . '_capture' => array(
-        $gkeyTitle       => __($googlePrefix . ' Capture', 'woocommerce-gateway-cardknox'),
+        $gkeyTitle       => __($googlePrefix . 'Capture', 'woocommerce-gateway-cardknox'),
         'label'       => __('Capture charge immediately', 'woocommerce-gateway-cardknox'),
         $gkeyType        => 'checkbox',
         'id'          => 'google_cardknox_capture',

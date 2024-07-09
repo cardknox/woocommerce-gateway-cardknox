@@ -1,4 +1,4 @@
-jQuery(document.body).on("updated_checkout", function () {
+jQuery(document.body).on("updated_cart_totals", function () {
   if (
     googlePaysettings.merchant_name == "" ||
     googlePaysettings.merchant_name == null ||
@@ -18,8 +18,8 @@ jQuery(document.body).on("updated_checkout", function () {
 });
 
 ckGooglePay.enableGooglePay({
-  initFunction: "gpRequest.initGP",
-  amountField: "amount",
+    initFunction: "gpRequest.initGP",
+    amountField: "amount",
 });
 
 //Google Pay
@@ -36,12 +36,55 @@ window.gpRequest = {
   billingParams: {
     //phoneNumberRequired: true,
     emailRequired: true,
-    billingAddressRequired: false,
+    billingAddressRequired: true,
+    billingAddressFormat: GPBillingAddressFormat.full,
   },
   shippingParams: {
-    shippingAddressRequired: false,
+    phoneNumberRequired: true,
+    emailRequired: true,
+    onGetShippingCosts: function (shippingData) {
+      logDebug({
+        label: "onGetShippingCosts",
+        data: googlePaysettings.shippingData,
+      });
+      return shippingCosts;
+    },
+    onGetShippingOptions: function (shippingData) {
+      logDebug({
+        label: "onGetShippingOptions",
+        data: shippingData,
+      });
+      const hasShipping = shippingData && shippingData.shippingAddress;
+      if (
+        hasShipping &&
+        shippingData.shippingAddress.administrativeArea == "HI"
+      ) {
+        return {
+          error: {
+            reason: "SHIPPING_ADDRESS_UNSERVICEABLE",
+            message: "This shipping option is invalid for the given address",
+            intent: "SHIPPING_ADDRESS",
+          },
+        };
+      }
+      let selectedOptionid = "free_shipping";
+      if (
+        hasShipping &&
+        shippingData.shippingOptionData.id !== "shipping_option_unselected"
+      ) {
+        selectedOptionid = shippingData.shippingOptionData.id;
+      }
+      return {
+        defaultSelectedOptionId: selectedOptionid,
+        shippingOptions: googlePaysettings.shippingMethods,
+      };
+    },
   },
   onGetTransactionInfo: function (shippingData) {
+    logDebug({
+      label: "onGetTransactionInfo",
+      data: shippingData,
+    });
     const amt = getAmount();
     let countryCode = null;
     if (
@@ -97,8 +140,8 @@ window.gpRequest = {
       let token = btoa(
         paymentResponse.paymentData.paymentMethodData.tokenizationData.token
       );
-      jQuery("#googlePaytoken").val(token);
-      jQuery("#place_order").trigger("click");
+
+      createWooCommerceOrder(token, xAmount, paymentResponse.paymentData.email, paymentResponse.paymentData.shippingAddress);
     }
   },
   onPaymentCanceled: function (respCanceled) {
@@ -131,7 +174,11 @@ window.gpRequest = {
       buttonOptions: this.buttonOptions,
       environment: this.getGPEnvironment(),
       billingParameters: this.billingParams,
-      shippingParameters: this.shippingParams,
+      shippingParameters: {
+        emailRequired: this.shippingParams.emailRequired,
+        onGetShippingCosts: "gpRequest.shippingParams.onGetShippingCosts",
+        onGetShippingOptions: "gpRequest.shippingParams.onGetShippingOptions",
+      },
       onGetTransactionInfo: "gpRequest.onGetTransactionInfo",
       onBeforeProcessPayment: "gpRequest.onBeforeProcessPayment",
       onProcessPayment: "gpRequest.onProcessPayment",
@@ -143,7 +190,7 @@ window.gpRequest = {
   gpButtonLoaded: function (resp) {
     if (!resp) return;
     if (resp.status === iStatus.success) {
-      //showHide("divGpay", true);
+      showHide("divGpay", true);
     } else if (resp.reason) {
       logDebug({
         label: "gpButtonLoaded",
@@ -155,13 +202,56 @@ window.gpRequest = {
 
 function setGPPayload(value) {
   document.getElementById("gp-payload").value = value;
-  //showHide("divGPPayload", value);
+  showHide("divGPPayload", value);
   if (value) {
     divGPPayload.scrollIntoView(false);
+  }
+}
+
+function showHide(elem, toShow) {
+  if (typeof elem === "string") {
+    elem = document.getElementById(elem);
+  }
+  if (elem) {
+    toShow ? elem.classList.remove("hidden") : elem.classList.add("hidden");
   }
 }
 
 function getAmount() {
   let totals = googlePaysettings.total;
   return parseFloat(totals).toFixed(2);
+}
+
+
+function createWooCommerceOrder(token, amount, email, shippingAddress) {
+    console.log(shippingAddress);
+    jQuery.ajax({
+        url: googlePaysettings.ajax_url,
+        type: 'POST',
+        data: {
+            action: 'cardknox_create_order',
+            google_pay_token: token,
+            amount: amount,
+            email: email,
+            shippingAddress: JSON.stringify(shippingAddress),
+            security: googlePaysettings.create_order_nonce  // Include nonce
+        },
+        success: function (response) {
+            if (response.success) {
+                window.location.href = response.redirect_url;
+            } else {
+                jQuery(".gpay-error").html("<div> " + response.data + " </div>").show();
+                setTimeout(function () {
+                    jQuery(".gpay-error").html("").hide();
+                }, 3000);
+            }
+        },
+        error: function (error) {
+            console.log(error);  // Log the full error response
+            jQuery(".gpay-error").html("<div> " + error.responseText + " </div>").show();
+            setTimeout(function () {
+                jQuery(".gpay-error").html("").hide();
+            }, 3000);
+        }
+    });    
 }

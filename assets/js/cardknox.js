@@ -205,26 +205,50 @@ jQuery(function ($) {
 
       var card_style = {
         outline: "none",
-        border: "0",
-        "border-left-color": "rgb(67, 69, 75)",
+        border: "1px solid #c3c3c3",
+        "border-radius": "4px",
         padding: "0.6180469716em",
-        width: "225px",
-        height: "auto",
+        width: "93%",
+        height: "30px",
         "background-color": wc_cardknox_params.bgcolor,
         "font-weight": "inherit",
+        "background-image": "url("+$('.payment_method_cardknox label').find('img').attr('src')+")",
+        "background-size": "32%",
+        "background-repeat": "no-repeat",
+        "background-position": "right 10px center"
       };
       var cvv_style = {
         outline: "none",
-        border: "0",
-        "border-left-color": "rgb(67, 69, 75)",
+        border: "1px solid #c3c3c3",
+        "border-radius": "4px",
         padding: "0.6180469716em",
-        width: "106px",
-        height: "auto",
+        width: "85%",
+        height: "30px",
         "background-color": wc_cardknox_params.bgcolor,
         "font-weight": "inherit",
       };
-      setIfieldStyle("card-number", card_style);
-      setIfieldStyle("cvv", cvv_style);
+
+      function applyStyles() {
+        if (window.matchMedia("(max-width: 767px)").matches) {
+          card_style.width = "100%";
+          card_style.height = "48px";
+          cvv_style.width = "100%";
+          cvv_style.height = "48px";
+          card_style["box-sizing"] = "border-box";
+          cvv_style["box-sizing"] = "border-box";
+        }else{
+          card_style.width = "93%";
+          cvv_style.width = "85%";
+        }      
+        setIfieldStyle("card-number", card_style);
+        setIfieldStyle("cvv", cvv_style);
+      }
+      
+      // Initial application of styles
+      applyStyles();
+      
+      // Apply styles on window resize
+      window.addEventListener("resize", applyStyles);
 
       enableAutoFormatting();
 

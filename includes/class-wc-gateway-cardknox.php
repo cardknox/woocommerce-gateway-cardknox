@@ -139,13 +139,13 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 			<label for="' . esc_attr($this->id) . '-card-cvc">' . esc_html__('Card Code', 'woocommerce') . ' <span class="required">*</span></label>
 			<iframe data-ifields-id="cvv" data-ifields-placeholder="CVV"
                         src="https://cdn.cardknox.com/ifields/2.15.2302.0801/ifield.htm?" + "' . esc_attr($timestamp) . '" frameBorder="0" width="100%"
-                        height="55" id="cvv-frame"></iframe>
+                        height="50" id="cvv-frame"></iframe>
             <label data-ifields-id="card-data-error" style="color: red;"></label>
 		</p><input data-ifields-id="cvv-token" name="xCVV" id="cardknox-card-cvc" type="hidden"/>';
 
         $default_fields = array(
             'card-number-field' => '<p><label data-ifields-id="card-data-error" id="ifieldsError" style="display:none;"></label></p>
-			<p class="form-row form-row-wide">
+			<p class="form-row-wide">
 				<label for="' . esc_attr($this->id) . '-card-number">' . esc_html__('Card Number', 'woocommerce') . ' <span class="required">*</span></label>
 
 				<iframe data-ifields-id="card-number" data-ifields-placeholder="Card Number"
@@ -154,7 +154,8 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 			</p> <input data-ifields-id="card-number-token" name="xCardNum" id="cardknox-card-number" type="hidden"/>',
             'card-expiry-field' => '<p class="form-row form-row-first">
 				<label for="' . esc_attr($this->id) . '-card-expiry">' . esc_html__('Expiry (MM/YY)', 'woocommerce') . ' <span class="required">*</span></label>
-				<input id="' . esc_attr($this->id) . '-card-expiry" class="input-text wc-credit-card-form-card-expiry" inputmode="numeric" autocomplete="cc-exp" autocorrect="no" autocapitalize="no" spellcheck="no" type="tel" placeholder="' . esc_attr__('MM / YY', 'woocommerce') . '" ' . $this->field_name('card-expiry') . ' style="font-size:inherit; line-height:1.1" />
+				<input id="' . esc_attr($this->id) . '-card-expiry" class="input-text wc-credit-card-form-card-expiry" inputmode="numeric" autocomplete="cc-exp" autocorrect="no" autocapitalize="no" spellcheck="no" type="tel" placeholder="' . esc_attr__('MM / YY', 'woocommerce') . '" ' . $this->field_name('card-expiry') . ' style="font-size:inherit; line-height:1.1,    outline: none;
+    border: 1px solid rgb(195, 195, 195);padding: 0.618047em;width: 100%;height: 48px;background-color: rgb(255, 255, 255);box-shadow: none;border-radius: 4px;outline: none;" />
                 <input type="hidden" id="x3dsReferenceId" name="x3dsReferenceId" value="">
                 <input type="hidden" id="x3dsInitializeStatus" name="x3dsInitializeStatus" value="">
                 </p>',

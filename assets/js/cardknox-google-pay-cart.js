@@ -1,4 +1,22 @@
+let subTotal = {
+    total: parseFloat(googlePaysettings.total).toFixed(2)
+};
 jQuery(document.body).on("updated_cart_totals", function () {
+
+    jQuery.ajax({
+        url: googlePaysettings.ajax_url,
+        type: 'POST',
+        data: {
+            action: 'update_cart_total'
+        },
+        success: function(response) {
+            if (response.success) {
+                // Update the global variable with the new total
+                subTotal.total = response.data.total;
+            }
+        }
+    });
+
   if (
     googlePaysettings.merchant_name == "" ||
     googlePaysettings.merchant_name == null ||
@@ -85,7 +103,7 @@ window.gpRequest = {
       label: "onGetTransactionInfo",
       data: shippingData,
     });
-    const amt = getAmount();
+    const amt = parseFloat(subTotal.total).toFixed(2);
     let countryCode = null;
     if (
       jQuery("#billing_country").val() !== null &&
@@ -225,8 +243,7 @@ function showHide(elem, toShow) {
 }
 
 function getAmount() {
-
-    let totals = googlePaysettings.total;
+    let totals = subTotal.total;
     return parseFloat(totals).toFixed(2);
 }
 

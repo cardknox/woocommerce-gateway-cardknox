@@ -122,7 +122,11 @@ if (!class_exists('WC_Cardknox')) :
             add_action('admin_notices', array($this, 'admin_notices'), 15);
             add_action('plugins_loaded', array($this, 'init'));
 
-            add_action('wp_enqueue_scripts', array($this, 'load_payment_scripts'));
+            add_action('wp_enqueue_scripts', array($this, 'load_payment_scripts'));           
+
+            add_action('wp_ajax_update_cart_total', array($this,'update_cart_total'));
+            add_action('wp_ajax_nopriv_update_cart_total', array($this,'update_cart_total'));
+
             add_action('wp_ajax_cardknox_create_order', array($this, 'cardknox_create_order'));
             add_action('wp_ajax_nopriv_cardknox_create_order', array($this,'cardknox_create_order'));
 
@@ -523,6 +527,17 @@ if (!class_exists('WC_Cardknox')) :
             }
 
             self::$log->add('woocommerce-gateway-cardknox', $message);
+        }
+
+        public function update_cart_total() {
+            if (defined('DOING_AJAX') && DOING_AJAX) {
+                // Calculate total
+                $cart_total = WC()->cart->total;
+                
+                // Return response
+                wp_send_json_success(array('total' => $cart_total));
+            }
+            wp_die();
         }
 
         /**

@@ -1,4 +1,22 @@
+let subTotal = {
+    total: parseFloat(applePaysettings.total).toFixed(2)
+};
 jQuery(document.body).on("updated_cart_totals", function () {
+
+    jQuery.ajax({
+        url: applePaysettings.ajax_url,
+        type: 'POST',
+        data: {
+            action: 'update_cart_total'
+        },
+        success: function(response) {
+            if (response.success) {
+                // Update the global variable with the new total
+                subTotal.total = response.data.total;
+            }
+        }
+    });
+
     if (
       applePaysettings.merchant_identifier == "" ||
       applePaysettings.merchant_identifier == null ||
@@ -38,7 +56,7 @@ jQuery(document.body).on("updated_cart_totals", function () {
     creditType: null,
     getTransactionInfo: function () {
       try {
-        const amt = getAmount();
+        const amt = parseFloat(subTotal.total).toFixed(2);
         return {
           total: {
             type: "final",
@@ -259,7 +277,7 @@ jQuery(document.body).on("updated_cart_totals", function () {
       }
     },
     onPaymentAuthorize: function (applePayload) {
-      const amt = getAmount();
+      const amt = parseFloat(subTotal.total).toFixed(2);
       return new Promise((resolve, reject) => {
         try {
           this.authorize(applePayload, amt.toString())

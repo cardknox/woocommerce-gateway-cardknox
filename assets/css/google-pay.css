@@ -14,7 +14,7 @@ iframe.gp {
 }
 div.gp {
   display: inline-block;
-  width: 250px;
+  width: 100%;
   position: relative;
   vertical-align: middle;
   overflow: hidden;

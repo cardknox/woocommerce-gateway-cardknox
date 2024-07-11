@@ -122,7 +122,7 @@ if (!class_exists('WC_Cardknox')) :
             add_action('admin_notices', array($this, 'admin_notices'), 15);
             add_action('plugins_loaded', array($this, 'init'));
 
-            add_action('wp_enqueue_scripts', array($this, 'load_payment_scripts'));           
+            add_action('wp_enqueue_scripts', array($this, 'quick_chekout_payment_scripts'));           
 
             add_action('wp_ajax_update_cart_total', array($this,'update_cart_total'));
             add_action('wp_ajax_nopriv_update_cart_total', array($this,'update_cart_total'));
@@ -543,7 +543,7 @@ if (!class_exists('WC_Cardknox')) :
         /**
          * For cart page load gpay button.
          */
-        public function load_payment_scripts()
+        public function quick_chekout_payment_scripts()
         {
 
             $options = get_option('woocommerce_cardknox-googlepay_settings');
@@ -571,7 +571,7 @@ if (!class_exists('WC_Cardknox')) :
 
                 wp_enqueue_script(
                     'woocommerce_cardknox_google_pay',
-                    plugins_url('assets/js/cardknox-google-pay-cart.js', WC_CARDKNOX_MAIN_FILE),
+                    plugins_url('assets/js/cardknox-google-pay-cart.min.js', WC_CARDKNOX_MAIN_FILE),
                     array('jquery-payment'),
                     '1.0',
                     true
@@ -650,7 +650,7 @@ if (!class_exists('WC_Cardknox')) :
             if(is_cart() && $applePay_quickcheckout == 'no'){
                 wp_enqueue_script(
                     'woocommerce_cardknox_apple_pay',
-                    plugins_url('assets/js/cardknox-apple-pay-cart.js', WC_CARDKNOX_MAIN_FILE),
+                    plugins_url('assets/js/cardknox-apple-pay-cart.min.js', WC_CARDKNOX_MAIN_FILE),
                     array('jquery-payment'),
                     '1.0',
                     true
@@ -758,7 +758,7 @@ if (!class_exists('WC_Cardknox')) :
             return $shipping_methods;
         }        
         /**
-         * For Quick create order.
+         * For Googlepay quick create order.
          */
         public function cardknox_create_order() {
 
@@ -835,7 +835,9 @@ if (!class_exists('WC_Cardknox')) :
 
             wp_die();            
         }
-
+        /**
+         * For Applepay quick create order.
+         */
         public function applepay_cardknox_create_order(){
   
             // Verify nonce

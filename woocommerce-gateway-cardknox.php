@@ -125,6 +125,9 @@ if (!class_exists('WC_Cardknox')) :
             add_action('wp_enqueue_scripts', array($this, 'load_payment_scripts'));
             add_action('wp_ajax_cardknox_create_order', array($this, 'cardknox_create_order'));
             add_action('wp_ajax_nopriv_cardknox_create_order', array($this,'cardknox_create_order'));
+
+            add_action('wp_ajax_applepay_cardknox_create_order', array($this, 'applepay_cardknox_create_order'));
+            add_action('wp_ajax_nopriv_applepay_cardknox_create_order', array($this,'applepay_cardknox_create_order'));
         }
 
         /**
@@ -527,8 +530,16 @@ if (!class_exists('WC_Cardknox')) :
          */
         public function load_payment_scripts()
         {
+
             $options = get_option('woocommerce_cardknox-googlepay_settings');
             $googlepay_quickcheckout = isset($options['googlepay_quickcheckout']) ? $options['googlepay_quickcheckout'] : 'no';
+
+            $applePayoptions = get_option('woocommerce_cardknox-applepay_settings');
+            $applePay_quickcheckout = isset($applePayoptions['applepay_quickcheckout']) ? $applePayoptions['applepay_quickcheckout'] : 'no';
+
+            if(is_cart()){
+                wp_enqueue_script('cardknox', 'https://cdn.cardknox.com/ifields/2.15.2309.2601/ifields.min.js', '', '1.0.0', false);
+            }
 
             if(is_cart() && $googlepay_quickcheckout == 'no'){
 
@@ -541,9 +552,7 @@ if (!class_exists('WC_Cardknox')) :
                     false,
                     '1.0',
                     'all'
-                );
-
-                wp_enqueue_script('cardknox', 'https://cdn.cardknox.com/ifields/2.15.2309.2601/ifields.min.js', '', '1.0.0', false);
+                );                
 
                 wp_enqueue_script(
                     'woocommerce_cardknox_google_pay',
@@ -552,15 +561,6 @@ if (!class_exists('WC_Cardknox')) :
                     '1.0',
                     true
                 );
-
-                $googlepay_enabled = $options['googlepay_enabled'];
-                $googlepay_title = $options['googlepay_title'];
-                $googlepay_merchant_name = $options['googlepay_merchant_name'];
-                $googlepay_environment = $options['googlepay_environment'];
-                $googlepay_button_style = $options['googlepay_button_style'];
-                $capture = $options['googlepay_capture'];
-                $googlepay_applicable_countries = $options['googlepay_applicable_countries'];
-                $googlepay_specific_countries = $options['googlepay_specific_countries'];
 
                 // Get shipping zones
                 $shipping_zones = WC_Shipping_Zones::get_zones();
@@ -603,6 +603,15 @@ if (!class_exists('WC_Cardknox')) :
                     );
                 }
 
+                $googlepay_enabled = $options['googlepay_enabled'];
+                $googlepay_title = $options['googlepay_title'];
+                $googlepay_merchant_name = $options['googlepay_merchant_name'];
+                $googlepay_environment = $options['googlepay_environment'];
+                $googlepay_button_style = $options['googlepay_button_style'];
+                $capture = $options['googlepay_capture'];
+                $googlepay_applicable_countries = $options['googlepay_applicable_countries'];
+                $googlepay_specific_countries = $options['googlepay_specific_countries'];                
+
                 $cardknoxGooglepaySettings = array(
                     'enabled'                 => $googlepay_enabled,
                     'title'                   => $googlepay_title,
@@ -621,6 +630,70 @@ if (!class_exists('WC_Cardknox')) :
                 );
 
                 wp_localize_script('woocommerce_cardknox_google_pay', 'googlePaysettings', $cardknoxGooglepaySettings);
+            }
+
+            if(is_cart() && $applePay_quickcheckout == 'no'){
+                wp_enqueue_script(
+                    'woocommerce_cardknox_apple_pay',
+                    plugins_url('assets/js/cardknox-apple-pay-cart.js', WC_CARDKNOX_MAIN_FILE),
+                    array('jquery-payment'),
+                    '1.0',
+                    true
+                );
+
+                // Get shipping zones
+                $shipping_zones = WC_Shipping_Zones::get_zones();
+
+                // Initialize an array to store shipping methods and costs
+                $shippingCosts = array();
+
+                // Loop through each shipping zone
+                foreach ($shipping_zones as $zone) {
+                    // Loop through each shipping method in the zone
+                    foreach ($zone['shipping_methods'] as $shipping_method) {
+                        // Check if the shipping method is an instance of WC_Shipping_Method
+                        if ($shipping_method instanceof WC_Shipping_Method) {
+                            // Get method ID and cost
+                            $method_id = $shipping_method->id;
+
+                            // Check if the shipping method is WC_Shipping_Free_Shipping
+                            if ($shipping_method instanceof WC_Shipping_Free_Shipping) {
+                                $method_cost = 0.00; // Set cost to 0 for Free Shipping
+                            } else {
+                                $method_cost = $shipping_method->cost; // Get cost for other shipping methods
+                            }
+
+                            // Clean the description by removing HTML tags and newline characters
+                            $cleaned_description = str_replace(array("\n", "\r"), '', strip_tags($shipping_method->get_method_description()));
+
+                            // Add method ID and cost to the array
+                            $shippingCosts[] = array(
+                                'identifier' => $method_id,
+                                'label' => $shipping_method->get_method_title(),
+                                'amount' => number_format((float)$method_cost, 2, '.', ''),
+                                'detail' => $cleaned_description,
+                            );
+                        }
+                    }
+                }
+        
+                $cardknoxApplepaySettings = array(
+                    'enabled'                 => $applePayoptions['applepay_enabled'],
+                    'title'                   => $applePayoptions['applepay_title'],
+                    'merchant_identifier'     => $applePayoptions['applepay_merchant_identifier'],
+                    'environment'             => $applePayoptions['applepay_environment'],
+                    'button_style'            => $applePayoptions['applepay_button_style'],
+                    'button_type'             => $applePayoptions['applepay_button_type'],
+                    'payment_action'          => $applePayoptions['applepay_capture'],
+                    'applicable_countries'    => $applePayoptions['applepay_applicable_countries'],
+                    'specific_countries'      => $applePayoptions['applepay_specific_countries'],
+                    'total'                   => WC()->cart->total,
+                    'shippingMethods'         => $shippingCosts,
+                    'ajax_url'                => admin_url('admin-ajax.php'),
+                    'create_order_nonce'      => wp_create_nonce('create_order_nonce'),
+                );
+        
+                wp_localize_script('woocommerce_cardknox_apple_pay', 'applePaysettings', $cardknoxApplepaySettings);
             }
         }
 
@@ -669,7 +742,9 @@ if (!class_exists('WC_Cardknox')) :
             
             return $shipping_methods;
         }        
-
+        /**
+         * For Quick create order.
+         */
         public function cardknox_create_order() {
 
             // Verify nonce
@@ -744,6 +819,89 @@ if (!class_exists('WC_Cardknox')) :
             }
 
             wp_die();            
+        }
+
+        public function applepay_cardknox_create_order(){
+  
+            // Verify nonce
+            check_ajax_referer('create_order_nonce', 'security');
+
+            // Get and sanitize inputs
+            $apple_pay_token = sanitize_text_field($_POST['apple_pay_token']);
+            $amount = floatval($_POST['amount']);
+
+            $billingContact = json_decode(stripslashes($_POST['billingContact']), true);
+            $shippingContact = json_decode(stripslashes($_POST['shippingContact']), true);
+            $selectedShipping = json_decode(stripslashes($_POST['selectedShipping']), true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                wp_send_json_error(__('Invalid shipping address format', 'woocommerce'));
+                wp_die();
+            }
+
+            // Create the order
+            $order = wc_create_order();
+            foreach (WC()->cart->get_cart() as $cart_item) {
+                $product = wc_get_product($cart_item['product_id']);
+                $order->add_product($product, $cart_item['quantity']);
+            }
+
+            $shipping_method_details = $this->get_shipping_method_details($selectedShipping['identifier']);
+
+            // add shipping options
+            $shipping = new WC_Order_Item_Shipping();
+            $shipping->set_method_title( $shipping_method_details[0]['method_title'] );
+            $shipping->set_method_id( $shipping_method_details[0]['method_id'] );
+            $shipping->set_total( $shipping_method_details[0]['method_cost'] ); 
+            $order->add_item( $shipping );
+
+            // add billing and shipping addresses
+            $billing = array(
+                'first_name'    => $billingContact['firstName'],
+                'last_name'     => $billingContact['billingLastName'],
+                'address_1'     => sanitize_text_field($billingContact['address']),
+                'address_2'     => '',
+                'city'          => sanitize_text_field($billingContact['city']),
+                'state'         => sanitize_text_field($billingContact['administrativeArea']),
+                'postcode'      => sanitize_text_field($billingContact['postcode']),
+                'country'       => sanitize_text_field($billingContact['country']),
+                'email'         => sanitize_email($billingContact['emailAddress']),
+                'phone'         => sanitize_text_field($shippingContact['phoneNumber']) 
+            );
+
+            $shipping = array(
+                'first_name'    => $shippingContact['firstName'],
+                'last_name'     => $shippingContact['billingLastName'],
+                'address_1'     => sanitize_text_field($shippingContact['address']),
+                'address_2'     => '',
+                'city'          => sanitize_text_field($shippingContact['city']),
+                'state'         => sanitize_text_field($shippingContact['administrativeArea']),
+                'postcode'      => sanitize_text_field($shippingContact['postcode']),
+                'country'       => sanitize_text_field($shippingContact['country']),
+                'email'         => sanitize_email($shippingContact['emailAddress']),
+                'phone'         => sanitize_text_field($shippingContact['phoneNumber'])  
+            );
+
+            $order->set_address( $billing, 'billing' );
+            $order->set_address( $shipping, 'shipping' );
+
+            // Set payment method and order status
+            $order->set_payment_method('cardknox-applepay');
+            $order->set_payment_method_title('Cardknox Apple Pay');
+            $order->calculate_totals();
+            $order->update_status('pending', __('Order pending payment', 'woocommerce'));
+
+            // Process the payment
+            $result = $order->payment_complete();
+
+            if ($result) {
+                WC()->cart->empty_cart();
+                wp_send_json_success(['redirect_url' => $order->get_checkout_order_received_url()]);
+            } else {
+                wp_send_json_error(__('Payment failed', 'woocommerce'));
+            }
+
+            wp_die(); 
         }
     }
 

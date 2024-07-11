@@ -225,8 +225,9 @@ function showHide(elem, toShow) {
 }
 
 function getAmount() {
-  let totals = googlePaysettings.total;
-  return parseFloat(totals).toFixed(2);
+
+    let totals = googlePaysettings.total;
+    return parseFloat(totals).toFixed(2);
 }
 
 

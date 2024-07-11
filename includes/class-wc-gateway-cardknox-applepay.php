@@ -58,6 +58,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         $this->init_settings();
 
         $this->enabled                          = $this->get_option('applepay_enabled');
+        $this->quickcheckout                    = $this->get_option('applepay_quickcheckout');
         $this->title                            = $this->get_option('applepay_title');
         $this->description                      = __('Pay with your apple card.', 'woocommerce-gateway-cardknox');
         $this->applepay_merchant_identifier     = $this->get_option('applepay_merchant_identifier');
@@ -76,6 +77,10 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
         add_action('woocommerce_review_order_after_submit', array($this, 'cardknox_review_order_after_submit'));
         add_filter('woocommerce_available_payment_gateways', array($this, 'cardknox_allow_payment_method_by_country'));
+
+        if(is_cart() && $this->quickcheckout == 'no'){
+            add_action('woocommerce_proceed_to_checkout', array($this, 'cardknox_review_order_after_submit'), 20);
+        }
     }
 
     /**

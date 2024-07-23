@@ -23,3 +23,13 @@ div.gp {
 .hidden {
   display: none;
 }
+
+.woocommerce-cart div.gp {
+  width: 53% !important;
+}
+
+@media only screen and (max-width: 600px) {
+  .woocommerce-cart div.gp {
+    width: 100% !important;
+  }
+}

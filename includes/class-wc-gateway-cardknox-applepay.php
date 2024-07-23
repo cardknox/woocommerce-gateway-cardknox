@@ -78,7 +78,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         add_action('woocommerce_review_order_after_submit', array($this, 'cardknox_review_order_after_submit'));
         add_filter('woocommerce_available_payment_gateways', array($this, 'cardknox_allow_payment_method_by_country'));
 
-        if(is_cart() && $this->quickcheckout == 'no'){
+        if (is_cart() && $this->quickcheckout == 'no') {
             add_action('woocommerce_proceed_to_checkout', array($this, 'cardknox_review_order_after_submit'), 20);
         }
     }
@@ -563,7 +563,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     public function cardknox_review_order_after_submit()
     {
         if ($this->enabled == 'yes') {
-            echo '<div id="ap-container" class="ap hidden" style="height:auto;min-height:55px;"></div><br/>';
+            echo '<div id="ap-container" class="ap hidden" style="min-height:55px;"></div><br/>';
             echo '<div class="messages">';
             echo '<div class="message message-error error applepay-error" style="display: none;"></div>';
             echo '</div>';

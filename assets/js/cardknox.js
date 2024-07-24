@@ -87,6 +87,7 @@ jQuery(function ($) {
     }
 
     const queryString = parseQueryString(window.location.href);
+
     setIfieldStyle("ach", defaultStyle);
     setIfieldStyle("card-number", card_style);
     setIfieldStyle("cvv", cvv_style);
@@ -179,10 +180,18 @@ jQuery(function ($) {
       url: wc_cardknox_params.threeds_object.ajax_url,
       data: postData,
       success: function (resp) {
-        if (resp.xResult == "E") {
-          $("#wc-cardknox-cc-form").after(
-            '<p style="color: red;">' + resp.xError + "</p>"
-          );
+        if (resp.xResult == "E" || resp.xResult == "D") {
+          //   $("#wc-cardknox-cc-form").after(
+          //     '<p style="color: red;">' + resp.xError + "</p>"
+          //   );
+          $(".woocommerce-error, .woocommerce-message").remove();
+          $("form.checkout")
+            .prev(".woocommerce-notices-wrapper")
+            .append(
+              '<ul class="woocommerce-error" role="alert"><li>' +
+                resp.xError +
+                "</li></ul>"
+            );
         }
         if (resp.xResult == "A") {
           window.location.href = resp.redirect;
@@ -296,6 +305,7 @@ jQuery(function ($) {
               return false;
             }
             wc_cardknox_form.onCardknoxResponse();
+            jQuery(document.body).trigger("update_checkout");
           },
           function () {
             //onError
@@ -306,7 +316,7 @@ jQuery(function ($) {
             );
             return false;
           },
-          //30 second timeout
+          //20 second timeout
           20000
         );
         return false;
@@ -357,7 +367,7 @@ jQuery(function ($) {
           //   $(".blockUI").show();
         },
         success: function (response) {
-          console.log("response", response);
+          //   console.log("response", response);
 
           if (response.result === "success") {
             let jsonResp = response.response;
@@ -380,6 +390,7 @@ jQuery(function ($) {
           } else {
             // Handle failure
             $("form.woocommerce-checkout .blockUI.blockOverlay").hide();
+            $(".woocommerce-error, .woocommerce-message").remove();
             wc_cardknox_form.form.prepend(response.messages);
             //return false;
           }

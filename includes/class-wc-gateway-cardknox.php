@@ -554,11 +554,19 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                 $response = WC_Cardknox_API::request($this->generate_payment_request($order));
                 $paymentName = get_post_meta($orderId, '_payment_method', true);
 
-                if ($response['xResult'] === 'V' && $paymentName === 'cardknox') {
-                    return array(
-                        'result'   => 'success',
-                        'response' => $response
-                    );
+                if ($this->enable_3ds === 'yes') {
+
+                    if (is_wp_error($response)) {
+                        $order->add_order_note($response->get_error_message());
+                        throw new Exception($response->get_error_message());
+                    } else {
+                        if ($response['xResult'] === 'V' && $paymentName === 'cardknox') {
+                            return array(
+                                'result'   => 'success',
+                                'response' => $response
+                            );
+                        }
+                    }
                 } else {
 
                     if (is_wp_error($response)) {
@@ -603,6 +611,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             }
 
             $this->log("Info: empty_cart");
+
             // Remove cart.
             WC()->cart->empty_cart();
 

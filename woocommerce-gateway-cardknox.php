@@ -546,7 +546,7 @@ if (!class_exists('WC_Cardknox')) :
             parse_str($response['body'], $parsedResponse);
 
             try {
-                if ($parsedResponse['xResult'] == "E") {
+                if ($parsedResponse['xResult'] === "E" || $parsedResponse['xResult'] === "D") {
                     wc_add_notice($parsedResponse['xError'], 'error');
                     $this->log(sprintf(__('Error: %s', 'woocommerce-gateway-cardknox'), $parsedResponse['xError']));
 

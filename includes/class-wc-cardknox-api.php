@@ -102,7 +102,7 @@ class WC_Cardknox_API
             if (($parsed_response['xResult'] == "A") || ($parsed_response['xResult'] == "V")) {
                 return $parsed_response;
             } else {
-                return new WP_Error("cardknox_error", "{$parsed_response['xStatus']}: {$parsed_response['xError']}({$parsed_response['xRefNum']})", 'woocommerce-gateway-cardknox');
+                return new WP_Error("cardknox_error", "{$parsed_response['xStatus']}: {$parsed_response['xError']}({$parsed_response['xRefNum']})({$parsed_response['xErrorCode']})", 'woocommerce-gateway-cardknox');
             }
         } else {
             return new WP_Error('cardknox_error', __('There was a problem connecting to the payment gateway.', 'woocommerce-gateway-cardknox'));

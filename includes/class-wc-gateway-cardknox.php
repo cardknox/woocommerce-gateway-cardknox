@@ -454,12 +454,13 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
     public function get_order_data($postData, $order)
     {
-        $billing_email    = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_email : $order->get_billing_email();
+        $billing_email            = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_email : $order->get_billing_email();
         $postData['xCurrency']    = strtolower(version_compare(WC_VERSION, '3.0.0', '<') ? $order->get_order_currency() : $order->get_currency());
         $postData['xAmount']      = $this->get_cardknox_amount($order->get_total());
-        $postData['xEmail'] = $billing_email;
-        $postData['xInvoice'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->id : $order->get_id();
-        $postData['xIP'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->customer_ip_address : $order->get_customer_ip_address();
+        $postData['xEmail']       = $billing_email;
+        $postData['xInvoice']     = version_compare(WC_VERSION, '3.0.0', '<') ? $order->id : $order->get_id();
+        $postData['xIP']          = version_compare(WC_VERSION, '3.0.0', '<') ? $order->customer_ip_address : $order->get_customer_ip_address();
+        $postData['xTax']         = $order->get_total_tax() > 0 ? $order->get_total_tax() : 0;
 
         if (!empty($billing_email) && apply_filters('wc_cardknox_send_cardknox_receipt', false)) {
             $postData['xCustReceipt'] = '1';

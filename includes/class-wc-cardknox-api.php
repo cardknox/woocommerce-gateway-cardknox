@@ -70,13 +70,15 @@ class WC_Cardknox_API
     public static function request($request, $method = 'POST')
     {
         $request['xKey'] =  self::get_transaction_key();
-        $request['xVersion'] =  '4.5.8';
+        $request['xVersion'] =  '5.0.0';
         $request['xSoftwareVersion'] =  WC()->version;
         $request['xSoftwareName'] =  'Wordpress_WooCommerce';
         $request['xSDKVersion'] =  WC_CARDKNOX_VERSION;
         $request['xSDKName'] =  'CardknoxWooCommerce';
         $request['xSupports64BitRefnum'] = true;
+        $request['xAllowDuplicate'] = 1;
         self::log(" request: " . print_r($request, true));
+        self::log(" endpoint: " . self::ENDPOINT);
         $response = wp_safe_remote_post(
             self::ENDPOINT,
             array(
@@ -96,19 +98,11 @@ class WC_Cardknox_API
         self::log(" reponse: " . print_r($parsed_response, true));
 
         if (!empty($parsed_response['xResult'])) {
-            if ($parsed_response['xResult'] != "A") {
-                //				if ( ! empty( $parsed_response['xError'] ) ) {
-                //					if ( ! empty( $parsed_response['xErrorCode'] ) ) {
-                //						$code = $parsed_response['xErrorCode'];
-                //					} else {
-                //						$code = 'cardknox_error';
-                //					}
-                return new WP_Error("cardknox_error", "{$parsed_response['xStatus']}: {$parsed_response['xError']}({$parsed_response['xRefNum']})", 'woocommerce-gateway-cardknox');
-                //				} else {
-                //					return new WP_Error( 'cardknox_error', __( 'There was a problem connecting to the payment gateway.', 'woocommerce-gateway-cardknox' ) );
-                //				}
-            } else {
+
+            if (($parsed_response['xResult'] == "A") || ($parsed_response['xResult'] == "V")) {
                 return $parsed_response;
+            } else {
+                return new WP_Error("cardknox_error", "{$parsed_response['xStatus']}: {$parsed_response['xError']}({$parsed_response['xRefNum']})({$parsed_response['xErrorCode']})", 'woocommerce-gateway-cardknox');
             }
         } else {
             return new WP_Error('cardknox_error', __('There was a problem connecting to the payment gateway.', 'woocommerce-gateway-cardknox'));

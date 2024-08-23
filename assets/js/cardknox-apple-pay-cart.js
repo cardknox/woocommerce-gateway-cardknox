@@ -138,40 +138,40 @@ const apRequest = {
   validateApplePayMerchant: function () {
     return new Promise((resolve, reject) => {
       try {
-        let xhr = new XMLHttpRequest();
-        xhr.open("POST", "https://api.cardknox.com/applepay/validate");
-        xhr.onload = function () {
+        let xhrQuick = new XMLHttpRequest();
+        xhrQuick.open("POST", "https://api.cardknox.com/applepay/validate");
+        xhrQuick.onload = function () {
           if (this.status >= 200 && this.status < 300) {
             console.log(
               "validateApplePayMerchant",
-              JSON.stringify(xhr.response)
+              JSON.stringify(xhrQuick.response)
             );
-            resolve(xhr.response);
+            resolve(xhrQuick.response);
           } else {
             console.error(
               "validateApplePayMerchant",
-              JSON.stringify(xhr.response),
+              JSON.stringify(xhrQuick.response),
               this.status
             );
             reject({
               status: this.status,
-              statusText: xhr.response,
+              statusText: xhrQuick.response,
             });
           }
         };
-        xhr.onerror = function () {
+        xhrQuick.onerror = function () {
           console.error(
             "validateApplePayMerchant",
-            xhr.statusText,
+            xhrQuick.statusText,
             this.status
           );
           reject({
             status: this.status,
-            statusText: xhr.statusText,
+            statusText: xhrQuick.statusText,
           });
         };
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.send();
+        xhrQuick.setRequestHeader("Content-Type", "application/json");
+        xhrQuick.send();
       } catch (err) {
         setTimeout(function () {
           console.log("getApplePaySession error: " + exMsg(err));
@@ -282,22 +282,23 @@ const apRequest = {
     }
   },
   onPaymentAuthorize: function (applePayload) {
-    const amt = parseFloat(cartTotal.total).toFixed(2);
+    const amtAppleQuick = parseFloat(cartTotal.total).toFixed(2);
     return new Promise((resolve, reject) => {
       try {
-        this.authorize(applePayload, amt.toString())
+        this.authorize(applePayload, amtAppleQuick.toString())
           .then((response) => {
             try {
               console.log(response);
               const resp = JSON.parse(response);
-              if (!resp) throw "Invalid response: " + response;
+              if (!resp) {
+                throw new Error("Invalid response: " + response);
+              }            
               if (resp.xError) {
                 throw resp;
               }
               resolve(response);
             } catch (err) {
               throw err;
-              // reject(err);
             }
           })
           .catch((err) => {
@@ -383,22 +384,15 @@ function getAmount() {
 }
 
 function getApButtonColor(applePaysettings) {
-  let apButtonColor = APButtonColor.black;
   switch (applePaysettings.button_style) {
-    case "black":
-      apButtonColor = APButtonColor.black;
-      break;
     case "white":
-      apButtonColor = APButtonColor.white;
-      break;
+      return APButtonColor.white;
     case "whiteOutline":
-      apButtonColor = APButtonColor.whiteOutline;
-      break;
+      return APButtonColor.whiteOutline;
+    case "black":
     default:
-      apButtonColor = APButtonColor.black;
+      return APButtonColor.black;
   }
-
-  return apButtonColor;
 }
 
 function getApButtonType(applePaysettings) {

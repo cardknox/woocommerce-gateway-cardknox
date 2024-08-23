@@ -41,6 +41,175 @@ jQuery(function ($) {
     }
   );
 
+  window.onload = function () {
+    if (wc_cardknox_params.enable_3ds == "yes") {
+      enable3DS(wc_cardknox_params.threeds_env, handle3DSResults);
+    } else {
+      enable3DS(wc_cardknox_params.threeds_env, null);
+    }
+
+    let defaultStyle = {
+      border: "1px solid black",
+    };
+
+    let validStyle = {
+      border: "1px solid green",
+    };
+
+    let invalidStyle = {
+      border: "1px solid red",
+    };
+
+    var card_style = {
+      outline: "none",
+      border: "0",
+      "border-left-color": "rgb(67, 69, 75)",
+      padding: "0.6180469716em",
+      width: "225px",
+      height: "auto",
+      "background-color": wc_cardknox_params.bgcolor,
+      "font-weight": "inherit",
+    };
+
+    var cvv_style = {
+      outline: "none",
+      border: "0",
+      "border-left-color": "rgb(67, 69, 75)",
+      padding: "0.6180469716em",
+      width: "106px",
+      height: "auto",
+      "background-color": wc_cardknox_params.bgcolor,
+      "font-weight": "inherit",
+    };
+
+    if (/[?&](is)?debug/i.test(window.location.search)) {
+      setDebugEnv(true);
+    }
+
+    const queryString = parseQueryString(window.location.href);
+
+    setIfieldStyle("ach", defaultStyle);
+    setIfieldStyle("card-number", card_style);
+    setIfieldStyle("cvv", cvv_style);
+
+    enableAutoFormatting();
+
+    enableLogging();
+
+    setAccount(wc_cardknox_params.key, "wordpress", "0.1.2");
+
+    addIfieldCallback("input", function (data) {
+      if (data.ifieldValueChanged) {
+        setIfieldStyle(
+          "card-number",
+          data.cardNumberFormattedLength <= 0
+            ? defaultStyle
+            : data.cardNumberIsValid
+            ? validStyle
+            : invalidStyle
+        );
+        if (data.lastIfieldChanged === "cvv") {
+          setIfieldStyle(
+            "cvv",
+            data.issuer === "unknown" || data.cvvLength <= 0
+              ? defaultStyle
+              : data.cvvIsValid
+              ? validStyle
+              : invalidStyle
+          );
+        } else if (data.lastIfieldChanged === "card-number") {
+          if (data.issuer === "unknown" || data.cvvLength <= 0) {
+            setIfieldStyle("cvv", defaultStyle);
+          } else if (data.issuer === "amex") {
+            setIfieldStyle(
+              "cvv",
+              data.cvvLength === 4 ? validStyle : invalidStyle
+            );
+          } else {
+            setIfieldStyle(
+              "cvv",
+              data.cvvLength === 3 ? validStyle : invalidStyle
+            );
+          }
+        } else if (data.lastIfieldChanged === "ach") {
+          setIfieldStyle(
+            "ach",
+            data.achLength === 0
+              ? defaultStyle
+              : data.achIsValid
+              ? validStyle
+              : invalidStyle
+          );
+        }
+      }
+    });
+
+    let checkCardLoaded = setInterval(function () {
+      clearInterval(checkCardLoaded);
+      focusIfield("card-number");
+    }, 1000);
+  };
+
+  function handle3DSResults(
+    actionCode,
+    xCavv,
+    xEciFlag,
+    xRefNum,
+    xAuthenticateStatus,
+    xSignatureVerification
+  ) {
+    const postData = {
+      action: "get_data",
+      xKey: wc_cardknox_params.xkey,
+      xRefNum: xRefNum,
+      xCavv: xCavv,
+      xEci: xEciFlag,
+      x3dsAuthenticationStatus: xAuthenticateStatus,
+      x3dsSignatureVerificationStatus: xSignatureVerification,
+      x3dsActionCode: actionCode,
+      x3dsError: ck3DS.error,
+      xVersion: wc_cardknox_params.xVersion,
+      xSoftwareName: wc_cardknox_params.xSoftwareName,
+      xSoftwareVersion: wc_cardknox_params.xSoftwareVersion,
+      xAllowDuplicate: 1,
+    };
+
+    $.ajax({
+      type: "post",
+      dataType: "json",
+      url: wc_cardknox_params.threeds_object.ajax_url,
+      data: postData,
+      success: function (resp) {
+        if (resp.xResult == "E" || resp.xResult == "D") {
+          //   $("#wc-cardknox-cc-form").after(
+          //     '<p style="color: red;">' + resp.xError + "</p>"
+          //   );
+          $(".woocommerce-error, .woocommerce-message").remove();
+          $("form.checkout")
+            .prev(".woocommerce-notices-wrapper")
+            .append(
+              '<ul class="woocommerce-error" role="alert"><li>' +
+                resp.xError +
+                "</li></ul>"
+            );
+        }
+        if (resp.xResult == "A") {
+          window.location.href = resp.redirect;
+        }
+      },
+    });
+  }
+
+  function urlEncodedToJson(data) {
+    return JSON.parse(
+      '{"' +
+        decodeURI(data)
+          .replace(/"/g, '\\"')
+          .replace(/&/g, '","')
+          .replace(/=/g, '":"') +
+        '"}'
+    );
+  }
   /**
    * Object to handle Cardknox payment forms.
    */
@@ -49,7 +218,7 @@ jQuery(function ($) {
      * Initialize event handlers and UI state.
      */
     init: function () {
-      this.onIfieldloaded();
+      // this.onIfieldloaded();
       // checkout page
       if ($("form.woocommerce-checkout").length) {
         this.form = $("form.woocommerce-checkout");
@@ -119,12 +288,9 @@ jQuery(function ($) {
       wc_cardknox_form.unblock();
     },
 
-    onSubmit: function (e) {
-      //debugger;
-      console.log("onSubmit");
-      // wc_cardknox_form.form.validate_field();
+    onSubmit: function () {
       if (wc_cardknox_form.isCardknoxChosen() && !wc_cardknox_form.hasExp()) {
-        e.preventDefault();
+        // e.preventDefault();
         wc_cardknox_form.block();
         getTokens(
           function () {
@@ -138,8 +304,8 @@ jQuery(function ($) {
               $(document).trigger("cardknoxError", "CVV Required");
               return false;
             }
-
             wc_cardknox_form.onCardknoxResponse();
+            jQuery(document.body).trigger("update_checkout");
           },
           function () {
             //onError
@@ -150,8 +316,8 @@ jQuery(function ($) {
             );
             return false;
           },
-          //30 second timeout
-          30000
+          //20 second timeout
+          20000
         );
         return false;
       }
@@ -191,123 +357,62 @@ jQuery(function ($) {
           xExp +
           "'/>"
       );
-      wc_cardknox_form.form.submit();
+
+      $.ajax({
+        type: "POST",
+        url: "?wc-ajax=checkout", // Ensure this points to the correct URL
+        data: $("form.woocommerce-checkout").serialize(),
+        beforeSend: function () {
+          // Show the loader
+          //   $(".blockUI").show();
+        },
+        success: function (response) {
+          //   console.log("response", response);
+
+          if (response.result === "success") {
+            let jsonResp = response.response;
+
+            if (
+              jsonResp.xResult == "V" &&
+              jsonResp.xVerifyPayload &&
+              jsonResp.xVerifyPayload !== "" &&
+              jsonResp.xVerifyURL &&
+              jsonResp.xVerifyURL !== ""
+            ) {
+              verify3DS(jsonResp);
+            }
+
+            if (jsonResp.xResult == "A") {
+              window.location.href = response.redirect;
+            }
+
+            // Handle success, such as showing a confirmation message
+          } else {
+            // Handle failure
+            $("form.woocommerce-checkout .blockUI.blockOverlay").hide();
+            $(".woocommerce-error, .woocommerce-message").remove();
+            wc_cardknox_form.form.prepend(response.messages);
+            //return false;
+          }
+          $("form.woocommerce-checkout .blockUI.blockOverlay").hide();
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+          // Handle error (e.g., show an error message)
+          console.log("Error placing order:", textStatus, errorThrown);
+
+          // Hide the loader
+          $("form.woocommerce-checkout .blockUI.blockOverlay").hide();
+        },
+        complete: function () {
+          // Ensure loader is hidden after the request completes
+          $("form.woocommerce-checkout .blockUI.blockOverlay").hide();
+        },
+      });
     },
 
     reset: function () {
       $("#cardknox-card-cvc, #cardknox-card-number").val("");
       $(".xExp").remove();
-    },
-
-    onIfieldloaded: function () {
-      enableLogging();
-      setAccount(wc_cardknox_params.key, "wordpress", "0.1.2");
-
-      var card_style = {
-        outline: "none",
-        border: "1px solid #c3c3c3",
-        "border-radius": "4px",
-        padding: "0.6180469716em",
-        width: "93%",
-        height: "30px",
-        "background-color": wc_cardknox_params.bgcolor,
-        "font-weight": "inherit",
-        "background-image": "url("+$('.payment_method_cardknox label').find('img').attr('src')+")",
-        "background-size": "32%",
-        "background-repeat": "no-repeat",
-        "background-position": "right 10px center"
-      };
-      var cvv_style = {
-        outline: "none",
-        border: "1px solid #c3c3c3",
-        "border-radius": "4px",
-        padding: "0.6180469716em",
-        width: "85%",
-        height: "30px",
-        "background-color": wc_cardknox_params.bgcolor,
-        "font-weight": "inherit",
-      };
-
-      function applyStyles() {
-        if (window.matchMedia("(max-width: 767px)").matches) {
-          card_style.width = "100%";
-          card_style.height = "48px";
-          cvv_style.width = "100%";
-          cvv_style.height = "48px";
-          card_style["box-sizing"] = "border-box";
-          cvv_style["box-sizing"] = "border-box";
-        }else{
-          card_style.width = "93%";
-          cvv_style.width = "85%";
-        }      
-        setIfieldStyle("card-number", card_style);
-        setIfieldStyle("cvv", cvv_style);
-      }
-      
-      // Initial application of styles
-      applyStyles();
-      
-      // Apply styles on window resize
-      window.addEventListener("resize", applyStyles);
-
-      enableAutoFormatting();
-
-      addIfieldCallback("input", function (data) {
-        if (data.ifieldValueChanged) {
-          setIfieldStyle(
-            "card-number",
-            data.cardNumberFormattedLength <= 0
-              ? defaultStyle
-              : data.cardNumberIsValid
-              ? validStyle
-              : invalidStyle
-          );
-          if (data.lastIfieldChanged === "cvv") {
-            setIfieldStyle(
-              "cvv",
-              data.issuer === "unknown" || data.cvvLength <= 0
-                ? defaultStyle
-                : data.cvvIsValid
-                ? validStyle
-                : invalidStyle
-            );
-          } else if (data.lastIfieldChanged === "card-number") {
-            if (data.issuer === "unknown" || data.cvvLength <= 0) {
-              setIfieldStyle("cvv", defaultStyle);
-            } else if (data.issuer === "amex") {
-              setIfieldStyle(
-                "cvv",
-                data.cvvLength === 4 ? validStyle : invalidStyle
-              );
-            } else {
-              setIfieldStyle(
-                "cvv",
-                data.cvvLength === 3 ? validStyle : invalidStyle
-              );
-            }
-          } else if (data.lastIfieldChanged === "ach") {
-            setIfieldStyle(
-              "ach",
-              data.achLength === 0
-                ? defaultStyle
-                : data.achIsValid
-                ? validStyle
-                : invalidStyle
-            );
-          }
-        }
-      });
-
-      addIfieldCallback("issuerupdated", function (data) {
-        setIfieldStyle(
-          "cvv",
-          data.issuer === "unknown" || data.cvvLength <= 0
-            ? defaultStyle
-            : data.cvvIsValid
-            ? validStyle
-            : invalidStyle
-        );
-      });
     },
   };
 

@@ -135,12 +135,12 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         wp_enqueue_script('wc-credit-card-form', '', array('jquery-payment'));
         $timestamp  = filemtime(get_stylesheet_directory());
         $fields = array();
-        $cvc_field = '<p class="form-row form-row-last" style="margin:0px !important;">
-			<label style="margin:0px !important; line-height: inherit; for="' . esc_attr($this->id) . '-card-cvc">' . esc_html__('Card Code', 'woocommerce') . ' <span class="required">*</span></label>
-			<iframe style="height:51px; margin-bottom:0px;"  data-ifields-id="cvv" data-ifields-placeholder="CVV"
-                        src="https://cdn.cardknox.com/ifields/2.15.2302.0801/ifield.htm?" + "' . esc_attr($timestamp) . '" frameBorder="0" width="100%"
-                        height="50" id="cvv-frame"></iframe>
-            <label style="margin:0px !important; line-height: inherit; color: red; margin-bottom:0px;" data-ifields-id="card-data-error"></label>
+        $cvc_field = '<p class="form-row form-row-last">
+			<label for="' . esc_attr($this->id) . '-card-cvc">' . esc_html__('Card Code', 'woocommerce') . ' <span class="required">*</span></label>
+			<iframe data-ifields-id="cvv" data-ifields-placeholder="CVV"
+                        src="https://cdn.cardknox.com/ifields/2.15.2401.3101/ifield.htm?" + "' . esc_attr($timestamp) . '" frameBorder="0" width="100%"
+                        height="55" id="cvv-frame"></iframe>
+            <label data-ifields-id="card-data-error" style="color: red;"></label>
 		</p><input data-ifields-id="cvv-token" name="xCVV" id="cardknox-card-cvc" type="hidden"/>';
 
         $default_fields = array(
@@ -149,8 +149,8 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 				<label style="margin:0px !important; line-height: inherit;" for="' . esc_attr($this->id) . '-card-number">' . esc_html__('Card Number', 'woocommerce') . ' <span class="required">*</span></label>
 
 				<iframe data-ifields-id="card-number" data-ifields-placeholder="Card Number"
-                        src="https://cdn.cardknox.com/ifields/2.15.2302.0801/ifield.htm?" + "' . esc_attr($timestamp) . '" frameBorder="0" width="100%"
-                        height="55" style="height:51px; margin-bottom:10px !important;"></iframe>
+                        src="https://cdn.cardknox.com/ifields/2.15.2401.3101/ifield.htm?" + "' . esc_attr($timestamp) . '" frameBorder="0" width="100%"
+                        height="55"></iframe>
 			</p> <input data-ifields-id="card-number-token" name="xCardNum" id="cardknox-card-number" type="hidden"/>',
             'card-expiry-field' => '<p class="form-row form-row-first" style=" margin: 0 !important;">
 				<label style="margin:0px !important; line-height: inherit;" for="' . esc_attr($this->id) . '-card-expiry">' . esc_html__('Expiry (MM/YY)', 'woocommerce') . ' <span class="required">*</span></label>
@@ -378,9 +378,9 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
         $cardknox_admin_params = array(
             'localized_messages' => array(
-                'missing_transaction_key'     => __('Missing Trasnaction Key. Please set the trasnaction key field above and re-try.', 'woocommerce-gateway-cardknox'),
+                'missing_transaction_key' => __('Missing Trasnaction Key. Please set the trasnaction key field above and re-try.', 'woocommerce-gateway-cardknox'),
             ),
-            'ajaxurl'            => admin_url('admin-ajax.php')
+            'ajaxurl' => admin_url('admin-ajax.php')
         );
 
         wp_localize_script('woocommerce_cardknox_admin', 'wc_cardknox_admin_params', apply_filters('wc_cardknox_admin_params', $cardknox_admin_params));
@@ -414,22 +414,23 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
         $suffix = defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? '' : '.min';
 
-        wp_enqueue_script('cardknox', 'https://cdn.cardknox.com/ifields/2.15.2309.2601/ifields.min.js', '', '1.0.0', false);
+        wp_enqueue_script('cardknox', 'https://cdn.cardknox.com/ifields/2.15.2401.3101/ifields.min.js', '', '1.0.0', false);
         wp_enqueue_script('woocommerce_cardknox', plugins_url('assets/js/cardknox' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE), array('jquery-payment'), filemtime(plugin_dir_path(dirname(__FILE__)) . 'assets/js/cardknox' . $suffix . '.js'), true);
 
         $cardknox_params = array(
             'key'                  => $this->token_key,
-            'transaction_key'      => $this->transaction_key,
+            'xkey'                 => $this->transaction_key,
             'i18n_terms'           => __('Please accept the terms and conditions first', 'woocommerce-gateway-cardknox'),
             'i18n_required_fields' => __('Please fill in required checkout fields first', 'woocommerce-gateway-cardknox'),
             'bgcolor'              => $this->bgcolor,
             'enable_3ds'           => $this->enable_3ds,
             'threeds_env'          => $this->threeds_env,
-            'xVersion'             => '4.5.8',
+            'xVersion'             => '5.0.0',
             'xSoftwareVersion'     => WC()->version,
             'xSoftwareName'        => 'Wordpress_WooCommerce',
             'xCommand'             => $this->capture ? 'cc:sale' : 'cc:authonly',
-            'xAmount'              => $woocommerce->cart->get_cart_contents_total()
+            'xAmount'              => $woocommerce->cart->get_cart_contents_total(),
+            'threeds_object'       => array('ajax_url' => admin_url('admin-ajax.php'))
         );
 
         // merge localized messages to be use in JS
@@ -453,7 +454,6 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $postData = self::get_billing_shiping_info($postData, $order);
         $postData = self::get_payment_data($postData);
 
-
         /**
          * Filter the return value of the WC_Payment_Gateway_CC::generate_payment_request.
          *
@@ -467,12 +467,13 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
     public function get_order_data($postData, $order)
     {
-        $billing_email    = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_email : $order->get_billing_email();
+        $billing_email            = version_compare(WC_VERSION, '3.0.0', '<') ? $order->billing_email : $order->get_billing_email();
         $postData['xCurrency']    = strtolower(version_compare(WC_VERSION, '3.0.0', '<') ? $order->get_order_currency() : $order->get_currency());
         $postData['xAmount']      = $this->get_cardknox_amount($order->get_total());
-        $postData['xEmail'] = $billing_email;
-        $postData['xInvoice'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->id : $order->get_id();
-        $postData['xIP'] = version_compare(WC_VERSION, '3.0.0', '<') ? $order->customer_ip_address : $order->get_customer_ip_address();
+        $postData['xEmail']       = $billing_email;
+        $postData['xInvoice']     = version_compare(WC_VERSION, '3.0.0', '<') ? $order->id : $order->get_id();
+        $postData['xIP']          = version_compare(WC_VERSION, '3.0.0', '<') ? $order->customer_ip_address : $order->get_customer_ip_address();
+        $postData['xTax']         = $order->get_total_tax() > 0 ? $order->get_total_tax() : 0;
 
         if (!empty($billing_email) && apply_filters('wc_cardknox_send_cardknox_receipt', false)) {
             $postData['xCustReceipt'] = '1';
@@ -490,7 +491,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         } else {
             $postData['xCardNum'] = wc_clean($_POST['xCardNum']);
             $postData['xCVV'] = wc_clean($_POST['xCVV']);
-            $postData['xExp'] = wc_clean($_POST['xExp']);
+            $postData['xExp'] = str_replace(' ', '', wc_clean($_POST['xExp']));
         }
 
         $this->validate_payment_data($postData);
@@ -499,13 +500,11 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
     public function validate_payment_data($postData)
     {
-        if ($this->is_unset_or_empty($postData['xToken'])) {
-            if ($this->is_unset_or_empty($postData['xCardNum'])) {
-                throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: card number", 400);
-            }
-            if ($this->is_unset_or_empty($postData['xCVV'])) {
-                throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: cvv", 400);
-            }
+        if ($this->is_unset_or_empty($postData['xCardNum'])) {
+            throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: card number", 400);
+        }
+        if ($this->is_unset_or_empty($postData['xCVV'])) {
+            throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: cvv", 400);
         }
     }
     private function is_unset_or_empty($s)
@@ -567,32 +566,49 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
                 // Make the request.
                 $response = WC_Cardknox_API::request($this->generate_payment_request($order));
+                $paymentName = get_post_meta($orderId, '_payment_method', true);
 
-                if (is_wp_error($response)) {
-                    //					$localized_messages = $this->get_localized_messages();
-                    //
-                    //					$message = isset( $localized_messages[ $response->get_error_code() ] ) ? $localized_messages[ $response->get_error_code() ] : $response->get_error_message();
-                    //
-                    //					$order->add_order_note( $message );
-                    $order->add_order_note($response->get_error_message());
-                    throw new Exception("The transaction was declined please try again");
+                if ($this->enable_3ds === 'yes') {
+
+                    if (is_wp_error($response)) {
+                        $order->add_order_note($response->get_error_message());
+                        throw new Exception($response->get_error_message());
+                    } else {
+                        if ($response['xResult'] === 'V' && $paymentName === 'cardknox') {
+                            return array(
+                                'result'   => 'success',
+                                'response' => $response
+                            );
+                        }
+                    }
+                } else {
+
+                    if (is_wp_error($response)) {
+                        //					$localized_messages = $this->get_localized_messages();
+                        //
+                        //					$message = isset( $localized_messages[ $response->get_error_code() ] ) ? $localized_messages[ $response->get_error_code() ] : $response->get_error_message();
+                        //
+                        //					$order->add_order_note( $message );
+                        $order->add_order_note($response->get_error_message());
+                        throw new Exception("The transaction was declined please try again");
+                    }
+
+                    $this->log("Info: set_transaction_id");
+                    $order->set_transaction_id($response['xRefNum']);
+
+                    $this->log("Info: save_payment");
+                    $this->save_payment($forceCustomer, $response);
+
+                    //the below get sets when a subscription charge gets fired
+                    if ($forceCustomer) {
+                        $this->save_payment_for_subscription($orderId, $response);
+                    }
+                    // Process valid response.
+                    $this->log("Info: process_response");
+                    $this->process_response($response, $order);
                 }
-
-                $this->log("Info: set_transaction_id");
-                $order->set_transaction_id($response['xRefNum']);
-
-                $this->log("Info: save_payment");
-                $this->save_payment($forceCustomer, $response);
-
-                //the below get sets when a subscription charge gets fired
-                if ($forceCustomer) {
-                    $this->save_payment_for_subscription($orderId, $response);
-                }
-                // Process valid response.
-                $this->log("Info: process_response");
-                $this->process_response($response, $order);
             } else {
-                //				the below get sets when a subscription charge gets fired
+                // the below get sets when a subscription charge gets fired
                 if ($forceCustomer && wcs_is_subscription($orderId)) {
                     $postData                = array();
                     $postData['xCommand']     = 'cc:save';
@@ -608,19 +624,19 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                 $order->payment_complete();
             }
 
-
             $this->log("Info: empty_cart");
+
             // Remove cart.
             WC()->cart->empty_cart();
 
             $this->log("Info: wc_gateway_cardknox_process_payment");
             do_action('wc_gateway_cardknox_process_payment', $response, $order);
 
-
             $this->log("Info: thank you page redirect");
             // Return thank you page redirect.
             return array(
                 'result'   => 'success',
+                'response' => $response,
                 'redirect' => $this->get_return_url($order),
             );
         } catch (Exception $e) {
@@ -661,7 +677,6 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
     public function save_payment_for_subscription($orderId, $response)
     {
-
         if (function_exists('wcs_order_contains_subscription') && wcs_order_contains_subscription($orderId)) {
             $subscriptions = wcs_get_subscriptions_for_order($orderId);
         } elseif (function_exists('wcs_order_contains_renewal') && wcs_order_contains_renewal($orderId)) {
@@ -681,7 +696,8 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
      */
     public function process_response($response, $order)
     {
-        //		$this->log( 'Processing response: ' . print_r( $response, true ) );
+        // $this->log( 'Processing response: ' . print_r( $response, true ) );
+
 
         $orderId = version_compare(WC_VERSION, '3.0.0', '<') ? $order->id : $order->get_id();
 
@@ -741,7 +757,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                 'xCommand' => 'cc:save',
                 'xCardNum' => wc_clean($_POST['xCardNum']),
                 'xCVV'     => wc_clean($_POST['xCVV']),
-                'xExp'     => wc_clean($_POST['xExp']),
+                'xExp'     => str_replace(' ', '', wc_clean($_POST['xExp'])),
             )
         );
 
@@ -872,14 +888,13 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
      */
     public function add_card($response)
     {
-
         // Add token to WooCommerce
         if (get_current_user_id() && class_exists('WC_Payment_Token_CC')) {
             $myExp = '';
             if ($response['xExp']) {
-                $myExp = $response['xExp'];
+                $myExp = str_replace(' ', '', $response['xExp']);
             } elseif (wc_clean($_POST['xExp']) != '') {
-                $myExp = wc_clean($_POST['xExp']);
+                $myExp = str_replace(' ', '', wc_clean($_POST['xExp']));
             }
             if ($myExp) {
                 $token = new WC_Payment_Token_CC();

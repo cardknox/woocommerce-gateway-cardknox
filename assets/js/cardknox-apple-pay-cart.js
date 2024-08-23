@@ -209,7 +209,6 @@ const apRequest = {
     });
   },
   authorize: function (applePayload, totalAmount) {
-    console.log(applePayload);
     let appToken = applePayload.token.paymentData.data;
     if (appToken) {
       let xcardnum = btoa(JSON.stringify(applePayload.token.paymentData));
@@ -283,6 +282,7 @@ const apRequest = {
   },
   onPaymentAuthorize: function (applePayload) {
     const amtAppleQuick = parseFloat(cartTotal.total).toFixed(2);
+
     return new Promise((resolve, reject) => {
       try {
         this.authorize(applePayload, amtAppleQuick.toString())

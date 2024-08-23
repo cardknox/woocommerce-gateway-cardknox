@@ -103,8 +103,10 @@ window.gpRequest = {
       label: "onGetTransactionInfo",
       data: shippingData,
     });
+
     const amtQuick = parseFloat(subTotal.total).toFixed(2);
     let countryCodeQuick = null;
+
     if (
       jQuery("#billing_country").val() !== null &&
       jQuery("#billing_country").val() !== undefined

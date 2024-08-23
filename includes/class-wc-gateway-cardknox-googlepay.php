@@ -60,6 +60,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         $this->googlepay_specific_countries     = $this->get_option('googlepay_specific_countries');
 
         $this->wcVersion = version_compare(WC_VERSION, '3.0.0', '<');
+        
         // Hooks.
         add_action('wp_enqueue_scripts', array($this, 'gpayment_scripts'));
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
@@ -595,5 +596,5 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
             }
         }
         return $available_gateways;
-    }    
+    }
 }

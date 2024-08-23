@@ -561,6 +561,9 @@ if (!class_exists('WC_Cardknox')) :
                 wp_enqueue_script('cardknox', 'https://cdn.cardknox.com/ifields/2.15.2309.2601/ifields.min.js', '', '1.0.0', false);
             }
 
+            // Get shipping zones
+            $shipping_zones = WC_Shipping_Zones::get_zones();
+
             if (is_cart() && $googlepay_quickcheckout == 'no') {
 
                 wp_enqueue_style(
@@ -580,13 +583,10 @@ if (!class_exists('WC_Cardknox')) :
                     array('jquery-payment'),
                     '1.0',
                     true
-                );
-
-                // Get shipping zones
-                $shipping_zones = WC_Shipping_Zones::get_zones();
+                );                
 
                 // Initialize an array to store shipping methods and costs
-                $shippingCosts = array();
+                $shippingCostsGoogle = array();
 
                 // Loop through each shipping zone
                 foreach ($shipping_zones as $zone) {
@@ -605,15 +605,15 @@ if (!class_exists('WC_Cardknox')) :
                             }
 
                             // Add method ID and cost to the array
-                            $shippingCosts[$method_id] = $method_cost;
+                            $shippingCostsGoogle[$method_id] = $method_cost;
                         }
                     }
                 }
 
-                $shipping_methods = WC()->shipping()->get_shipping_methods();
+                $shipping_methods_gpay = WC()->shipping()->get_shipping_methods();
                 $methods = array();
 
-                foreach ($shipping_methods as $method) {
+                foreach ($shipping_methods_gpay as $method) {
 
                     $methods[] = array(
                         'id' => $method->id,
@@ -643,7 +643,7 @@ if (!class_exists('WC_Cardknox')) :
                     'total'                   => WC()->cart->total,
                     'currencyCode'            => get_woocommerce_currency(),
                     'shippingMethods'         => $methods,
-                    'shippingCosts'           => $shippingCosts,
+                    'shippingCosts'           => $shippingCostsGoogle,
                     'ajax_url'                => admin_url('admin-ajax.php'),
                     'create_order_nonce'      => wp_create_nonce('create_order_nonce'),
                 );
@@ -672,11 +672,9 @@ if (!class_exists('WC_Cardknox')) :
                     true
                 );
 
-                // Get shipping zones
-                $shipping_zones = WC_Shipping_Zones::get_zones();
 
                 // Initialize an array to store shipping methods and costs
-                $shippingCosts = array();
+                $shippingCostsApple = array();
 
                 // Loop through each shipping zone
                 foreach ($shipping_zones as $zone) {
@@ -698,7 +696,7 @@ if (!class_exists('WC_Cardknox')) :
                             $cleaned_description = str_replace(array("\n", "\r"), '', strip_tags($shipping_method->get_method_description()));
 
                             // Add method ID and cost to the array
-                            $shippingCosts[] = array(
+                            $shippingCostsApple[] = array(
                                 'identifier' => $method_id,
                                 'label' => $shipping_method->get_method_title(),
                                 'amount' => number_format((float)$method_cost, 2, '.', ''),
@@ -719,7 +717,7 @@ if (!class_exists('WC_Cardknox')) :
                     'applicable_countries'    => $applePayoptions['applepay_applicable_countries'],
                     'specific_countries'      => $applePayoptions['applepay_specific_countries'],
                     'total'                   => WC()->cart->total,
-                    'shippingMethods'         => $shippingCosts,
+                    'shippingMethods'         => $shippingCostsApple,
                     'ajax_url'                => admin_url('admin-ajax.php'),
                     'create_order_nonce'      => wp_create_nonce('create_order_nonce'),
                 );

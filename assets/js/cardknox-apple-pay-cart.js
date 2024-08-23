@@ -181,7 +181,6 @@ const apRequest = {
       }
     });
   },
-
   onValidateMerchant: function () {
     return new Promise((resolve, reject) => {
       try {
@@ -203,8 +202,7 @@ const apRequest = {
         reject(err);
       }
     });
-  },
-  
+  },  
   authorize: function (applePayload, totalAmount) {
     let appToken = applePayload.token.paymentData.data;
     if (appToken) {

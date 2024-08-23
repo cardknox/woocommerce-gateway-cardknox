@@ -85,13 +85,15 @@ const apRequest = {
           label: "shippingContact",
           data: JSON.stringify(shippingContact),
         });
-        const hasShipping = shippingContact?.administrativeArea;
+
+        const hasShippingApplepay = shippingContact?.administrativeArea;
+
         let taxAmt = 0.1;
         const newShippingMethods = applePaysettings.shippingMethods;
 
         let resp = self.getTransactionInfo(taxAmt, newShippingMethods[0]);
         resp.shippingMethods = newShippingMethods;
-        if (hasShipping && shippingContact.administrativeArea == "HI") {
+        if (hasShippingApplepay && shippingContact.administrativeArea == "HI") {
           resp.error = {
             code: APErrorCode.addressUnserviceable,
             contactField: APErrorContactField.administrativeArea,

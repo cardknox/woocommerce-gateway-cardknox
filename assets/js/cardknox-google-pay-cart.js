@@ -72,9 +72,11 @@ window.gpRequest = {
         label: "onGetShippingOptions",
         data: shippingData,
       });
-      const hasShipping = shippingData?.shippingAddress;
+
+      const hasShippingGpay = shippingData?.shippingAddress;
+      
       if (
-        hasShipping &&
+        hasShippingGpay &&
         shippingData.shippingAddress.administrativeArea == "HI"
       ) {
         return {
@@ -87,7 +89,7 @@ window.gpRequest = {
       }
       let selectedOptionid = "free_shipping";
       if (
-        hasShipping &&
+        hasShippingGpay &&
         shippingData.shippingOptionData.id !== "shipping_option_unselected"
       ) {
         selectedOptionid = shippingData.shippingOptionData.id;

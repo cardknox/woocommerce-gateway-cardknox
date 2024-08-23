@@ -72,7 +72,7 @@ window.gpRequest = {
         label: "onGetShippingOptions",
         data: shippingData,
       });
-      const hasShipping = shippingData && shippingData.shippingAddress;
+      const hasShipping = shippingData?.shippingAddress;
       if (
         hasShipping &&
         shippingData.shippingAddress.administrativeArea == "HI"
@@ -213,14 +213,14 @@ window.gpRequest = {
       isDebug: isDebugEnv,
     };
   },
-  gpButtonLoaded: function (resp) {
-    if (!resp) return;
-    if (resp.status === iStatus.success) {
+  gpButtonLoaded: function (quickResp) {
+    if (!quickResp) return;
+    if (quickResp.status === iStatus.success) {
       showHide("divGpay", true);
-    } else if (resp.reason) {
+    } else if (quickResp.reason) {
       logDebug({
         label: "gpButtonLoaded",
-        data: resp.reason,
+        data: quickResp.reason,
       });
     }
   },

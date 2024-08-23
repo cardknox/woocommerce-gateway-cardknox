@@ -135,7 +135,7 @@ const apRequest = {
       }
     });
   },
-  validateApplePayMerchant: function () {
+  validateQuickApplePayMerchant: function () {
     return new Promise((resolve, reject) => {
       try {
         let xhrQuick = new XMLHttpRequest();
@@ -143,13 +143,13 @@ const apRequest = {
         xhrQuick.onload = function () {
           if (this.status >= 200 && this.status < 300) {
             console.log(
-              "validateApplePayMerchant",
+              "validateQuickApplePayMerchant",
               JSON.stringify(xhrQuick.response)
             );
             resolve(xhrQuick.response);
           } else {
             console.error(
-              "validateApplePayMerchant",
+              "validateQuickApplePayMerchant",
               JSON.stringify(xhrQuick.response),
               this.status
             );
@@ -161,7 +161,7 @@ const apRequest = {
         };
         xhrQuick.onerror = function () {
           console.error(
-            "validateApplePayMerchant",
+            "validateQuickApplePayMerchant",
             xhrQuick.statusText,
             this.status
           );
@@ -182,14 +182,14 @@ const apRequest = {
   onValidateMerchant: function () {
     return new Promise((resolve, reject) => {
       try {
-        this.validateApplePayMerchant()
+        this.validateQuickApplePayMerchant()
           .then((response) => {
             try {
               console.log(response);
               resolve(response);
             } catch (err) {
               console.error(
-                "validateApplePayMerchant exception.",
+                "validateQuickApplePayMerchant exception.",
                 JSON.stringify(err)
               );
               reject(err);
@@ -197,7 +197,7 @@ const apRequest = {
           })
           .catch((err) => {
             console.error(
-              "validateApplePayMerchant error.",
+              "validateQuickApplePayMerchant error.",
               JSON.stringify(err)
             );
             reject(err);
@@ -289,12 +289,12 @@ const apRequest = {
           .then((response) => {
             try {
               console.log(response);
-              const resp = JSON.parse(response);
-              if (!resp) {
+              const respQuick = JSON.parse(response);
+              if (!respQuick) {
                 throw new Error("Invalid response: " + response);
               }            
-              if (resp.xError) {
-                throw resp;
+              if (respQuick.xError) {
+                throw respQuick;
               }
               resolve(response);
             } catch (err) {
@@ -396,34 +396,23 @@ function getApButtonColor(applePaysettings) {
 }
 
 function getApButtonType(applePaysettings) {
-  let apButtonType = APButtonType.pay;
   switch (applePaysettings.button_type) {
-    case "pay":
-      apButtonType = APButtonType.pay;
-      break;
     case "buy":
-      apButtonType = APButtonType.buy;
-      break;
+      return APButtonType.buy;
     case "plain":
-      apButtonType = APButtonType.plain;
-      break;
+      return APButtonType.plain;
     case "order":
-      apButtonType = APButtonType.order;
-      break;
+      return APButtonType.order;
     case "donate":
-      apButtonType = APButtonType.donate;
-      break;
+      return APButtonType.donate;
     case "continue":
-      apButtonType = APButtonType.continue;
-      break;
+      return APButtonType.continue;
     case "checkout":
-      apButtonType = APButtonType.checkout;
-      break;
+      return APButtonType.checkout;
+    case "pay":
     default:
-      apButtonType = APButtonType.pay;
+      return APButtonType.pay;
   }
-
-  return apButtonType;
 }
 
 function applePaycreateWooCommerceOrder(

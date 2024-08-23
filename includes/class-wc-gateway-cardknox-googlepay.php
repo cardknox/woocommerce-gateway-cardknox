@@ -48,7 +48,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         $this->init_settings();
 
         $this->enabled                          = $this->get_option('googlepay_enabled');
-        $this->google_quickcheckout                    = $this->get_option('googlepay_quickcheckout');
+        $this->google_quickcheckout             = $this->get_option('googlepay_quickcheckout');
         $this->title                            = $this->get_option('googlepay_title');
         $this->description                      = __('Pay with your Google Pay.', 'woocommerce-gateway-cardknox');
         $this->googlepay_merchant_name          = $this->get_option('googlepay_merchant_name');

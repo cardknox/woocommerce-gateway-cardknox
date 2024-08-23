@@ -58,7 +58,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         $this->init_settings();
 
         $this->enabled                          = $this->get_option('applepay_enabled');
-        $this->apple_quickcheckout                    = $this->get_option('applepay_quickcheckout');
+        $this->apple_quickcheckout              = $this->get_option('applepay_quickcheckout');
         $this->title                            = $this->get_option('applepay_title');
         $this->description                      = __('Pay with your apple card.', 'woocommerce-gateway-cardknox');
         $this->applepay_merchant_identifier     = $this->get_option('applepay_merchant_identifier');

@@ -181,27 +181,21 @@ const apRequest = {
       }
     });
   },
+
   onValidateMerchant: function () {
     return new Promise((resolve, reject) => {
       try {
         this.validateQuickApplePayMerchant()
           .then((response) => {
             try {
-              console.log(response);
               resolve(response);
             } catch (err) {
-              console.error(
-                "validateQuickApplePayMerchant exception.",
-                JSON.stringify(err)
-              );
+              console.error("validateQuickApplePayMerchant exception.", JSON.stringify(err));
               reject(err);
             }
           })
           .catch((err) => {
-            console.error(
-              "validateQuickApplePayMerchant error.",
-              JSON.stringify(err)
-            );
+            console.error("validateQuickApplePayMerchant error.", JSON.stringify(err));
             reject(err);
           });
       } catch (err) {
@@ -210,6 +204,7 @@ const apRequest = {
       }
     });
   },
+  
   authorize: function (applePayload, totalAmount) {
     let appToken = applePayload.token.paymentData.data;
     if (appToken) {
@@ -286,33 +281,27 @@ const apRequest = {
     const amtAppleQuick = parseFloat(cartTotal.total).toFixed(2);
 
     return new Promise((resolve, reject) => {
-      try {
         this.authorize(applePayload, amtAppleQuick.toString())
-          .then((response) => {
-            try {
-              console.log(response);
-              const respQuick = JSON.parse(response);
-              if (!respQuick) {
-                throw new Error("Invalid response: " + response);
-              }            
-              if (respQuick.xError) {
-                throw respQuick;
-              }
-              resolve(response);
-            } catch (err) {
-              throw err;
-            }
-          })
-          .catch((err) => {
-            console.error("authorizeAPay error.", JSON.stringify(err));
-            apRequest.handleAPError(err);
-            reject(err);
-          });
-      } catch (err) {
-        console.error("onPaymentAuthorize error.", JSON.stringify(err));
-        apRequest.handleAPError(err);
-        reject(err);
-      }
+            .then((response) => {
+                try {
+                    console.log(response);
+                    const respQuick = JSON.parse(response);
+                    if (!respQuick) {
+                        throw new Error("Invalid response: " + response);
+                    }
+                    if (respQuick.xError) {
+                        throw respQuick;
+                    }
+                    resolve(response);
+                } catch (err) {
+                    reject(err);
+                }
+            })
+            .catch((err) => {
+                console.error("authorizeAPay error.", JSON.stringify(err));
+                apRequest.handleAPError(err);
+                reject(err);
+            });
     });
   },
   handleAPError: function (err) {

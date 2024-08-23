@@ -561,9 +561,6 @@ if (!class_exists('WC_Cardknox')) :
                 wp_enqueue_script('cardknox', 'https://cdn.cardknox.com/ifields/2.15.2309.2601/ifields.min.js', '', '1.0.0', false);
             }
 
-            // Get shipping zones
-            $shipping_zones = WC_Shipping_Zones::get_zones();
-
             if (is_cart() && $googlepay_quickcheckout == 'no') {
 
                 wp_enqueue_style(
@@ -585,11 +582,14 @@ if (!class_exists('WC_Cardknox')) :
                     true
                 );                
 
+                // Get shipping zones
+                $shipping_zones_gpay = WC_Shipping_Zones::get_zones();
+
                 // Initialize an array to store shipping methods and costs
                 $shippingCostsGoogle = array();
 
                 // Loop through each shipping zone
-                foreach ($shipping_zones as $zone) {
+                foreach ($shipping_zones_gpay as $zone) {
                     // Loop through each shipping method in the zone
                     foreach ($zone['shipping_methods'] as $shipping_method) {
                         // Check if the shipping method is an instance of WC_Shipping_Method
@@ -673,11 +673,14 @@ if (!class_exists('WC_Cardknox')) :
                 );
 
 
+                // Get shipping zones
+                $shipping_zones_applepay = WC_Shipping_Zones::get_zones();
+
                 // Initialize an array to store shipping methods and costs
                 $shippingCostsApple = array();
 
                 // Loop through each shipping zone
-                foreach ($shipping_zones as $zone) {
+                foreach ($shipping_zones_applepay as $zone) {
                     // Loop through each shipping method in the zone
                     foreach ($zone['shipping_methods'] as $shipping_method) {
                         // Check if the shipping method is an instance of WC_Shipping_Method

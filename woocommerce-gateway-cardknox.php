@@ -123,16 +123,16 @@ if (!class_exists('WC_Cardknox')) :
             add_action('admin_notices', array($this, 'admin_notices'), 15);
             add_action('plugins_loaded', array($this, 'init'));
 
-            add_action('wp_enqueue_scripts', array($this, 'quick_chekout_payment_scripts'));
+            add_action('wp_enqueue_scripts', array($this, 'quickChekoutPaymentScripts'));
 
-            add_action('wp_ajax_update_cart_total', array($this, 'update_cart_total'));
-            add_action('wp_ajax_nopriv_update_cart_total', array($this, 'update_cart_total'));
+            add_action('wp_ajax_update_cart_total', array($this, 'updateCartTotal'));
+            add_action('wp_ajax_nopriv_update_cart_total', array($this, 'updateCartTotal'));
 
-            add_action('wp_ajax_cardknox_create_order', array($this, 'cardknox_create_order'));
-            add_action('wp_ajax_nopriv_cardknox_create_order', array($this, 'cardknox_create_order'));
+            add_action('wp_ajax_cardknox_create_order', array($this, 'googlepayCardknoxCreateorder'));
+            add_action('wp_ajax_nopriv_cardknox_create_order', array($this, 'googlepayCardknoxCreateorder'));
 
-            add_action('wp_ajax_applepay_cardknox_create_order', array($this, 'applepay_cardknox_create_order'));
-            add_action('wp_ajax_nopriv_applepay_cardknox_create_order', array($this, 'applepay_cardknox_create_order'));
+            add_action('wp_ajax_applepay_cardknox_create_order', array($this, 'applepayCardknoxCreateorder'));
+            add_action('wp_ajax_nopriv_applepay_cardknox_create_order', array($this, 'applepayCardknoxCreateorder'));
         }
 
         /**
@@ -161,8 +161,8 @@ if (!class_exists('WC_Cardknox')) :
 
             $this->settingPage = 'admin.php?page=wc-settings&tab=checkout&section=';
 
-            add_action('wp_ajax_nopriv_get_data', array($this, 'threeds_ajax_handler'));
-            add_action('wp_ajax_get_data', array($this, 'threeds_ajax_handler'));
+            add_action('wp_ajax_nopriv_get_data', array($this, 'threedsAjaxHandler'));
+            add_action('wp_ajax_get_data', array($this, 'threedsAjaxHandler'));
         }
 
         /**
@@ -533,7 +533,7 @@ if (!class_exists('WC_Cardknox')) :
             self::$log->add('woocommerce-gateway-cardknox', $message);
         }
 
-        public function update_cart_total()
+        public function updateCartTotal()
         {
             if (defined('DOING_AJAX') && DOING_AJAX) {
                 // Calculate total
@@ -548,7 +548,7 @@ if (!class_exists('WC_Cardknox')) :
         /**
          * For cart page load gpay button.
          */
-        public function quick_chekout_payment_scripts()
+        public function quickChekoutPaymentScripts()
         {
 
             $options = get_option('woocommerce_cardknox-googlepay_settings');
@@ -614,7 +614,6 @@ if (!class_exists('WC_Cardknox')) :
                 $methods = array();
 
                 foreach ($shipping_methods as $method) {
-                    $method_id = $method->id;
 
                     $methods[] = array(
                         'id' => $method->id,
@@ -732,7 +731,7 @@ if (!class_exists('WC_Cardknox')) :
         /**
          * For shipping method details.
          */
-        public function get_shipping_method_details($shipping_method_slug)
+        public function getShippingMethodDetails($shipping_method_slug)
         {
             $shipping_methods = [];
 
@@ -778,16 +777,14 @@ if (!class_exists('WC_Cardknox')) :
         /**
          * For Googlepay quick create order.
          */
-        public function cardknox_create_order()
+        public function googlepayCardknoxCreateorder()
         {
 
             // Verify nonce
             check_ajax_referer('create_order_nonce', 'security');
 
             // Get and sanitize inputs
-            $google_pay_token = sanitize_text_field($_POST['google_pay_token']);
             $google_email = sanitize_text_field($_POST['email']);
-            $amount = floatval($_POST['amount']);
             $phone = sanitize_text_field($_POST['phone']);
             $shippingOptionData = json_decode(stripslashes($_POST['shippingOptionData']), true);
             $shippingAddress = json_decode(stripslashes($_POST['shippingAddress']), true);
@@ -798,7 +795,7 @@ if (!class_exists('WC_Cardknox')) :
             }
 
             $shipping_method_slug = $shippingOptionData['id'];
-            $shipping_method_details = $this->get_shipping_method_details($shipping_method_slug);
+            $shipping_method_details = $this->getShippingMethodDetails($shipping_method_slug);
 
             // Create the order
             $order = wc_create_order();
@@ -857,15 +854,11 @@ if (!class_exists('WC_Cardknox')) :
         /**
          * For Applepay quick create order.
          */
-        public function applepay_cardknox_create_order()
+        public function applepayCardknoxCreateorder()
         {
 
             // Verify nonce
             check_ajax_referer('create_order_nonce', 'security');
-
-            // Get and sanitize inputs
-            $apple_pay_token = sanitize_text_field($_POST['apple_pay_token']);
-            $amount = floatval($_POST['amount']);
 
             $billingContact = json_decode(stripslashes($_POST['billingContact']), true);
             $shippingContact = json_decode(stripslashes($_POST['shippingContact']), true);
@@ -883,7 +876,7 @@ if (!class_exists('WC_Cardknox')) :
                 $order->add_product($product, $cart_item['quantity']);
             }
 
-            $shipping_method_details = $this->get_shipping_method_details($selectedShipping['identifier']);
+            $shipping_method_details = $this->getShippingMethodDetails($selectedShipping['identifier']);
 
             // add shipping options
             $shipping = new WC_Order_Item_Shipping();
@@ -943,7 +936,7 @@ if (!class_exists('WC_Cardknox')) :
         /**
          * 3ds API verificaion
          */
-        public function threeds_ajax_handler()
+        public function threedsAjaxHandler()
         {
 
             $apiUrl = "https://x1.cardknox.com/verify";

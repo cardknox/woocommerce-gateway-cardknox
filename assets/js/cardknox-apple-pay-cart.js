@@ -89,7 +89,7 @@ const apRequest = {
         let taxAmt = 0.1;
         const newShippingMethods = applePaysettings.shippingMethods;
 
-        resp = self.getTransactionInfo(taxAmt, newShippingMethods[0]);
+        let resp = self.getTransactionInfo(taxAmt, newShippingMethods[0]);
         resp.shippingMethods = newShippingMethods;
         if (hasShipping && shippingContact.administrativeArea == "HI") {
           resp.error = {
@@ -129,12 +129,7 @@ const apRequest = {
         console.log("paymentMethod", JSON.stringify(paymentMethod));
         const resp = self.getTransactionInfo(null, null, paymentMethod.type);
         resolve(resp);
-      } catch (err) {
-        const apErr = {
-          code: "-102",
-          contactField: "",
-          message: exMsg(err),
-        };
+      } catch (err) {        
         console.error("onPaymentMethodSelected error.", exMsg(err));
         reject({ errors: [err] });
       }
@@ -143,7 +138,7 @@ const apRequest = {
   validateApplePayMerchant: function () {
     return new Promise((resolve, reject) => {
       try {
-        var xhr = new XMLHttpRequest();
+        let xhr = new XMLHttpRequest();
         xhr.open("POST", "https://api.cardknox.com/applepay/validate");
         xhr.onload = function () {
           if (this.status >= 200 && this.status < 300) {
@@ -215,9 +210,9 @@ const apRequest = {
   },
   authorize: function (applePayload, totalAmount) {
     console.log(applePayload);
-    var appToken = applePayload.token.paymentData.data;
+    let appToken = applePayload.token.paymentData.data;
     if (appToken) {
-      var xcardnum = btoa(JSON.stringify(applePayload.token.paymentData));
+      let xcardnum = btoa(JSON.stringify(applePayload.token.paymentData));
       jQuery("#applePaytoken").val(xcardnum);
 
       let billingFirstName = applePayload.billingContact.givenName;
@@ -318,7 +313,7 @@ const apRequest = {
     });
   },
   handleAPError: function (err) {
-    if (err && err.xRefNum) {
+    if (err?.xRefNum) {
       setAPPayload("There was a problem with your order:(" + err.xRefNum + ")");
     } else {
       setAPPayload("There was a problem with your order:" + exMsg(err));
@@ -348,17 +343,12 @@ const apRequest = {
     };
   },
   isSupportedApplePay: function () {
-    if (!window.ApplePaySession || !ApplePaySession.canMakePayments()) {
-      return false;
-    } else {
-      return true;
-    }
+    return !!window.ApplePaySession && ApplePaySession.canMakePayments();
   },
   apButtonLoaded: function (resp) {
     if (!resp) return;
     if (resp.status === iStatus.success) {
       showHide(this.buttonOptions.buttonContainer, true);
-      //showHide("lbAPPayload", true);
     } else if (resp.reason) {
       jQuery(".applepay-error")
         .html("<div class='woocommerce-error'>" + resp.reason + "</div>")
@@ -366,7 +356,7 @@ const apRequest = {
       console.log(resp.reason);
     }
 
-    if (this.isSupportedApplePay() == false) {
+    if (!this.isSupportedApplePay()) {
       jQuery(".woocommerce-checkout .payment_method_cardknox-applepay").hide();
     } else {
       jQuery(".woocommerce-checkout .payment_method_cardknox-applepay").show();
@@ -388,12 +378,12 @@ function showHide(elem, toShow) {
 }
 
 function getAmount() {
-  var totals = applePaysettings.total;
+  let totals = applePaysettings.total;
   return parseFloat(totals).toFixed(2);
 }
 
 function getApButtonColor(applePaysettings) {
-  var apButtonColor = APButtonColor.black;
+  let apButtonColor = APButtonColor.black;
   switch (applePaysettings.button_style) {
     case "black":
       apButtonColor = APButtonColor.black;
@@ -412,7 +402,7 @@ function getApButtonColor(applePaysettings) {
 }
 
 function getApButtonType(applePaysettings) {
-  var apButtonType = APButtonType.pay;
+  let apButtonType = APButtonType.pay;
   switch (applePaysettings.button_type) {
     case "pay":
       apButtonType = APButtonType.pay;

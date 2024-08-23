@@ -48,7 +48,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         $this->init_settings();
 
         $this->enabled                          = $this->get_option('googlepay_enabled');
-        $this->quickcheckout                    = $this->get_option('googlepay_quickcheckout');
+        $this->google_quickcheckout                    = $this->get_option('googlepay_quickcheckout');
         $this->title                            = $this->get_option('googlepay_title');
         $this->description                      = __('Pay with your Google Pay.', 'woocommerce-gateway-cardknox');
         $this->googlepay_merchant_name          = $this->get_option('googlepay_merchant_name');
@@ -68,7 +68,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         add_action('woocommerce_review_order_after_submit', array($this, 'cardknox_gpay_order_after_submit'));
         add_filter('woocommerce_available_payment_gateways', array($this, 'cardknox_allow_gpay_method_by_country'));
 
-        if(is_cart() && $this->quickcheckout == 'no'){
+        if ( is_cart() && $this->google_quickcheckout == 'no'){
             add_action('woocommerce_proceed_to_checkout', array($this, 'cardknox_gpay_order_after_submit'), 20);
         }
     }

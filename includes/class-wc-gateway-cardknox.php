@@ -116,6 +116,10 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
         WC_Cardknox_API::set_transaction_key($this->transaction_key);
 
+        // Initialize the child gateways
+        $this->apple_pay_gateway = new WCCardknoxApplepay();
+        $this->google_pay_gateway = new WCCardknoxGooglepay();
+
         // Hooks.
         add_action('wp_enqueue_scripts', array($this, 'payment_scripts'));
         add_action('admin_enqueue_scripts', array($this, 'admin_scripts'));
@@ -926,7 +930,66 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             <br class="clear" />
             <p><strong><?php echo __('Last 4 Digits Of Credit Card:', 'woocommerce-gateway-cardknox'); ?></strong><br>
                 <?php echo substr($cardknox_masked_card, -4); ?></p>
-<?php
+        <?php
         }
+    }
+
+    /**
+     * Admin options for all payment method
+     */
+    public function admin_options()
+    {
+        ?>
+        <div id="wc-master-gateway-tabs" class="nav-tab-wrapper">
+            <a href="#credit-card-settings" class="nav-tab nav-tab-active"><?php _e('Credit Card', 'woocommerce'); ?></a>
+            <a href="#apple-pay-settings" class="nav-tab"><?php _e('Apple Pay', 'woocommerce'); ?></a>
+            <a href="#google-pay-settings" class="nav-tab"><?php _e('Google Pay', 'woocommerce'); ?></a>
+        </div>
+        <div id="credit-card-settings" class="panel">
+            <table class="form-table" style="width:400px;">
+                <thead>
+                    <tr>
+                        <th><?php _e('Credit Card Settings', 'woocommerce'); ?></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $this->generate_settings_html();
+                    ?>
+                </tbody>
+            </table>
+        </div>
+        <div id="apple-pay-settings" class="panel">
+            <table class="form-table" style="width:400px;">
+                <thead>
+                    <tr>
+                        <th><?php _e('Apple Pay Settings', 'woocommerce'); ?></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $this->apple_pay_gateway->generate_settings_html();
+                    ?>
+                </tbody>
+            </table>
+        </div>
+        <div id="google-pay-settings" class="panel">
+            <table class="form-table" style="width:400px;">
+                <thead>
+                    <tr>
+                        <th><?php _e('Google Pay Settings', 'woocommerce'); ?></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $this->google_pay_gateway->generate_settings_html();
+                    ?>
+                </tbody>
+            </table>
+        </div>
+<?php
     }
 }

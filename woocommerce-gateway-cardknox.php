@@ -42,6 +42,7 @@ define('WC_CARDKNOX_MAIN_FILE', __FILE__);
 define('WC_CARDKNOX_PLUGIN_URL', untrailingslashit(plugins_url(basename(plugin_dir_path(__FILE__)), basename(__FILE__))));
 define('WC_CARDKNOX_PLUGIN_PATH', untrailingslashit(plugin_dir_path(__FILE__)));
 
+
 if (!class_exists('WC_Cardknox')) :
 
     class WC_Cardknox
@@ -76,9 +77,7 @@ if (!class_exists('WC_Cardknox')) :
          *
          * @return void
          */
-        private function __clone()
-        {
-        }
+        private function __clone() {}
 
         /**
          * Private unserialize method to prevent unserializing of the *Singleton*
@@ -86,9 +85,7 @@ if (!class_exists('WC_Cardknox')) :
          *
          * @return void
          */
-        public function __wakeup()
-        {
-        }
+        public function __wakeup() {}
 
         /**
          * Flag to indicate whether or not we need to load code for / support subscriptions.
@@ -159,6 +156,9 @@ if (!class_exists('WC_Cardknox')) :
             add_action('woocommerce_order_status_processing_to_completed', array($this, 'capture_payment'));
 
             $this->settingPage = 'admin.php?page=wc-settings&tab=checkout&section=';
+
+            add_action('wp_ajax_nopriv_get_data', array($this, 'threeds_ajax_handler'));
+            add_action('wp_ajax_get_data', array($this, 'threeds_ajax_handler'));
         }
 
         /**
@@ -275,13 +275,9 @@ if (!class_exists('WC_Cardknox')) :
         public function plugin_action_links($links)
         {
             $setting_link = $this->get_setting_link();
-            $applepay_setting_link = $this->get_setting_applepay_link();
-            $googlepay_setting_link = $this->getSettingGooglepayLink();
 
             $plugin_links = array(
                 $this->generateLink($setting_link) . __('Settings', 'woocommerce-gateway-cardknox') . '</a>',
-                $this->generateLink($applepay_setting_link) . __('Apple Pay', 'woocommerce-gateway-cardknox') . '</a>',
-                $this->generateLink($googlepay_setting_link) . __('Google Pay', 'woocommerce-gateway-cardknox') . '</a>',
                 '<a href="https://docs.woocommerce.com/document/cardknox/">' . __('Docs', 'woocommerce-gateway-cardknox') . '</a>',
                 '<a href="https://woocommerce.com/contact-us/">' . __('Support', 'woocommerce-gateway-cardknox') . '</a>',
             );

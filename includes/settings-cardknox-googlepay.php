@@ -3,10 +3,6 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-global $woocommerce;
-$countries_obj   = new WC_Countries();
-$countries   = $countries_obj->__get('countries');
-
 $gtextType = 'text';
 $gselectType = 'select';
 $googlePrefix = 'Google Pay';
@@ -17,10 +13,6 @@ $gkeyOptions = 'options';
 $gkeyDefault = 'default';
 $gkeyDescTip = 'desc_tip';
 $gbuttonPrefix = 'Google Pay Button';
-
-global $woocommerce;
-$countries_obj   = new WC_Countries();
-$countries   = $countries_obj->__get('countries');
 
 $wc_cardknox_google_pay_settings = array(
     $gkeyPrefix . '_enabled' => array(

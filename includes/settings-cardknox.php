@@ -19,6 +19,10 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+global $woocommerce;
+$countries_obj   = new WC_Countries();
+$countries   = $countries_obj->__get('countries');
+
 $wc_cardknox_settings = array(
     'enabled' => array(
         'title'       => __('Enable/Disable', 'woocommerce-gateway-cardknox'),
@@ -100,8 +104,42 @@ $wc_cardknox_settings = array(
         'default'     => '#F2F2F2',
         'desc_tip'    => true,
         'class'       => 'colorpick',
-        'css'          => 'width: 6em'
-    )
+        'css'         => 'width: 6em'
+    ),
+    'applicable_countries' => array(
+        'title'       => __('Payment From Applicable Countries', 'woocommerce-gateway-cardknox'),
+        'type'        => 'select',
+        'options'     => array(
+            '0'       => __('All Allowed Countries', 'woocommerce-gateway-cardknox'),
+            '1'       => __('Specific Countries', 'woocommerce-gateway-cardknox'),
+        ),
+    ),
+    'specific_countries' => array(
+        'title'          => __('Payment From Specific Countries', 'woocommerce-gateway-cardknox'),
+        'type'           => 'multiselect',
+        'options'        => $countries
+    ),
+    'enable-3ds' => array(
+        'title'       => __('Enable 3DS', 'woocommerce-gateway-cardknox'),
+        'label'       => __('Enable 3DS', 'woocommerce-gateway-cardknox'),
+        'type'        => 'checkbox',
+        'description' => __('Enable 3DS', 'woocommerce-gateway-cardknox'),
+        'default'     => 'no',
+        'desc_tip'    => true,
+    ),
+    '3ds-env' => array(
+        'title'       => __('3DS environment', 'woocommerce-gateway-cardknox'),
+        'type'     => 'select',
+        'class'    => 'wc-enhanced-select',
+        'id'       => '3ds-env',
+        'description' => __('To set up the environment for processing a 3DS authentication transaction', 'woocommerce-gateway-cardknox'),
+        'default'     => 'staging',
+        'desc_tip'    => true,
+        'options'  => array(
+            'staging'    => __('Staging', 'woocommerce-gateway-cardknox'),
+            'production' => __('Production', 'woocommerce-gateway-cardknox'),
+        ),
+    ),
 );
 
 $GLOBALS["wc_cardknox_settings"] = $wc_cardknox_settings;

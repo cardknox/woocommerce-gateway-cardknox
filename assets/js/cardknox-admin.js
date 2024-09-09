@@ -48,44 +48,11 @@ jQuery(function ($) {
   wc_cardknox_admin.init();
 });
 
-jQuery(function ($) {
-  (function () {
-    $("input#woocommerce_cardknox-applepay_applepay_capture")
-      .change(function () {
-        $(this).is(":checked")
-          ? $("#woocommerce_cardknox-applepay_applepay_auth_only_order_status")
-              .closest("tr")
-              .hide()
-          : $("#woocommerce_cardknox-applepay_applepay_auth_only_order_status")
-              .closest("tr")
-              .show();
-      })
-      .change();
-    $("input#woocommerce_cardknox-googlepay_googlepay_capture")
-      .change(function () {
-        $(this).is(":checked")
-          ? $(
-              "#woocommerce_cardknox-googlepay_googlepay_auth_only_order_status"
-            )
-              .closest("tr")
-              .hide()
-          : $(
-              "#woocommerce_cardknox-googlepay_googlepay_auth_only_order_status"
-            )
-              .closest("tr")
-              .show();
-      })
-      .change();
-  })();
-});
-
 jQuery(document).ready(function ($) {
   // Target the first select box
-  let select1 = $(
-    "#woocommerce_cardknox-applepay_applepay_applicable_countries"
-  );
+  let select1 = $("#woocommerce_cardknox_applicable_countries");
   // Target the second select box
-  let select2 = $("#woocommerce_cardknox-applepay_applepay_specific_countries");
+  let select2 = $("#woocommerce_cardknox_specific_countries");
   // Disable the second select box initially
   if (select1.val() == 0) {
     select2.prop("disabled", true);
@@ -101,26 +68,16 @@ jQuery(document).ready(function ($) {
     }
   });
 
-  // Target the first select box
-  let select3 = $(
-    "#woocommerce_cardknox-googlepay_googlepay_applicable_countries"
-  );
-  // Target the second select box
-  let select4 = $(
-    "#woocommerce_cardknox-googlepay_googlepay_specific_countries"
-  );
-  // Disable the second select box initially
-  if (select3.val() == 0) {
-    select4.prop("disabled", true);
-  } else {
-    select4.prop("disabled", false);
-  }
-  // Enable or disable the second select box based on the value of the first select box
-  select3.on("change", function () {
-    if (select3.val() == 0) {
-      select4.prop("disabled", true);
-    } else {
-      select4.prop("disabled", false);
-    }
+  $('tr[data-gateway_id="cardknox-applepay"]').hide();
+  $('tr[data-gateway_id="cardknox-googlepay"]').hide();
+
+  $("#wc-master-gateway-tabs .nav-tab").click(function (e) {
+    e.preventDefault();
+    $("#wc-master-gateway-tabs .nav-tab").removeClass("nav-tab-active");
+    $(this).addClass("nav-tab-active");
+    $(".panel").hide();
+    $($(this).attr("href")).show();
   });
+  $(".panel").hide();
+  $(".panel:first").show();
 });

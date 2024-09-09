@@ -116,6 +116,10 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
         WC_Cardknox_API::set_transaction_key($this->transaction_key);
 
+        // Initialize the child gateways
+        $this->apple_pay_gateway = new WCCardknoxApplepay();
+        $this->google_pay_gateway = new WCCardknoxGooglepay();
+
         // Hooks.
         add_action('wp_enqueue_scripts', array($this, 'payment_scripts'));
         add_action('admin_enqueue_scripts', array($this, 'admin_scripts'));
@@ -138,7 +142,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $cvc_field = '<p class="form-row form-row-last">
 			<label for="' . esc_attr($this->id) . '-card-cvc">' . esc_html__('Card Code', 'woocommerce') . ' <span class="required">*</span></label>
 			<iframe data-ifields-id="cvv" data-ifields-placeholder="CVV"
-                        src="https://cdn.cardknox.com/ifields/2.15.2401.3101/ifield.htm?" + "' . esc_attr($timestamp) . '" frameBorder="0" width="100%"
+                        src="https://cdn.cardknox.com/ifields/2.15.2405.1601/ifield.htm?" + "' . esc_attr($timestamp) . '" frameBorder="0" width="100%"
                         height="55" id="cvv-frame"></iframe>
             <label data-ifields-id="card-data-error" style="color: red;"></label>
 		</p><input data-ifields-id="cvv-token" name="xCVV" id="cardknox-card-cvc" type="hidden"/>';
@@ -149,7 +153,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 				<label style="margin:0px !important; line-height: inherit;" for="' . esc_attr($this->id) . '-card-number">' . esc_html__('Card Number', 'woocommerce') . ' <span class="required">*</span></label>
 
 				<iframe data-ifields-id="card-number" data-ifields-placeholder="Card Number"
-                        src="https://cdn.cardknox.com/ifields/2.15.2401.3101/ifield.htm?" + "' . esc_attr($timestamp) . '" frameBorder="0" width="100%"
+                        src="https://cdn.cardknox.com/ifields/2.15.2405.1601/ifield.htm?" + "' . esc_attr($timestamp) . '" frameBorder="0" width="100%"
                         height="55"></iframe>
 			</p> <input data-ifields-id="card-number-token" name="xCardNum" id="cardknox-card-number" type="hidden"/>',
             'card-expiry-field' => '<p class="form-row form-row-first" style=" margin: 0 !important;">
@@ -939,10 +943,68 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             <br class="clear" />
             <p><strong><?php echo __('Last 4 Digits Of Credit Card:', 'woocommerce-gateway-cardknox'); ?></strong><br>
                 <?php echo substr($cardknox_masked_card, -4); ?></p>
-<?php
+        <?php
         }
     }
 
+    /**
+     * Admin options for all payment method
+     */
+    public function admin_options()
+    {
+        ?>
+        <div id="wc-master-gateway-tabs" class="nav-tab-wrapper">
+            <a href="#credit-card-settings" class="nav-tab nav-tab-active"><?php _e('Credit Card', 'woocommerce'); ?></a>
+            <a href="#apple-pay-settings" class="nav-tab"><?php _e('Apple Pay', 'woocommerce'); ?></a>
+            <a href="#google-pay-settings" class="nav-tab"><?php _e('Google Pay', 'woocommerce'); ?></a>
+        </div>
+        <div id="credit-card-settings" class="panel">
+            <table class="form-table" style="width:400px;">
+                <thead>
+                    <tr>
+                        <th><?php _e('Credit Card Settings', 'woocommerce'); ?></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $this->generate_settings_html();
+                    ?>
+                </tbody>
+            </table>
+        </div>
+        <div id="apple-pay-settings" class="panel">
+            <table class="form-table" style="width:400px;">
+                <thead>
+                    <tr>
+                        <th><?php _e('Apple Pay Settings', 'woocommerce'); ?></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $this->apple_pay_gateway->generate_settings_html();
+                    ?>
+                </tbody>
+            </table>
+        </div>
+        <div id="google-pay-settings" class="panel">
+            <table class="form-table" style="width:400px;">
+                <thead>
+                    <tr>
+                        <th><?php _e('Google Pay Settings', 'woocommerce'); ?></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $this->google_pay_gateway->generate_settings_html();
+                    ?>
+                </tbody>
+            </table>
+        </div>
+<?php
+    }
     public function cardknox_gateway_icon($icon, $id)
     {
         if ($id === 'cardknox') {

@@ -72,9 +72,11 @@ window.gpRequest = {
         label: "onGetShippingOptions",
         data: shippingData,
       });
-      const hasShipping = shippingData && shippingData.shippingAddress;
+
+      const hasShippingGpay = shippingData?.shippingAddress;
+      
       if (
-        hasShipping &&
+        hasShippingGpay &&
         shippingData.shippingAddress.administrativeArea == "HI"
       ) {
         return {
@@ -87,7 +89,7 @@ window.gpRequest = {
       }
       let selectedOptionid = "free_shipping";
       if (
-        hasShipping &&
+        hasShippingGpay &&
         shippingData.shippingOptionData.id !== "shipping_option_unselected"
       ) {
         selectedOptionid = shippingData.shippingOptionData.id;
@@ -103,25 +105,27 @@ window.gpRequest = {
       label: "onGetTransactionInfo",
       data: shippingData,
     });
-    const amt = parseFloat(subTotal.total).toFixed(2);
-    let countryCode = null;
+
+    const amtQuick = parseFloat(subTotal.total).toFixed(2);
+    let countryCodeQuick = null;
+
     if (
       jQuery("#billing_country").val() !== null &&
       jQuery("#billing_country").val() !== undefined
     ) {
-      countryCode = jQuery("#billing_country").val();
+      countryCodeQuick = jQuery("#billing_country").val();
     } else {
-      countryCode = "US";
+      countryCodeQuick = "US";
     }
     return {
       displayItems: [
         {
           label: "Subtotal",
           type: "SUBTOTAL",
-          price: amt.toString(),
+          price: amtQuick.toString(),
         },
       ],
-      countryCode: countryCode,
+      countryCode: countryCodeQuick,
       currencyCode: googlePaysettings.currencyCode,
       totalPriceStatus: "FINAL",
       totalPrice: amt.toString(),
@@ -131,7 +135,6 @@ window.gpRequest = {
   onBeforeProcessPayment: function () {
     return new Promise(function (resolve, reject) {
       try {
-        //Do some validation here
         resolve(iStatus.success);
       } catch (err) {
         reject(err);
@@ -176,15 +179,15 @@ window.gpRequest = {
     }, 3000);
   },
   handleResponse: function (resp) {
-    const respObj = JSON.parse(resp);
-    if (respObj) {
-      if (respObj.xError) {
+    const respObjQuick = JSON.parse(resp);
+    if (respObjQuick) {
+      if (respObjQuick.xError) {
         setTimeout(function () {
-          alert(`There was a problem with your order (${respObj.xRefNum})!`);
+          alert(`There was a problem with your order (${respObjQuick.xRefNum})!`);
         }, 500);
       } else
         setTimeout(function () {
-          alert(`Thank you for your order (${respObj.xRefNum})!`);
+          alert(`Thank you for your order (${respObjQuick.xRefNum})!`);
         }, 500);
     }
   },
@@ -212,14 +215,14 @@ window.gpRequest = {
       isDebug: isDebugEnv,
     };
   },
-  gpButtonLoaded: function (resp) {
-    if (!resp) return;
-    if (resp.status === iStatus.success) {
+  gpButtonLoaded: function (quickResp) {
+    if (!quickResp) return;
+    if (quickResp.status === iStatus.success) {
       showHide("divGpay", true);
-    } else if (resp.reason) {
+    } else if (quickResp.reason) {
       logDebug({
         label: "gpButtonLoaded",
-        data: resp.reason,
+        data: quickResp.reason,
       });
     }
   },

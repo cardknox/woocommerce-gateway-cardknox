@@ -85,13 +85,15 @@ const apRequest = {
           label: "shippingContact",
           data: JSON.stringify(shippingContact),
         });
-        const hasShipping = shippingContact?.administrativeArea;
+
+        const hasShippingApplepay = shippingContact?.administrativeArea;
+
         let taxAmt = 0.1;
         const newShippingMethods = applePaysettings.shippingMethods;
 
-        resp = self.getTransactionInfo(taxAmt, newShippingMethods[0]);
+        let resp = self.getTransactionInfo(taxAmt, newShippingMethods[0]);
         resp.shippingMethods = newShippingMethods;
-        if (hasShipping && shippingContact.administrativeArea == "HI") {
+        if (hasShippingApplepay && shippingContact.administrativeArea == "HI") {
           resp.error = {
             code: APErrorCode.addressUnserviceable,
             contactField: APErrorContactField.administrativeArea,
@@ -129,54 +131,49 @@ const apRequest = {
         console.log("paymentMethod", JSON.stringify(paymentMethod));
         const resp = self.getTransactionInfo(null, null, paymentMethod.type);
         resolve(resp);
-      } catch (err) {
-        const apErr = {
-          code: "-102",
-          contactField: "",
-          message: exMsg(err),
-        };
+      } catch (err) {        
         console.error("onPaymentMethodSelected error.", exMsg(err));
         reject({ errors: [err] });
       }
     });
   },
-  validateApplePayMerchant: function () {
+  validateQuickApplePayMerchant: function () {
     return new Promise((resolve, reject) => {
       try {
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", "https://api.cardknox.com/applepay/validate");
-        xhr.onload = function () {
+        let xhrQuick = new XMLHttpRequest();
+        xhrQuick.open("POST", "https://api.cardknox.com/applepay/validate");
+        xhrQuick.onload = function () {
           if (this.status >= 200 && this.status < 300) {
             console.log(
-              "validateApplePayMerchant",
-              JSON.stringify(xhr.response)
+              "validateQuickApplePayMerchant",
+              JSON.stringify(xhrQuick.response)
             );
-            resolve(xhr.response);
+            resolve(xhrQuick.response);
           } else {
             console.error(
-              "validateApplePayMerchant",
-              JSON.stringify(xhr.response),
+              "validateQuickApplePayMerchant",
+              JSON.stringify(xhrQuick.response),
               this.status
             );
             reject({
               status: this.status,
-              statusText: xhr.response,
+              statusText: xhrQuick.response,
             });
           }
         };
-        xhr.onerror = function () {
+        xhrQuick.onerror = function () {
           console.error(
-            "validateApplePayMerchant",
-            xhr.statusText,
+            "validateQuickApplePayMerchant",
+            xhrQuick.statusText,
             this.status
           );
           reject({
             status: this.status,
-            statusText: xhr.statusText,
+            statusText: xhrQuick.statusText,
           });
         };
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.send();
+        xhrQuick.setRequestHeader("Content-Type", "application/json");
+        xhrQuick.send();
       } catch (err) {
         setTimeout(function () {
           console.log("getApplePaySession error: " + exMsg(err));
@@ -187,24 +184,17 @@ const apRequest = {
   onValidateMerchant: function () {
     return new Promise((resolve, reject) => {
       try {
-        this.validateApplePayMerchant()
+        this.validateQuickApplePayMerchant()
           .then((response) => {
             try {
-              console.log(response);
               resolve(response);
             } catch (err) {
-              console.error(
-                "validateApplePayMerchant exception.",
-                JSON.stringify(err)
-              );
+              console.error("validateQuickApplePayMerchant exception.", JSON.stringify(err));
               reject(err);
             }
           })
           .catch((err) => {
-            console.error(
-              "validateApplePayMerchant error.",
-              JSON.stringify(err)
-            );
+            console.error("validateQuickApplePayMerchant error.", JSON.stringify(err));
             reject(err);
           });
       } catch (err) {
@@ -212,12 +202,11 @@ const apRequest = {
         reject(err);
       }
     });
-  },
+  },  
   authorize: function (applePayload, totalAmount) {
-    console.log(applePayload);
-    var appToken = applePayload.token.paymentData.data;
+    let appToken = applePayload.token.paymentData.data;
     if (appToken) {
-      var xcardnum = btoa(JSON.stringify(applePayload.token.paymentData));
+      let xcardnum = btoa(JSON.stringify(applePayload.token.paymentData));
       jQuery("#applePaytoken").val(xcardnum);
 
       let billingFirstName = applePayload.billingContact.givenName;
@@ -287,38 +276,34 @@ const apRequest = {
     }
   },
   onPaymentAuthorize: function (applePayload) {
-    const amt = parseFloat(cartTotal.total).toFixed(2);
+    const amtAppleQuick = parseFloat(cartTotal.total).toFixed(2);
+
     return new Promise((resolve, reject) => {
-      try {
-        this.authorize(applePayload, amt.toString())
-          .then((response) => {
-            try {
-              console.log(response);
-              const resp = JSON.parse(response);
-              if (!resp) throw "Invalid response: " + response;
-              if (resp.xError) {
-                throw resp;
-              }
-              resolve(response);
-            } catch (err) {
-              throw err;
-              // reject(err);
-            }
-          })
-          .catch((err) => {
-            console.error("authorizeAPay error.", JSON.stringify(err));
-            apRequest.handleAPError(err);
-            reject(err);
-          });
-      } catch (err) {
-        console.error("onPaymentAuthorize error.", JSON.stringify(err));
-        apRequest.handleAPError(err);
-        reject(err);
-      }
+        this.authorize(applePayload, amtAppleQuick.toString())
+            .then((response) => {
+                try {
+                    console.log(response);
+                    const respQuick = JSON.parse(response);
+                    if (!respQuick) {
+                        throw new Error("Invalid response: " + response);
+                    }
+                    if (respQuick.xError) {
+                        throw respQuick;
+                    }
+                    resolve(response);
+                } catch (err) {
+                    reject(err);
+                }
+            })
+            .catch((err) => {
+                console.error("authorizeAPay error.", JSON.stringify(err));
+                apRequest.handleAPError(err);
+                reject(err);
+            });
     });
   },
   handleAPError: function (err) {
-    if (err && err.xRefNum) {
+    if (err?.xRefNum) {
       setAPPayload("There was a problem with your order:(" + err.xRefNum + ")");
     } else {
       setAPPayload("There was a problem with your order:" + exMsg(err));
@@ -348,17 +333,12 @@ const apRequest = {
     };
   },
   isSupportedApplePay: function () {
-    if (!window.ApplePaySession || !ApplePaySession.canMakePayments()) {
-      return false;
-    } else {
-      return true;
-    }
+    return !!window.ApplePaySession && ApplePaySession.canMakePayments();
   },
   apButtonLoaded: function (resp) {
     if (!resp) return;
     if (resp.status === iStatus.success) {
       showHide(this.buttonOptions.buttonContainer, true);
-      //showHide("lbAPPayload", true);
     } else if (resp.reason) {
       jQuery(".applepay-error")
         .html("<div class='woocommerce-error'>" + resp.reason + "</div>")
@@ -366,7 +346,7 @@ const apRequest = {
       console.log(resp.reason);
     }
 
-    if (this.isSupportedApplePay() == false) {
+    if (!this.isSupportedApplePay()) {
       jQuery(".woocommerce-checkout .payment_method_cardknox-applepay").hide();
     } else {
       jQuery(".woocommerce-checkout .payment_method_cardknox-applepay").show();
@@ -388,58 +368,40 @@ function showHide(elem, toShow) {
 }
 
 function getAmount() {
-  var totals = applePaysettings.total;
+  let totals = applePaysettings.total;
   return parseFloat(totals).toFixed(2);
 }
 
 function getApButtonColor(applePaysettings) {
-  var apButtonColor = APButtonColor.black;
   switch (applePaysettings.button_style) {
-    case "black":
-      apButtonColor = APButtonColor.black;
-      break;
     case "white":
-      apButtonColor = APButtonColor.white;
-      break;
+      return APButtonColor.white;
     case "whiteOutline":
-      apButtonColor = APButtonColor.whiteOutline;
-      break;
+      return APButtonColor.whiteOutline;
+    case "black":
     default:
-      apButtonColor = APButtonColor.black;
+      return APButtonColor.black;
   }
-
-  return apButtonColor;
 }
 
 function getApButtonType(applePaysettings) {
-  var apButtonType = APButtonType.pay;
   switch (applePaysettings.button_type) {
-    case "pay":
-      apButtonType = APButtonType.pay;
-      break;
     case "buy":
-      apButtonType = APButtonType.buy;
-      break;
+      return APButtonType.buy;
     case "plain":
-      apButtonType = APButtonType.plain;
-      break;
+      return APButtonType.plain;
     case "order":
-      apButtonType = APButtonType.order;
-      break;
+      return APButtonType.order;
     case "donate":
-      apButtonType = APButtonType.donate;
-      break;
+      return APButtonType.donate;
     case "continue":
-      apButtonType = APButtonType.continue;
-      break;
+      return APButtonType.continue;
     case "checkout":
-      apButtonType = APButtonType.checkout;
-      break;
+      return APButtonType.checkout;
+    case "pay":
     default:
-      apButtonType = APButtonType.pay;
+      return APButtonType.pay;
   }
-
-  return apButtonType;
 }
 
 function applePaycreateWooCommerceOrder(

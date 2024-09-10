@@ -23,6 +23,16 @@ $wc_cardknox_apple_pay_settings = array(
             'no'     => __('No', 'woocommerce-gateway-cardknox'),
         ),
     ),
+    $keyPrefix . '_quickcheckout' => array(
+        $keyTitle       => __('Disable Quick Checkout to Cart Page', 'woocommerce-gateway-cardknox'),
+        $keyType        => 'checkbox',
+        'description' => __(
+            'Disable Quick Checkout to Cart Page',
+            'woocommerce-gateway-cardknox'
+        ),
+        $keyDefault    => 'no',
+        $keyDescTip    => true,
+    ),
     $keyPrefix . '_title' => array(
         $keyTitle       => __('Title', 'woocommerce-gateway-cardknox'),
         $keyType        => $textType,

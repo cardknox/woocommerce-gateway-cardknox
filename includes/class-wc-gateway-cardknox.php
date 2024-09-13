@@ -126,6 +126,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         add_action('admin_notices', array($this, 'admin_notices'));
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
         add_action('woocommerce_admin_order_data_after_order_details', array($this, 'cardknox_order_meta_general'));
+        add_filter('woocommerce_gateway_icon', array($this, 'cardknox_gateway_icon'), 10, 2);
     }
 
 
@@ -147,17 +148,18 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 		</p><input data-ifields-id="cvv-token" name="xCVV" id="cardknox-card-cvc" type="hidden"/>';
 
         $default_fields = array(
-            'card-number-field' => '<p><label data-ifields-id="card-data-error" id="ifieldsError" style="display:none;"></label></p>
-			<p class="form-row form-row-wide">
-				<label for="' . esc_attr($this->id) . '-card-number">' . esc_html__('Card Number', 'woocommerce') . ' <span class="required">*</span></label>
+            'card-number-field' => '<p style="margin:0px; padding:0px;"><label style="margin:0px !important; data-ifields-id="card-data-error" id="ifieldsError" style="display:none; margin-bottom:0px;""></label></p>
+			<p class="form-row-wide" style="padding-bottom: 0; margin: 0;">
+				<label style="margin:0px !important; line-height: inherit;" for="' . esc_attr($this->id) . '-card-number">' . esc_html__('Card Number', 'woocommerce') . ' <span class="required">*</span></label>
 
 				<iframe data-ifields-id="card-number" data-ifields-placeholder="Card Number"
                         src="https://cdn.cardknox.com/ifields/2.15.2405.1601/ifield.htm?" + "' . esc_attr($timestamp) . '" frameBorder="0" width="100%"
                         height="55"></iframe>
 			</p> <input data-ifields-id="card-number-token" name="xCardNum" id="cardknox-card-number" type="hidden"/>',
-            'card-expiry-field' => '<p class="form-row form-row-first">
-				<label for="' . esc_attr($this->id) . '-card-expiry">' . esc_html__('Expiry (MM/YY)', 'woocommerce') . ' <span class="required">*</span></label>
-				<input id="' . esc_attr($this->id) . '-card-expiry" class="input-text wc-credit-card-form-card-expiry" inputmode="numeric" autocomplete="cc-exp" autocorrect="no" autocapitalize="no" spellcheck="no" type="tel" placeholder="' . esc_attr__('MM / YY', 'woocommerce') . '" ' . $this->field_name('card-expiry') . ' style="font-size:inherit; line-height:1.1" />
+            'card-expiry-field' => '<p class="form-row form-row-first" style=" margin: 0 !important;">
+				<label style="margin:0px !important; line-height: inherit;" for="' . esc_attr($this->id) . '-card-expiry">' . esc_html__('Expiry (MM/YY)', 'woocommerce') . ' <span class="required">*</span></label>
+				<input id="' . esc_attr($this->id) . '-card-expiry" class="input-text wc-credit-card-form-card-expiry" inputmode="numeric" autocomplete="cc-exp" autocorrect="no" autocapitalize="no" spellcheck="no" type="tel" placeholder="' . esc_attr__('MM / YY', 'woocommerce') . '" ' . $this->field_name('card-expiry') . ' style="font-size:inherit !important; line-height:1.1 !important; outline: none !important;
+    border: 1px solid rgb(195, 195, 195) !important;padding: 0.618047em !important; width: 100% !important; height: 48px !important;background-color: rgb(255, 255, 255) !important; box-shadow: none !important; border-radius: 4px !important; />
                 <input type="hidden" id="x3dsReferenceId" name="x3dsReferenceId" value="">
                 <input type="hidden" id="x3dsInitializeStatus" name="x3dsInitializeStatus" value="">
                 </p>',
@@ -402,6 +404,17 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         if (!is_cart() && !is_checkout() && !isset($_GET['pay_for_order']) && !is_add_payment_method_page()) {
             return;
         }
+
+        wp_enqueue_style(
+            'woocommerce_cardknox_cc_form',
+            plugins_url(
+                '/assets/css/cc-form.css',
+                WC_CARDKNOX_MAIN_FILE
+            ),
+            false,
+            '1.0',
+            'all'
+        );
 
         $suffix = defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? '' : '.min';
 
@@ -991,5 +1004,14 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             </table>
         </div>
 <?php
+    }
+    public function cardknox_gateway_icon($icon, $id)
+    {
+        if ($id === 'cardknox') {
+            $icon = plugin_dir_url(__DIR__) . 'images/card-logos.png';
+            return '<img src="' . $icon . '"> ';
+        } else {
+            return $icon;
+        }
     }
 }

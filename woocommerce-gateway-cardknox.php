@@ -4,7 +4,7 @@ Plugin Name: WooCommerce Cardknox Gateway
 Description: Accept credit card payments on your store using the Cardknox gateway.
 Author: Cardknox Development Inc.
 Author URI: https://www.cardknox.com/
-Version: 1.0.17
+Version: 1.2.68
 Requires at least: 4.4
 Tested up to: 6.4.2
 WC requires at least: 2.5

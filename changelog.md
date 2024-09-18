@@ -1,6 +1,6 @@
 # Changelog
 
-## changelog for version 1.0.17
+## changelog for version Version: 1.2.68
 - Added 3D Secure integration to the checkout for added security 
 - Added the card brand logos to the Credit Card tender 
 - Added Digital Wallet (Apple Pay & google Pay) quick checkout option to cart page

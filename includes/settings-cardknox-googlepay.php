@@ -3,10 +3,6 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-global $woocommerce;
-$countries_obj   = new WC_Countries();
-$countries   = $countries_obj->__get('countries');
-
 $gtextType = 'text';
 $gselectType = 'select';
 $googlePrefix = 'Google Pay';
@@ -18,10 +14,6 @@ $gkeyDefault = 'default';
 $gkeyDescTip = 'desc_tip';
 $gbuttonPrefix = 'Google Pay Button';
 
-global $woocommerce;
-$countries_obj   = new WC_Countries();
-$countries   = $countries_obj->__get('countries');
-
 $wc_cardknox_google_pay_settings = array(
     $gkeyPrefix . '_enabled' => array(
         $gkeyTitle       => __('Enabled', 'woocommerce-gateway-cardknox'),
@@ -30,6 +22,16 @@ $wc_cardknox_google_pay_settings = array(
             'yes'    => __('Yes', 'woocommerce-gateway-cardknox'),
             'no'     => __('No', 'woocommerce-gateway-cardknox'),
         ),
+    ),
+    $gkeyPrefix . '_quickcheckout' => array(
+        $gkeyTitle       => __('Disable Quick Checkout to Cart Page', 'woocommerce-gateway-cardknox'),
+        $gkeyType        => 'checkbox',
+        'description' => __(
+            'Disable Quick Checkout to Cart Page',
+            'woocommerce-gateway-cardknox'
+        ),
+        $gkeyDefault    => 'no',
+        $gkeyDescTip    => true,
     ),
     $gkeyPrefix . '_title' => array(
         $gkeyTitle       => __('Title', 'woocommerce-gateway-cardknox'),
@@ -50,7 +52,7 @@ $wc_cardknox_google_pay_settings = array(
         ),
     ),
     $gkeyPrefix . '_button_style' => array(
-        $gkeyTitle       => __($gbuttonPrefix . ' Style', 'woocommerce-gateway-cardknox'),
+        $gkeyTitle       => __($gbuttonPrefix . 'Style', 'woocommerce-gateway-cardknox'),
         $gkeyType        => $gselectType,
         $gkeyOptions     => array(
             'black'          => __('Black', 'woocommerce-gateway-cardknox'),
@@ -58,7 +60,7 @@ $wc_cardknox_google_pay_settings = array(
         ),
     ),
     $gkeyPrefix . '_capture' => array(
-        $gkeyTitle       => __($googlePrefix . ' Capture', 'woocommerce-gateway-cardknox'),
+        $gkeyTitle       => __($googlePrefix . 'Capture', 'woocommerce-gateway-cardknox'),
         'label'       => __('Capture charge immediately', 'woocommerce-gateway-cardknox'),
         $gkeyType        => 'checkbox',
         'id'          => 'google_cardknox_capture',

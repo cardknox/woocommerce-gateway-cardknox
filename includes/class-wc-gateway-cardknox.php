@@ -420,7 +420,6 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
         wp_enqueue_script('cardknox', 'https://cdn.cardknox.com/ifields/2.15.2401.3101/ifields.min.js', '', '1.0.0', false);
         wp_enqueue_script('woocommerce_cardknox', plugins_url('assets/js/cardknox' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE), array('jquery-payment'), filemtime(plugin_dir_path(dirname(__FILE__)) . 'assets/js/cardknox' . $suffix . '.js'), true);
-
         $cardknox_params = array(
             'key'                  => $this->token_key,
             'xkey'                 => $this->transaction_key,
@@ -504,11 +503,15 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
     public function validate_payment_data($postData)
     {
-        if ($this->is_unset_or_empty($postData['xCardNum'])) {
-            throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: card number", 400);
-        }
-        if ($this->is_unset_or_empty($postData['xCVV'])) {
-            throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: cvv", 400);
+        if (isset($postData['xToken'])) {
+            return true;
+        } else {
+            if ($this->is_unset_or_empty($postData['xCardNum'])) {
+                throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: card number", 400);
+            }
+            if ($this->is_unset_or_empty($postData['xCVV'])) {
+                throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: cvv", 400);
+            }
         }
     }
     private function is_unset_or_empty($s)

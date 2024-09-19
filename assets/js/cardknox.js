@@ -20,24 +20,15 @@ jQuery(function ($) {
   "use strict";
 
   /* Open and close for legacy class */
-  $("form.checkout, form#order_review").on(
-    "change",
-    'input[name="wc-cardknox-payment-token"]',
-    function () {
-      if (
-        "new" ===
-        $(
-          '.cardknox-legacy-payment-fields input[name="wc-cardknox-payment-token"]:checked'
-        ).val()
-      ) {
-        $(".cardknox-legacy-payment-fields #cardknox-payment-data").slideDown(
-          200
-        );
-      } else {
-        $(".cardknox-legacy-payment-fields #cardknox-payment-data").slideUp(
-          200
-        );
-      }
+    $("form.checkout, form#order_review").on("change",'input[name="wc-cardknox-payment-token"]',function () 
+    {
+        if ("new" === $('.cardknox-legacy-payment-fields input[name="wc-cardknox-payment-token"]:checked').val()) {
+            $(".cardknox-legacy-payment-fields #cardknox-payment-data").slideDown(200);
+        }
+        else 
+        {
+            $(".cardknox-legacy-payment-fields #cardknox-payment-data").slideUp(200);
+        }
     }
   );
 
@@ -323,93 +314,98 @@ jQuery(function ($) {
       }
       return true;
     },
-
     onCardknoxResponse: function () {
-      var xExp = document
-        .getElementById("cardknox-card-expiry")
-        .value.replace(/\s|\//g, "");
-      if (xExp.length != 4) {
-        $(document).trigger("cardknoxError", "Invalid expiration date");
-        return false;
-      }
-
-      // Extract the month and year from the expiration date
-      let month = parseInt(xExp.substr(0, 2));
-      let year = parseInt(xExp.substr(2));
-
-      // Validate the expiration month and year
-      let currentDate = new Date();
-      let currentYear = currentDate.getFullYear() % 100; // Get the last two digits of the current year
-      let currentMonth = currentDate.getMonth() + 1; // January is month 0 in JavaScript
-
-      if (
-        year < currentYear ||
-        (year === currentYear && month < currentMonth)
-      ) {
-        $(document).trigger(
-          "cardknoxError",
-          "Expiration must be in the future"
-        );
-        return false;
-      }
-      wc_cardknox_form.form.append(
-        "<input type='hidden' class='xExp' id='xExp' name='xExp' value='" +
-          xExp +
-          "'/>"
-      );
-
-      $.ajax({
-        type: "POST",
-        url: "?wc-ajax=checkout", // Ensure this points to the correct URL
-        data: $("form.woocommerce-checkout").serialize(),
-        beforeSend: function () {
-          // Show the loader
-          //   $(".blockUI").show();
-        },
-        success: function (response) {
-          //   console.log("response", response);
-
-          if (response.result === "success") {
-            let jsonResp = response.response;
-
-            if (
-              jsonResp.xResult == "V" &&
-              jsonResp.xVerifyPayload &&
-              jsonResp.xVerifyPayload !== "" &&
-              jsonResp.xVerifyURL &&
-              jsonResp.xVerifyURL !== ""
-            ) {
-              verify3DS(jsonResp);
+        
+        var element = document.querySelector('body');
+        if (element.classList.contains('woocommerce-checkout')) 
+        {
+          console.log('Class woocommerce-cart exists!');
+          var xExp = document.getElementById("cardknox-card-expiry").value.replace(/\s|\//g, "");
+          if (xExp.length != 4) {
+            $(document).trigger("cardknoxError", "Invalid expiration date");
+            return false;
             }
+        
+            // Extract the month and year from the expiration date
+            let month = parseInt(xExp.substr(0, 2));
+            let year = parseInt(xExp.substr(2));
 
-            if (jsonResp.xResult == "A") {
-              window.location.href = response.redirect;
+            // Validate the expiration month and year
+            let currentDate = new Date();
+            let currentYear = currentDate.getFullYear() % 100; // Get the last two digits of the current year
+            let currentMonth = currentDate.getMonth() + 1; // January is month 0 in JavaScript
+        
+            if (year < currentYear ||(year === currentYear && month < currentMonth)) 
+            {
+                $(document).trigger(
+                "cardknoxError",
+                "Expiration must be in the future"
+                );
+                return false;
             }
+            wc_cardknox_form.form.append("<input type='hidden' class='xExp' id='xExp' name='xExp' value='"+xExp+"'/>");
 
-            // Handle success, such as showing a confirmation message
-          } else {
-            // Handle failure
-            $("form.woocommerce-checkout .blockUI.blockOverlay").hide();
-            $(".woocommerce-error, .woocommerce-message").remove();
-            wc_cardknox_form.form.prepend(response.messages);
-            //return false;
-          }
-          $("form.woocommerce-checkout .blockUI.blockOverlay").hide();
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-          // Handle error (e.g., show an error message)
-          console.log("Error placing order:", textStatus, errorThrown);
+            $.ajax({
+                type: "POST",
+                url: "?wc-ajax=checkout", // Ensure this points to the correct URL
+                data: $("form.woocommerce-checkout").serialize(),
+                beforeSend: function () {
+                // Show the loader
+                //   $(".blockUI").show();
+                },
+                success: function (response) {
+                //   console.log("response", response);
 
-          // Hide the loader
-          $("form.woocommerce-checkout .blockUI.blockOverlay").hide();
-        },
-        complete: function () {
-          // Ensure loader is hidden after the request completes
-          $("form.woocommerce-checkout .blockUI.blockOverlay").hide();
-        },
-      });
+                if (response.result === "success") {
+                    let jsonResp = response.response;
+
+                    if (
+                    jsonResp.xResult == "V" &&
+                    jsonResp.xVerifyPayload &&
+                    jsonResp.xVerifyPayload !== "" &&
+                    jsonResp.xVerifyURL &&
+                    jsonResp.xVerifyURL !== ""
+                    ) {
+                    verify3DS(jsonResp);
+                    }
+
+                    if (jsonResp.xResult == "A") {
+                    window.location.href = response.redirect;
+                    }
+
+                    // Handle success, such as showing a confirmation message
+                } else {
+                    // Handle failure
+                    $("form.woocommerce-checkout .blockUI.blockOverlay").hide();
+                    $(".woocommerce-error, .woocommerce-message").remove();
+                    wc_cardknox_form.form.prepend(response.messages);
+                    //return false;
+                }
+                $("form.woocommerce-checkout .blockUI.blockOverlay").hide();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                // Handle error (e.g., show an error message)
+                console.log("Error placing order:", textStatus, errorThrown);
+
+                // Hide the loader
+                $("form.woocommerce-checkout .blockUI.blockOverlay").hide();
+                },
+                complete: function () {
+                // Ensure loader is hidden after the request completes
+                $("form.woocommerce-checkout .blockUI.blockOverlay").hide();
+                },
+            });
+        } 
+        else 
+        {
+            console.log('Class woocommerce-cart does not exist!');
+            var expires = $('#cardknox-card-expiry').payment('cardExpiryVal');
+            var xExp = expires.month.toString() + expires.year.toString().substr(2, 2);
+            console.log('onCardknoxResponse');
+            wc_cardknox_form.form.append("<input type='hidden' class='xExp' name='xExp' value='" + xExp + "'/>");
+            wc_cardknox_form.form.submit();
+        }
     },
-
     reset: function () {
       $("#cardknox-card-cvc, #cardknox-card-number").val("");
       $(".xExp").remove();

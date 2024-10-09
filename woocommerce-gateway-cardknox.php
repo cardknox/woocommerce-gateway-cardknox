@@ -130,7 +130,7 @@ if (!class_exists('WC_Cardknox')) :
             add_action('wp_ajax_applepay_cardknox_create_order', array($this, 'applepayCardknoxCreateorder'));
             add_action('wp_ajax_nopriv_applepay_cardknox_create_order', array($this, 'applepayCardknoxCreateorder'));
 
-            add_action('woocommerce_checkout_before_order_review_heading',  array($this, 'add_link_in_checkout_page'));
+            add_action('woocommerce_checkout_before_order_review_heading',  array($this, 'addlink_in_checkoutpage'));
         }
 
         /**
@@ -1003,7 +1003,7 @@ if (!class_exists('WC_Cardknox')) :
         /*
         * Set and Get link in checkout page
         */
-        public function add_link_in_checkout_page()
+        public function addlink_in_checkoutpage()
         {
             $settings = get_option('woocommerce_cardknox_settings');
             $unserialized_settings = maybe_unserialize($settings);

@@ -140,10 +140,10 @@ $wc_cardknox_settings = array(
         ),
     ),
     'enableshoplink' => array(
-        'title' => __('In Cartpage add Shop Page Link', 'woocommerce-gateway-cardknox'),
-        'label' => __('Enable/Disable Shop Link', 'woocommerce-gateway-cardknox'),
         'type'  => 'checkbox',
+        'title' => __('In Cartpage add Shop Page Link', 'woocommerce-gateway-cardknox'),
         'default' => 'no',
+        'label' => __('Enable/Disable Shop Link', 'woocommerce-gateway-cardknox'),
     ),
 );
 

@@ -1003,16 +1003,23 @@ if (!class_exists('WC_Cardknox')) :
         /*
         * Set and Get link in checkout page
         */
-        public function addlinkinchkpag()
-        {
+        public function add_link_to_checkout_page() {
+            // Retrieve the CardKnox settings
             $settings = get_option('woocommerce_cardknox_settings');
             $unserialized_settings = maybe_unserialize($settings);
-            if (is_array($unserialized_settings) && isset($unserialized_settings['enable-shop'])) {
-                if($unserialized_settings['enable-shop']== 'yes'){
-                    $link_url = get_permalink(wc_get_page_id('shop'));
-                    $link_text = 'Continue shopping';
-                    echo '<p class="custom-checkout-link"><a href="' . esc_url($link_url) . '" class="button wc-forward">' . esc_html($link_text) . '</a></p>';
-                }
+        
+            // Check if settings are valid and if the shop link is enabled
+            if (!is_array($unserialized_settings) || !isset($unserialized_settings['enable-shop'])) {
+                return; // Exit early if the settings are not valid
+            }
+        
+            // Proceed only if the shop link is enabled
+            if ($unserialized_settings['enable-shop'] === 'yes') {
+                $link_url = get_permalink(wc_get_page_id('shop'));
+                $link_text = __('Continue shopping', 'woocommerce-gateway-cardknox'); // Use translation function
+        
+                // Output the link HTML
+                echo '<p class="custom-checkout-link"><a href="' . esc_url($link_url) . '" class="button wc-forward" aria-label="' . esc_attr($link_text) . '">' . esc_html($link_text) . '</a></p>';
             }
         }
     }

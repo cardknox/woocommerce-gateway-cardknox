@@ -129,6 +129,8 @@ if (!class_exists('WC_Cardknox')) :
 
             add_action('wp_ajax_applepay_cardknox_create_order', array($this, 'applepayCardknoxCreateorder'));
             add_action('wp_ajax_nopriv_applepay_cardknox_create_order', array($this, 'applepayCardknoxCreateorder'));
+
+            add_action('woocommerce_checkout_before_order_review_heading',  array($this, 'add_link_in_checkout_page'));
         }
 
         /**
@@ -997,6 +999,23 @@ if (!class_exists('WC_Cardknox')) :
             }
 
             die();
+        }
+        /*
+        * Set and Get link in checkout page
+        */
+        public function add_link_in_checkout_page()
+        {
+            $settings = get_option('woocommerce_cardknox_settings');
+            $unserialized_settings = maybe_unserialize($settings);
+
+            if (is_array($unserialized_settings) && isset($unserialized_settings['enable-shop'])) {
+                
+                if($unserialized_settings['enable-shop']== 'yes'){
+                    $link_url = get_permalink(wc_get_page_id('shop')); // Get the shop page URL
+                    $link_text = 'Continue shopping'; // Replace with your desired text
+                    echo '<p class="custom-checkout-link"><a href="' . esc_url($link_url) . '" class="button wc-forward">' . esc_html($link_text) . '</a></p>';
+                }
+            }
         }
     }
 

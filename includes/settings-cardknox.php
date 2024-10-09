@@ -22,7 +22,6 @@ if (!defined('ABSPATH')) {
 global $woocommerce;
 $countries_obj   = new WC_Countries();
 $countries   = $countries_obj->__get('countries');
-
 $wc_cardknox_settings = array(
     'enabled' => array(
         'title'       => __('Enable/Disable', 'woocommerce-gateway-cardknox'),
@@ -141,13 +140,12 @@ $wc_cardknox_settings = array(
         ),
     ),
     'enable-shop' => array(
-        'title'       => __('Enable Shop Link in Checkout Page', 'woocommerce-gateway-cardknox'),
         'label'       => __('Enable Shop Link', 'woocommerce-gateway-cardknox'),
+        'title'       => __('Enable Shop Link in Checkout Page', 'woocommerce-gateway-cardknox'),
         'description' => __('Enable Shop Link', 'woocommerce-gateway-cardknox'),
         'type'        => 'checkbox',
         'default'     => 'no',
         'desc_tip'    => false,
-    )
+    ),
 );
-
 $GLOBALS["wc_cardknox_settings"] = $wc_cardknox_settings;

@@ -139,14 +139,5 @@ $wc_cardknox_settings = array(
             'production' => __('Production', 'woocommerce-gateway-cardknox'),
         ),
     ),
-    'enableshoplink' => array(
-        'label'       => __('Enable-Shop Link', 'woocommerce-gateway-cardknox'),
-        'title'       => __('Enable-Shop Link in Checkout Page', 'woocommerce-gateway-cardknox'),
-        'description' => __('Enable-Shop', 'woocommerce-gateway-cardknox'),
-        'type'        => 'checkbox',
-        'id'          => 'cardknox_enableshoplink',
-        'default'     => 'no',
-        'desc_tip'    => false,
-    ),
 );
 $GLOBALS["wc_cardknox_settings"] = $wc_cardknox_settings;

@@ -145,7 +145,7 @@ $wc_cardknox_settings = array(
         'default' => 'no',
         'label' => __('Enable/Disable Shop Link', 'woocommerce-gateway-cardknox'),
         'desc_tip' => true,
-        'description' => __('Enable Shop Page Link in Cart Page', 'woocommerce-gateway-cardknox'),
+        'description' => __('Show Shop Page Link in Checkout Page', 'woocommerce-gateway-cardknox'),
     ),
 );
 

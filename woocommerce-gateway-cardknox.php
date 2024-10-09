@@ -1003,7 +1003,7 @@ if (!class_exists('WC_Cardknox')) :
         /*
         * Set and Get link in checkout page
         */
-        public function add_link_to_checkout_page() {
+        public function addlinkinchkpag() {
             // Retrieve the CardKnox settings
             $settings = get_option('woocommerce_cardknox_settings');
             $unserialized_settings = maybe_unserialize($settings);

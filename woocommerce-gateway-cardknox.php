@@ -1007,18 +1007,15 @@ if (!class_exists('WC_Cardknox')) :
         {
             $settings = get_option('woocommerce_cardknox_settings');
             $unserialized_settings = maybe_unserialize($settings);
-
             if (is_array($unserialized_settings) && isset($unserialized_settings['enable-shop'])) {
-                
                 if($unserialized_settings['enable-shop']== 'yes'){
-                    $link_url = get_permalink(wc_get_page_id('shop')); // Get the shop page URL
-                    $link_text = 'Continue shopping'; // Replace with your desired text
+                    $link_url = get_permalink(wc_get_page_id('shop'));
+                    $link_text = 'Continue shopping';
                     echo '<p class="custom-checkout-link"><a href="' . esc_url($link_url) . '" class="button wc-forward">' . esc_html($link_text) . '</a></p>';
                 }
             }
         }
     }
-
     $GLOBALS['wc_cardknox'] = WC_Cardknox::get_instance();
 
 endif;

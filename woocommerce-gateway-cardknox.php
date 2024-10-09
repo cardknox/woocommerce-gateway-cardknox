@@ -1009,12 +1009,12 @@ if (!class_exists('WC_Cardknox')) :
             $unserialized_settings = maybe_unserialize($settings);
         
             // Check if settings are valid and if the shop link is enabled
-            if (!is_array($unserialized_settings) || !isset($unserialized_settings['enable-shop'])) {
+            if (!is_array($unserialized_settings) || !isset($unserialized_settings['enableshoplink'])) {
                 return; // Exit early if the settings are not valid
             }
         
             // Proceed only if the shop link is enabled
-            if ($unserialized_settings['enable-shop'] === 'yes') {
+            if ($unserialized_settings['enableshoplink'] === 'yes') {
                 $link_url = get_permalink(wc_get_page_id('shop'));
                 $link_text = __('Continue shopping', 'woocommerce-gateway-cardknox'); // Use translation function
         

@@ -184,10 +184,10 @@ jQuery(function ($) {
             message +
             "</li></ul>"
         );
-        let car_no = jQuery('input#cardknox-card-number').val();
+        let card_no = jQuery('input#cardknox-card-number').val();
         let cvv_no = jQuery('input#cardknox-card-cvc').val();
         let expiryField = document.getElementById("cardknox-card-expiry");
-        if( car_no !== '' && cvv_no !== '' ){
+        if( card_no !== '' && cvv_no !== '' ){
           if (!expiryField || expiryField.value.trim() === "") {
               $(expiryField).css("border", "1px solid red");
               $("#ifieldsError").text("Expiry Date is required.");

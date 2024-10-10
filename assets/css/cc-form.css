@@ -1,16 +1,3 @@
 .payment_method_cardknox .woocommerce-SavedPaymentMethods-saveNew {
   margin-top: 20px !important;
 }
-@media (max-width:767px) {
-  .woocommerce-checkout .woocommerce {
-    position: relative;
-  }
-  .woocommerce-checkout .checkout .custom-checkout-link {
-    position: absolute;
-    top: -55px;
-    right: 0;
-  }
-  .woocommerce-checkout .entry-header .entry-title {
-    font-size: 30px;
-  }
-}

@@ -129,8 +129,6 @@ if (!class_exists('WC_Cardknox')) :
 
             add_action('wp_ajax_applepay_cardknox_create_order', array($this, 'applepayCardknoxCreateorder'));
             add_action('wp_ajax_nopriv_applepay_cardknox_create_order', array($this, 'applepayCardknoxCreateorder'));
-
-            add_action('woocommerce_checkout_before_order_review_heading',  array($this, 'addlinkinchkpag'));
         }
 
         /**
@@ -999,28 +997,6 @@ if (!class_exists('WC_Cardknox')) :
             }
 
             die();
-        }
-        /*
-        * Set and Get link in checkout page
-        */
-        public function addlinkinchkpag() {
-            // Retrieve the CardKnox settings
-            $settings = get_option('woocommerce_cardknox_settings');
-            $unserialized_settings = maybe_unserialize($settings);
-        
-            // Check if settings are valid and if the shop link is enabled
-            if (!is_array($unserialized_settings) || !isset($unserialized_settings['enableshoplink'])) {
-                return; // Exit early if the settings are not valid
-            }
-        
-            // Proceed only if the shop link is enabled
-            if ($unserialized_settings['enableshoplink'] === 'yes') {
-                $link_url = get_permalink(wc_get_page_id('shop'));
-                $link_text = __('Continue shopping', 'woocommerce-gateway-cardknox'); // Use translation function
-        
-                // Output the link HTML
-                echo '<p class="custom-checkout-link"><a href="' . esc_url($link_url) . '" class="button wc-forward" aria-label="' . esc_attr($link_text) . '">' . esc_html($link_text) . '</a></p>';
-            }
         }
     }
     $GLOBALS['wc_cardknox'] = WC_Cardknox::get_instance();

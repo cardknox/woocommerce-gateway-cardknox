@@ -75,7 +75,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $this->method_title         = __('Cardknox', 'woocommerce-gateway-cardknox');
         $this->method_description   = sprintf(__('Cardknox works by adding credit card fields on the checkout and then sending the details to Cardknox for verification. <a href="%1$s" target="_blank">Sign up</a> for a Cardknox account.', 'woocommerce-gateway-cardknox'), 'https://www.cardknox.com');
         $this->has_fields           = true;
-        $this->view_transaction_url = 'https://portal.cardknox.com/transactions?referenceNumber=%s';
+        $this->view_transaction_url = 'https://portal.cardknox.com/transactions?disabled=true&expandedRow=%s&referenceNumber=%s';
         $this->supports             = array(
             'subscriptions',
             'products',
@@ -419,7 +419,6 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
         wp_enqueue_script('cardknox', 'https://cdn.cardknox.com/ifields/2.15.2401.3101/ifields.min.js', '', '1.0.0', false);
         wp_enqueue_script('woocommerce_cardknox', plugins_url('assets/js/cardknox' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE), array('jquery-payment'), filemtime(plugin_dir_path(dirname(__FILE__)) . 'assets/js/cardknox' . $suffix . '.js'), true);
-
         $cardknox_params = array(
             'key'                  => $this->token_key,
             'xkey'                 => $this->transaction_key,

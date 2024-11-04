@@ -75,7 +75,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $this->method_title         = __('Cardknox', 'woocommerce-gateway-cardknox');
         $this->method_description   = sprintf(__('Cardknox works by adding credit card fields on the checkout and then sending the details to Cardknox for verification. <a href="%1$s" target="_blank">Sign up</a> for a Cardknox account.', 'woocommerce-gateway-cardknox'), 'https://www.cardknox.com');
         $this->has_fields           = true;
-        $this->view_transaction_url = 'https://portal.cardknox.com/transactions?referenceNumber=%s';
+        $this->view_transaction_url = 'https://portal.cardknox.com/transactions?disabled=true&expandedRow=%s&referenceNumber=%s';
         $this->supports             = array(
             'subscriptions',
             'products',
@@ -158,7 +158,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 			</p> <input data-ifields-id="card-number-token" name="xCardNum" id="cardknox-card-number" type="hidden"/>',
             'card-expiry-field' => '<p class="form-row form-row-first" style=" margin: 0 !important;">
 				<label style="margin:0px !important; line-height: inherit;" for="' . esc_attr($this->id) . '-card-expiry">' . esc_html__('Expiry (MM/YY)', 'woocommerce') . ' <span class="required">*</span></label>
-				<input id="' . esc_attr($this->id) . '-card-expiry" class="input-text wc-credit-card-form-card-expiry" inputmode="numeric" autocomplete="cc-exp" autocorrect="no" autocapitalize="no" spellcheck="no" type="tel" placeholder="' . esc_attr__('MM / YY', 'woocommerce') . '" ' . $this->field_name('card-expiry') . ' style="font-size:inherit; line-height:1.1" />
+				<input id="' . esc_attr($this->id) . '-card-expiry" class="input-text wc-credit-card-form-card-expiry" inputmode="numeric" autocomplete="cc-exp" autocorrect="no" autocapitalize="no" spellcheck="no" type="tel" placeholder="' . esc_attr__('MM / YY', 'woocommerce') . '" ' . $this->field_name('card-expiry') . ' style="outline: none;border: 1px solid rgb(195, 195, 195);border-radius: 4px;padding: 0.618047em;width: 85%;height: 48px;background-color: rgb(255, 255, 255);font-weight: inherit;box-shadow: 0 0 0 0;font-size: 16px;" />
                 <input type="hidden" id="x3dsReferenceId" name="x3dsReferenceId" value="">
                 <input type="hidden" id="x3dsInitializeStatus" name="x3dsInitializeStatus" value="">
                 </p>',

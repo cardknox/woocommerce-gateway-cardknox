@@ -175,6 +175,17 @@ jQuery(function ($) {
             message +
             "</li></ul>"
         );
+        let card_no = jQuery('input#cardknox-card-number').val();
+        let cvv_no = jQuery('input#cardknox-card-cvc').val();
+        let expiryField = document.getElementById("cardknox-card-expiry");
+        if( card_no !== '' && cvv_no !== '' ){
+          if (!expiryField || expiryField.value.trim() === "") {
+              $(expiryField).css("border", "1px solid red");
+              $("#ifieldsError").text("Expiry Date is required.");
+          } else {
+              $(expiryField).css("border", "1px solid #c3c3c3"); // Revert to original border if valid
+          }
+        }
       wc_cardknox_form.unblock();
     },
 
@@ -188,11 +199,21 @@ jQuery(function ($) {
             //perform your own validation here...
             if (document.getElementsByName("xCardNum")[0].value === "") {
               $(document).trigger("cardknoxError", "Card Number Required");
+              setIfieldStyle("card-number", { border: "1px solid red" }); // Highlight the Card Number iframe
               return false;
+            }
+            else
+            {
+              setIfieldStyle("card-number", { border: "1px solid #c3c3c3" });
             }
             if (document.getElementsByName("xCVV")[0].value === "") {
               $(document).trigger("cardknoxError", "CVV Required");
+              setIfieldStyle("cvv", { border: "1px solid red" }); // Highlight the CVV iframe
               return false;
+            }
+            else
+            {
+              setIfieldStyle("cvv", { border: "1px solid #c3c3c3" });
             }
             wc_cardknox_form.onCardknoxResponse();
             jQuery(document.body).trigger("update_checkout");

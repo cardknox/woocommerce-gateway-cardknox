@@ -999,7 +999,6 @@ if (!class_exists('WC_Cardknox')) :
             die();
         }
     }
-
     $GLOBALS['wc_cardknox'] = WC_Cardknox::get_instance();
 
 endif;

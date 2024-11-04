@@ -75,7 +75,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $this->method_title         = __('Cardknox', 'woocommerce-gateway-cardknox');
         $this->method_description   = sprintf(__('Cardknox works by adding credit card fields on the checkout and then sending the details to Cardknox for verification. <a href="%1$s" target="_blank">Sign up</a> for a Cardknox account.', 'woocommerce-gateway-cardknox'), 'https://www.cardknox.com');
         $this->has_fields           = true;
-        $this->view_transaction_url = 'https://portal.cardknox.com/transactions?referenceNumber=%s';
+        $this->view_transaction_url = 'https://portal.cardknox.com/transactions?disabled=true&expandedRow=%s&referenceNumber=%s';
         $this->supports             = array(
             'subscriptions',
             'products',
@@ -158,7 +158,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 			</p> <input data-ifields-id="card-number-token" name="xCardNum" id="cardknox-card-number" type="hidden"/>',
             'card-expiry-field' => '<p class="form-row form-row-first" style=" margin: 0 !important;">
 				<label style="margin:0px !important; line-height: inherit;" for="' . esc_attr($this->id) . '-card-expiry">' . esc_html__('Expiry (MM/YY)', 'woocommerce') . ' <span class="required">*</span></label>
-				<input id="' . esc_attr($this->id) . '-card-expiry" class="input-text wc-credit-card-form-card-expiry" inputmode="numeric" autocomplete="cc-exp" autocorrect="no" autocapitalize="no" spellcheck="no" type="tel" placeholder="' . esc_attr__('MM / YY', 'woocommerce') . '" ' . $this->field_name('card-expiry') . ' style="font-size:inherit; line-height:1.1" />
+				<input id="' . esc_attr($this->id) . '-card-expiry" class="input-text wc-credit-card-form-card-expiry" inputmode="numeric" autocomplete="cc-exp" autocorrect="no" autocapitalize="no" spellcheck="no" type="tel" placeholder="' . esc_attr__('MM / YY', 'woocommerce') . '" ' . $this->field_name('card-expiry') . ' style="outline: none;border: 1px solid rgb(195, 195, 195);border-radius: 4px;padding: 0.618047em;width: 85%;height: 48px;background-color: rgb(255, 255, 255);font-weight: inherit;box-shadow: 0 0 0 0;font-size: 16px;" />
                 <input type="hidden" id="x3dsReferenceId" name="x3dsReferenceId" value="">
                 <input type="hidden" id="x3dsInitializeStatus" name="x3dsInitializeStatus" value="">
                 </p>',
@@ -419,7 +419,6 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
         wp_enqueue_script('cardknox', 'https://cdn.cardknox.com/ifields/2.15.2401.3101/ifields.min.js', '', '1.0.0', false);
         wp_enqueue_script('woocommerce_cardknox', plugins_url('assets/js/cardknox' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE), array('jquery-payment'), filemtime(plugin_dir_path(dirname(__FILE__)) . 'assets/js/cardknox' . $suffix . '.js'), true);
-
         $cardknox_params = array(
             'key'                  => $this->token_key,
             'xkey'                 => $this->transaction_key,
@@ -503,11 +502,15 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
     public function validate_payment_data($postData)
     {
-        if ($this->is_unset_or_empty($postData['xCardNum'])) {
-            throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: card number", 400);
-        }
-        if ($this->is_unset_or_empty($postData['xCVV'])) {
-            throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: cvv", 400);
+        if (isset($postData['xToken'])) {
+            return true;
+        } else {
+            if ($this->is_unset_or_empty($postData['xCardNum'])) {
+                throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: card number", 400);
+            }
+            if ($this->is_unset_or_empty($postData['xCVV'])) {
+                throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: cvv", 400);
+            }
         }
     }
     private function is_unset_or_empty($s)

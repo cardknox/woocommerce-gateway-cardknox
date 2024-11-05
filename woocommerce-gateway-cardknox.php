@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: WooCommerce Cardknox Gateway
-Description: Accept credit card payments on your store using the Cardknox gateway.Plugin version is, 1.2.69
+Description: Accept credit card payments on your store using the Cardknox gateway.Plugin version is, 1.2.69 
 Author: Cardknox Development Inc.
 Author URI: https://www.cardknox.com/
 Version: 1.2.69
@@ -9,6 +9,7 @@ Requires at least: 4.4
 Tested up to: 6.4.2
 WC requires at least: 2.5
 WC tested up to: 8.4.0
+WooCommerce Subscriptions tested up to: 6.7.0
 Text Domain: woocommerce-gateway-cardknox
 Domain Path: /languages
 
@@ -999,6 +1000,7 @@ if (!class_exists('WC_Cardknox')) :
             die();
         }
     }
+
     $GLOBALS['wc_cardknox'] = WC_Cardknox::get_instance();
 
 endif;

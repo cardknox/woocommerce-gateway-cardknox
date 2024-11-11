@@ -39,7 +39,7 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
         parent::__construct();
 
         if (class_exists('WC_Subscriptions_Order')) {
-            add_action('woocommerce_scheduled_subscription_payment_' . $this->id, array($this, 'scheduled_subscription_payment'), 10, 2);
+            add_action('woocommerce_scheduled_subscription_payment_' . $this->id, array($this, 'scheduled_subscription_payment'), 10, 3);
             add_action('wcs_resubscribe_order_created', array($this, 'delete_resubscribe_meta'), 10);
             add_action('wcs_renewal_order_created', array($this, 'delete_renewal_meta'), 10);
             add_action('woocommerce_subscription_failing_payment_method_updated_cardknox', array($this, 'update_failing_payment_method'), 10, 2);

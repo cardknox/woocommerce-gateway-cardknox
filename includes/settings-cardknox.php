@@ -22,7 +22,6 @@ if (!defined('ABSPATH')) {
 global $woocommerce;
 $countries_obj   = new WC_Countries();
 $countries   = $countries_obj->__get('countries');
-
 $wc_cardknox_settings = array(
     'enabled' => array(
         'title'       => __('Enable/Disable', 'woocommerce-gateway-cardknox'),

@@ -1,5 +1,8 @@
 # Changelog
 
+## changelog for version Version: 1.2.70
+- Fixed the issue in Orderdetail Page like, Uncaught ArgumentCountError(3 arguments are required, 2 given).
+
 ## changelog for version Version: 1.2.69
 - Testing the functionality with Woo Subscription's latestversion(Version 6.7.0)
 

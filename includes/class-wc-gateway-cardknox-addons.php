@@ -55,6 +55,16 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
         $this->wc_pre_30 = version_compare(WC_VERSION, WC_VERSION_THRESHOLD, '<');
     }
 
+    public function get_transaction_url($order) {
+        
+        $transaction_id = $order->get_transaction_id();
+        
+        // If no transaction ID, return an empty string
+        if (!$transaction_id) {
+            return '';
+        }
+    }
+
     /**
      * Is $order_id a subscription?
      * @param  int  $order_id

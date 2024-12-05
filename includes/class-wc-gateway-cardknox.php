@@ -388,7 +388,16 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
         wp_localize_script('woocommerce_cardknox_admin', 'wc_cardknox_admin_params', apply_filters('wc_cardknox_admin_params', $cardknox_admin_params));
     }
-
+    /**
+     * For key and xkey convert into encrypt_code
+     *
+     * Outputs key and xkey convert into encrypt_code for 3DS
+     *
+     * @access public
+    */
+    public function encrypt_code($data) {
+        return base64_encode($data);
+    }
     /**
      * payment_scripts function.
      *
@@ -419,9 +428,14 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
         wp_enqueue_script('cardknox', 'https://cdn.cardknox.com/ifields/2.15.2401.3101/ifields.min.js', '', '1.0.0', false);
         wp_enqueue_script('woocommerce_cardknox', plugins_url('assets/js/cardknox' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE), array('jquery-payment'), filemtime(plugin_dir_path(dirname(__FILE__)) . 'assets/js/cardknox' . $suffix . '.js'), true);
+
+        //wp_enqueue_script('woocommerce_cardknox', plugins_url('assets/js/cardknox.js', WC_CARDKNOX_MAIN_FILE), array('jquery-payment'), filemtime(plugin_dir_path(dirname(__FILE__)) . 'assets/js/cardknox.js'), true);
+
+        $encrypted_key = $this->encrypt_code($this->token_key); // Encodes the given string with base64
+        $encrypted_xkey = $this->encrypt_code($this->transaction_key); // Encodes the given string with base64
         $cardknox_params = array(
-            'key'                  => $this->token_key,
-            'xkey'                 => $this->transaction_key,
+            'key'                  => $encrypted_key,
+            'xkey'                 => $encrypted_xkey,
             'i18n_terms'           => __('Please accept the terms and conditions first', 'woocommerce-gateway-cardknox'),
             'i18n_required_fields' => __('Please fill in required checkout fields first', 'woocommerce-gateway-cardknox'),
             'bgcolor'              => $this->bgcolor,

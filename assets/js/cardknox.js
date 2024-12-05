@@ -18,7 +18,6 @@
 
 jQuery(function ($) {
   "use strict";
-
   /* Open and close for legacy class */
     $("form.checkout, form#order_review").on("change",'input[name="wc-cardknox-payment-token"]',function () 
     {
@@ -48,9 +47,10 @@ jQuery(function ($) {
     xAuthenticateStatus,
     xSignatureVerification
   ) {
+    //atob Decode a base-64 encoded string
     const postData = {
       action: "get_data",
-      xKey: wc_cardknox_params.xkey,
+      xKey: atob(wc_cardknox_params.xkey),  
       xRefNum: xRefNum,
       xCavv: xCavv,
       xEci: xEciFlag,
@@ -332,8 +332,7 @@ jQuery(function ($) {
     },
     onIfieldloaded: function () {
       enableLogging();
-      setAccount(wc_cardknox_params.key, "wordpress", "0.1.2");
-
+      setAccount(atob(wc_cardknox_params.key), "wordpress", "0.1.2");   //atob Decode a base-64 encoded string
       var card_style = {
         outline: "none",
         border: "1px solid #c3c3c3",

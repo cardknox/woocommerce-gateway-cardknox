@@ -6,7 +6,7 @@ Author: Cardknox Development Inc.
 Author URI: https://www.cardknox.com/
 Version: 1.2.70
 Requires at least: 4.4
-Tested up to: 6.4.2
+Tested up to: 6.7.1
 WC requires at least: 2.5
 WC tested up to: 8.4.0
 WooCommerce Subscriptions tested up to: 6.7.0

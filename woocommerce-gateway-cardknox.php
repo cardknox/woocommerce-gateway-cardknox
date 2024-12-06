@@ -935,7 +935,20 @@ if (!class_exists('WC_Cardknox')) :
 
             $apiUrl = "https://x1.cardknox.com/verify";
 
+            
+            $options = get_option('woocommerce_cardknox_settings');
+            if (is_serialized($options)) {
+                $options = maybe_unserialize($options); 
+            }
+            $transaction_key = isset($options['transaction_key']) ? $options['transaction_key'] : null;
+            
             $request = $_POST;
+        
+            if(isset($options['enable-3ds']) == 'yes')
+            {
+                $request['xKey'] = $transaction_key;
+            }
+        
             unset($request['action']);
 
             $response = wp_safe_remote_post(

@@ -47,10 +47,8 @@ jQuery(function ($) {
     xAuthenticateStatus,
     xSignatureVerification
   ) {
-    //atob Decode a base-64 encoded string
     const postData = {
-      action: "get_data",
-      xKey: atob(wc_cardknox_params.xkey),  
+      action: "get_data", 
       xRefNum: xRefNum,
       xCavv: xCavv,
       xEci: xEciFlag,
@@ -332,7 +330,7 @@ jQuery(function ($) {
     },
     onIfieldloaded: function () {
       enableLogging();
-      setAccount(atob(wc_cardknox_params.key), "wordpress", "0.1.2");   //atob Decode a base-64 encoded string
+      setAccount(wc_cardknox_params.key, "wordpress", "0.1.2");
       var card_style = {
         outline: "none",
         border: "1px solid #c3c3c3",

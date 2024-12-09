@@ -424,7 +424,6 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         //$encrypted_xkey = $this->transaction_key;
         $cardknox_params = array(
             'key'                  => $encrypted_key,
-            //'xkey'                 => $encrypted_xkey,
             'i18n_terms'           => __('Please accept the terms and conditions first', 'woocommerce-gateway-cardknox'),
             'i18n_required_fields' => __('Please fill in required checkout fields first', 'woocommerce-gateway-cardknox'),
             'bgcolor'              => $this->bgcolor,

@@ -1,5 +1,25 @@
 # Changelog
 
+## changelog for version 1.2.691
+
+Rolled back changes from versions 1.2.68 and 1.2.69
+
+## changelog for version Version: 1.2.69
+
+Testing the functionality with Woo Subscription's latest version (Version 6.7.0)
+
+## changelog for version Version: 1.2.68
+
+Added 3D Secure integration to the checkout for added security
+Added the card brand logos to the Credit Card tender
+Added Digital Wallet (Apple Pay & google Pay) quick checkout option to cart page
+Added tabs for Apple Pay and Google Pay on Admin Settings
+Fixed issues with Woo Subscription
+Updated tax to be sent to the Gateway
+Fixed issue with white space on Expiry
+Updated iFields to latest version 2.15.2405.1601
+Add Tax parameter to Gateway request
+
 ## changelog for version 1.0.16
 
 - Add support for GooglePay

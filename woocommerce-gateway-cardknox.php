@@ -941,13 +941,8 @@ if (!class_exists('WC_Cardknox')) :
                 $options = maybe_unserialize($options); 
             }
             $transaction_key = isset($options['transaction_key']) ? $options['transaction_key'] : null;
-            
             $request = $_POST;
-        
-            if(isset($options['enable-3ds']) == 'yes')
-            {
-                $request['xKey'] = $transaction_key;
-            }
+            $request['xKey'] = $transaction_key;
         
             unset($request['action']);
 

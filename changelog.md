@@ -1,5 +1,9 @@
 # Changelog
 
+## changelog for version Version: 1.2.71
+
+- 3DS Key is exposed issue Fixed.
+
 ## changelog for version Version: 1.2.70
 
 - Fixed Orderdetail Page

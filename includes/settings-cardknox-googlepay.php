@@ -19,8 +19,8 @@ $wc_cardknox_google_pay_settings = array(
         $gkeyTitle       => __('Enabled', 'woocommerce-gateway-cardknox'),
         $gkeyType        => $gselectType,
         $gkeyOptions     => array(
-            'yes'    => __('Yes', 'woocommerce-gateway-cardknox'),
             'no'     => __('No', 'woocommerce-gateway-cardknox'),
+            'yes'    => __('Yes', 'woocommerce-gateway-cardknox'),
         ),
     ),
     $gkeyPrefix . '_quickcheckout' => array(

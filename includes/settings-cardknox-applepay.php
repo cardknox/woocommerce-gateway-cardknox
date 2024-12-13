@@ -19,8 +19,8 @@ $wc_cardknox_apple_pay_settings = array(
         $keyTitle       => __('Enabled', 'woocommerce-gateway-cardknox'),
         $keyType        => $selectType,
         $keyOptions     => array(
-            'yes'    => __('Yes', 'woocommerce-gateway-cardknox'),
             'no'     => __('No', 'woocommerce-gateway-cardknox'),
+            'yes'    => __('Yes', 'woocommerce-gateway-cardknox'),
         ),
     ),
     $keyPrefix . '_quickcheckout' => array(

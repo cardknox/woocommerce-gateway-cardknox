@@ -420,10 +420,11 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         wp_enqueue_script('woocommerce_cardknox', plugins_url('assets/js/cardknox' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE), array('jquery-payment'), filemtime(plugin_dir_path(dirname(__FILE__)) . 'assets/js/cardknox' . $suffix . '.js'), true);
         
 
-        $encrypted_key = $this->token_key;
-        //$encrypted_xkey = $this->transaction_key;
+        $token_key = $this->token_key;
+        //$transaction_key = $this->transaction_key;
+        
         $cardknox_params = array(
-            'key'                  => $encrypted_key,
+            'key'                  => $token_key,
             'i18n_terms'           => __('Please accept the terms and conditions first', 'woocommerce-gateway-cardknox'),
             'i18n_required_fields' => __('Please fill in required checkout fields first', 'woocommerce-gateway-cardknox'),
             'bgcolor'              => $this->bgcolor,

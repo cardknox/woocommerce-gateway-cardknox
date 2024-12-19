@@ -44,6 +44,31 @@ define('WC_CARDKNOX_PLUGIN_URL', untrailingslashit(plugins_url(basename(plugin_d
 define('WC_CARDKNOX_PLUGIN_PATH', untrailingslashit(plugin_dir_path(__FILE__)));
 
 
+/** 
+ * WordPress version Check, if WordPress Version 6.5 or Higher
+ * then Cardknox Plugin will Activate otherwise Deactivate.
+ */ 
+if (version_compare(get_bloginfo('version'), '6.5', '<')) {
+    // Display admin notice
+    add_action('admin_notices', function () {
+        echo '<div class="error"><p>';
+        esc_html_e(
+            'WooCommerce Cardknox Gateway requires WordPress version 6.5 or higher. Please update WordPress to use this plugin.',
+            'woocommerce-gateway-cardknox'
+        );
+        echo '</p></div>';
+    });
+
+    // Deactivate the plugin
+    add_action('admin_init', function () {
+        deactivate_plugins(plugin_basename(__FILE__));
+    });
+
+    // Stop further execution of the plugin
+    return;
+}
+
+
 if (!class_exists('WC_Cardknox')) :
 
     class WC_Cardknox

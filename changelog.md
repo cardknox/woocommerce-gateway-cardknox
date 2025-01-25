@@ -2,7 +2,7 @@
 
 ## changelog for version Version: 1.2.71
 
-- Security Updates
+- Security Updates.
 
 ## changelog for version Version: 1.2.70
 

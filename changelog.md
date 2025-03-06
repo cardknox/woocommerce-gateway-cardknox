@@ -1,5 +1,10 @@
 # Changelog
 
+## changelog for version Version: 1.2.72
+
+- Apple Pay Default Enable - No.
+- Google Pay Default Enable - No.
+
 ## changelog for version Version: 1.2.71
 
 - Security Updates.

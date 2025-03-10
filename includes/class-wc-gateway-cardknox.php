@@ -27,6 +27,9 @@ include_once 'settings-cardknox.php';
 class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 {
 
+	/* Define props to avoid php 8.x dynamic prop deprecation warnings. */
+	public $bgcolor;
+
     /**
      * Should we capture Credit cards
      *

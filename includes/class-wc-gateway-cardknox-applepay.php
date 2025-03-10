@@ -11,7 +11,18 @@ include_once 'settings-cardknox-applepay.php';
  */
 class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 {
-    /**
+
+	/* Define props to avoid php 8.x dynamic prop deprecation warnings. */
+	public $applepay_merchant_identifier;
+	public $applepay_environment;
+	public $applepay_button_style;
+	public $applepay_button_type;
+	public $authonly_status;
+	public $applepay_applicable_countries;
+	public $applepay_specific_countries;
+	public $wcVersion;
+
+	/**
      * Should we capture Credit cards
      *
      * @var bool

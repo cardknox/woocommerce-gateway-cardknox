@@ -114,6 +114,8 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $this->enable_3ds              = $this->get_option('enable-3ds');
         $this->threeds_env             = $this->get_option('3ds-env');
 
+
+
         WC_Cardknox_API::set_transaction_key($this->transaction_key);
 
         // Initialize the child gateways

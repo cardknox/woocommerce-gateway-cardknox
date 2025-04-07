@@ -113,9 +113,8 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $this->bgcolor                 = $this->get_option('bgcolor');
         $this->enable_3ds              = $this->get_option('enable-3ds');
         $this->threeds_env             = $this->get_option('3ds-env');
-
-        $this->applicable_countries   = $this->get_option('applicable_countries'); // Add this Code
-        $this->specific_countries    = $this->get_option('specific_countries');    // Add this Code
+        $this->applicable_countries    = $this->get_option('applicable_countries');
+        $this->specific_countries     = $this->get_option('specific_countries');
 
 
 
@@ -132,7 +131,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
         add_action('woocommerce_admin_order_data_after_order_details', array($this, 'cardknox_order_meta_general'));
         add_filter('woocommerce_gateway_icon', array($this, 'cardknox_gateway_icon'), 10, 2);
-        add_filter('woocommerce_available_payment_gateways', array($this, 'cardknox_allow_payment_method_by_country')); // Add this Code
+        add_filter('woocommerce_available_payment_gateways', array($this, 'cardknox_allow_payment_method_by_country'));
     }
 
 

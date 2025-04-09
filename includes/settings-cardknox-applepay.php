@@ -13,8 +13,23 @@ $keyOptions = 'options';
 $keyDefault = 'default';
 $keyDescTip = 'desc_tip';
 $buttonPrefix = 'Apple Pay Button';
+$fileType = 'file';
 
 $wc_cardknox_apple_pay_settings = array(
+
+    $keyPrefix . '_certificate' => array(
+        'title'    => __('Apple Certificate', 'woocommerce-gateway-cardknox'),
+        'type'     => 'file',
+        'css'      => 'position: absolute;z-index: 999;min-height: 44px;opacity: 1;padding-left: 160px;bottom: 9px; width: 700px;',
+        'custom_attributes' => array(
+            'class' => 'custom-file-upload',
+        ),
+        'description' => '
+            <div class="upload-btn-wrapper">
+                <button class="btn" style=" border: 1px solid #58b5d8; color: #58b5d8; padding: 8px 10px; font-weight: 600; border-radius: 4px; cursor: pointer;">Choose Certificate</button>
+            </div>
+        ',
+    ),    
     $keyPrefix . '_enabled' => array(
         $keyTitle       => __('Enabled', 'woocommerce-gateway-cardknox'),
         $keyType        => $selectType,

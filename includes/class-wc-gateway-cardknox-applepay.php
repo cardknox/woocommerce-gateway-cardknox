@@ -59,6 +59,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
         $option = get_option('woocommerce_cardknox_settings');
 
+        $this->applepay_certificate             = $this->get_option('applepay_certificate');
         $this->enabled                          = $this->get_option('applepay_enabled');
         $this->apple_quickcheckout              = $this->get_option('applepay_quickcheckout');
         $this->title                            = $this->get_option('applepay_title');
@@ -83,6 +84,57 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
         if (is_cart() && $this->apple_quickcheckout == 'no') {
             add_action('woocommerce_proceed_to_checkout', array($this, 'cardknox_review_order_after_submit'), 20);
+        }
+        add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
+
+        add_action( 'admin_enqueue_scripts',  array($this, 'custom_admin_upload_btn_css') );
+
+    }
+    public function custom_admin_upload_btn_css() {
+        $screen = get_current_screen();
+        if ( strpos( $screen->id, 'woocommerce' ) !== false ) {
+            echo '<style>
+                .upload-btn-wrapper:after {
+                    content: "";
+                    position: absolute;
+                    background-color: #f0f0f1;
+                    height: 36px;
+                    width: 100px;
+                    z-index: 999;
+                    top: 21px;
+                    left: 158px;
+            }
+            </style>';
+        }
+    }
+    public function process_admin_options() {
+        parent::process_admin_options();
+    
+        if (!empty($_FILES['woocommerce_cardknox-applepay_applepay_certificate']['tmp_name'])) {
+            $uploaded_file = $_FILES['woocommerce_cardknox-applepay_applepay_certificate'];
+            $tmp_path = $uploaded_file['tmp_name'];
+    
+            // Use the uploaded file's actual name
+            $target_filename = basename($uploaded_file['name']);
+    
+            // Target directory path
+            $target_dir = rtrim($_SERVER['DOCUMENT_ROOT'], '/') . '/.well-known/';
+    
+            if (!file_exists($target_dir)) {
+                wp_mkdir_p($target_dir);
+            }
+    
+            $target_path = $target_dir . $target_filename;
+    
+            if (move_uploaded_file($tmp_path, $target_path)) {
+                $new_url = site_url('/.well-known/' . $target_filename);
+                $this->update_option('applepay_certificate', $new_url);
+    
+                // Debug log (optional)
+                error_log('[ApplePay] File uploaded: ' . $target_path);
+            } else {
+                error_log('[ApplePay] File move failed.');
+            }
         }
     }
 
@@ -192,6 +244,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         );
 
         $cardknoxApplepaySettings = array_merge($cardknoxApplepaySettings, $this->get_localized_messages());
+
         wp_localize_script('woocommerce_cardknox_apple_pay', 'applePaysettings', $cardknoxApplepaySettings);
     }
 
@@ -602,4 +655,5 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         }
         return $available_gateways;
     }
+
 }

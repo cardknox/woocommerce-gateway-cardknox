@@ -113,6 +113,10 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $this->bgcolor                 = $this->get_option('bgcolor');
         $this->enable_3ds              = $this->get_option('enable-3ds');
         $this->threeds_env             = $this->get_option('3ds-env');
+        $this->applicable_countries    = $this->get_option('applicable_countries');
+        $this->specific_countries     = $this->get_option('specific_countries');
+
+
 
         WC_Cardknox_API::set_transaction_key($this->transaction_key);
 
@@ -127,6 +131,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
         add_action('woocommerce_admin_order_data_after_order_details', array($this, 'cardknox_order_meta_general'));
         add_filter('woocommerce_gateway_icon', array($this, 'cardknox_gateway_icon'), 10, 2);
+        add_filter('woocommerce_available_payment_gateways', array($this, 'cardknox_allow_payment_method_by_country'));
     }
 
 
@@ -248,12 +253,14 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
      */
     public function is_available()
     {
+
         if ('yes' === $this->enabled) {
             if (!$this->transaction_key || !$this->token_key) {
                 return false;
             }
             return true;
         }
+
         return false;
     }
 
@@ -1016,5 +1023,34 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         } else {
             return $icon;
         }
+    }
+    /**
+     * Credit Card available based on specific countries.
+     *
+     * @param [type] $available_gateways
+     * @return void
+     */
+    public function cardknox_allow_payment_method_by_country($available_gateways)
+    {
+
+        if (is_admin()) return $available_gateways;
+
+        $applicable_countries = $this->applicable_countries;
+        $specific_countries    = $this->specific_countries;
+
+        if (isset($applicable_countries) && $applicable_countries == 1) {
+            // Get the customer's billing and shipping addresses
+            $billing_country = WC()->customer->get_billing_country();
+
+            // Define the country codes for which you want to allow the payment method
+            $enabled_countries = $specific_countries; // Add the country codes to this array
+
+            // Check if the billing or shipping address country is in the allow countries array
+            if (!in_array($billing_country, $enabled_countries)) {
+                // allow the payment method by unsetting it from the available gateways
+                unset($available_gateways['cardknox']);
+            }
+        }
+        return $available_gateways;
     }
 }

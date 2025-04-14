@@ -19,7 +19,7 @@ $wc_cardknox_apple_pay_settings = array(
 
     $keyPrefix . '_certificate' => array(
         'title'    => __('Apple Certificate', 'woocommerce-gateway-cardknox'),
-        'type'     => 'file',
+        'type'     => $fileType,
         'css'      => 'position: absolute;z-index: 999;min-height: 44px;opacity: 1;padding-left: 160px;bottom: 9px; width: 700px;',
         'custom_attributes' => array(
             'class' => 'custom-file-upload',

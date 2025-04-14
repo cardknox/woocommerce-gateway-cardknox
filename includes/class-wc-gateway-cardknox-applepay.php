@@ -130,9 +130,6 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             if (move_uploaded_file($tmp_path, $target_path)) {
                 $new_url = site_url('/.well-known/' . $target_filename);
                 $this->update_option('applepay_certificate', $new_url);
-                //error_log('[ApplePay] File uploaded: ' . $target_path);
-            } else {
-                //error_log('[ApplePay] File move failed.');
             }
         }
     }

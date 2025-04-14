@@ -11,6 +11,7 @@ include_once 'settings-cardknox-applepay.php';
  */
 class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 {
+    
     /**
      * Should we capture Credit cards
      *
@@ -244,7 +245,6 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         );
 
         $cardknoxApplepaySettings = array_merge($cardknoxApplepaySettings, $this->get_localized_messages());
-
         wp_localize_script('woocommerce_cardknox_apple_pay', 'applePaysettings', $cardknoxApplepaySettings);
     }
 

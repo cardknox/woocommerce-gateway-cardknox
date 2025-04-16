@@ -1,5 +1,9 @@
 # Changelog
 
+## changelog for version Version: 1.2.73
+
+- Updated iFields latest version 3.0.2503.2101
+
 ## changelog for version Version: 1.2.72
 
 - Apple Pay Default Enable - No.

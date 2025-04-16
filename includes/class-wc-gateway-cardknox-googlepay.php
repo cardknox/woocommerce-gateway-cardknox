@@ -56,10 +56,13 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         $this->googlepay_merchant_name          = $this->get_option('googlepay_merchant_name');
         $this->googlepay_environment            = $this->get_option('googlepay_environment');
         $this->googlepay_button_style           = $this->get_option('googlepay_button_style');
-        $this->capture                          = 'yes' === $this->get_option('googlepay_capture', 'yes');
-        $this->authonly_status                  = $this->get_option('googlepay_auth_only_order_status');
-        $this->googlepay_applicable_countries   = $this->get_option('googlepay_applicable_countries');
-        $this->googlepay_specific_countries     = $this->get_option('googlepay_specific_countries');
+        
+        $this->capture                          = 'yes' === $option['capture'];
+        $this->authonly_status                  = $option['auth_only_order_status'];
+
+        $this->googlepay_applicable_countries   = $option['applicable_countries'];
+        $this->googlepay_specific_countries     = $option['specific_countries'];
+
 
         $this->wcVersion = version_compare(WC_VERSION, '3.0.0', '<');
 

@@ -576,7 +576,7 @@ if (!class_exists('WC_Cardknox')) :
             $applePay_quickcheckout = isset($applePayoptions['applepay_quickcheckout']) ? $applePayoptions['applepay_quickcheckout'] : 'no';
 
             if (is_cart()) {
-                wp_enqueue_script('cardknox', 'https://cdn.cardknox.com/ifields/2.15.2309.2601/ifields.min.js', '', '1.0.0', false);
+                wp_enqueue_script('cardknox', 'https://cdn.cardknox.com/ifields/3.0.2503.2101/ifields.min.js', '', '1.0.0', false);
             }
 
             if (is_cart() && $googlepay_quickcheckout == 'no') {

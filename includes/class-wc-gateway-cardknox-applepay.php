@@ -87,49 +87,77 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             add_action('woocommerce_proceed_to_checkout', array($this, 'cardknox_review_order_after_submit'), 20);
         }
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
-
         add_action( 'admin_enqueue_scripts',  array($this, 'custom_admin_upload_btn_css') );
-
     }
-    public function custom_admin_upload_btn_css() {
-        $screen = get_current_screen();
-        if ( strpos( $screen->id, 'woocommerce' ) !== false ) {
-            echo '<style>
-                .upload-btn-wrapper:after {
-                    content: "";
-                    position: absolute;
-                    background-color: #f0f0f1;
-                    height: 36px;
-                    width: 100px;
-                    z-index: 999;
-                    top: 21px;
-                    left: 158px;
-            }
-            </style>';
-        }
-    }
-    public function process_admin_options() {
-        parent::process_admin_options();
     
-        if (!empty($_FILES['woocommerce_cardknox-applepay_applepay_certificate']['tmp_name'])) {
+    
+    public function custom_admin_upload_btn_css( $hook ) {
+        $screen = get_current_screen();
+        if ( strpos( $screen->id, 'woocommerce' ) === false ) {
+            return;
+        }
+        wp_register_style( 'custom-woo-admin-style', false );
+        wp_enqueue_style( 'custom-woo-admin-style' );
+    
+        $custom_css = '
+            .upload-btn-wrapper:after {
+                content: "";
+                position: absolute;
+                background-color: #f0f0f1;
+                height: 36px;
+                width: 100px;
+                z-index: 999;
+                top: 21px;
+                left: 158px;
+            }
+        ';
+        wp_add_inline_style( 'custom-woo-admin-style', $custom_css );
+    }
+    
+    public function process_admin_options() {
+
+        parent::process_admin_options(); // Save settings normally
+    
+        if (!empty($_FILES['woocommerce_cardknox-applepay_applepay_certificate']['tmp_name']) &&
+            $_FILES['woocommerce_cardknox-applepay_applepay_certificate']['error'] === UPLOAD_ERR_OK) {
+    
             $uploaded_file = $_FILES['woocommerce_cardknox-applepay_applepay_certificate'];
             $tmp_path = $uploaded_file['tmp_name'];
+
+            if (!file_exists($tmp_path)) {
+                sprintf(__('Upload failed: Temporary file missing.','woocommerce-gateway-cardknox'));
+                return;
+            }
     
-            // Use the uploaded file's actual name
+            // Validate MIME type
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            if (!$finfo) {
+                sprintf(__('Server error: Unable to open file info.','woocommerce-gateway-cardknox'));
+                return;
+            }
+    
+            $mime_type = finfo_file($finfo, $tmp_path);
+            finfo_close($finfo);
+    
+            if ($mime_type !== 'text/plain') {
+                sprintf(__('Invalid file type. Only plain text files are allowed.','woocommerce-gateway-cardknox'));
+                return;
+            }
+    
             $target_filename = basename($uploaded_file['name']);
     
-            // Target directory path
-            $target_dir = rtrim($_SERVER['DOCUMENT_ROOT'], '/') . '/.well-known/';
-    
+            // Target directory
+            $target_dir = rtrim(dirname(dirname(ABSPATH)), '/') . '/.well-known/';
             if (!file_exists($target_dir)) {
                 wp_mkdir_p($target_dir);
             }
     
             $target_path = $target_dir . $target_filename;
     
+            // Move file
             if (move_uploaded_file($tmp_path, $target_path)) {
                 $new_url = site_url('/.well-known/' . $target_filename);
-                $this->update_option('applepay_certificate', $new_url);
+                $this->update_option('applepay_certificate', esc_url_raw($new_url));
             }
         }
     }

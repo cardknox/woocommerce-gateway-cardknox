@@ -124,15 +124,29 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             $uploaded_file = $_FILES['woocommerce_cardknox-applepay_applepay_certificate'];
             $tmp_path = $uploaded_file['tmp_name'];
 
-            if (!file_exists($tmp_path)) {
-                sprintf(__('Upload failed: Temporary file missing.','woocommerce-gateway-cardknox'));
+            if ( ! function_exists( 'add_settings_error' ) ) {
+                require_once ABSPATH . 'wp-admin/includes/template.php';
+            }
+            
+            if ( ! file_exists( $tmp_path ) ) {
+                add_settings_error(
+                    'woocommerce_cardknox_applepay',
+                    'missing_tmp_file',
+                    __( 'Upload failed: Temporary file missing.', 'woocommerce-gateway-cardknox' ),
+                    'error'
+                );
                 return;
             }
     
             // Validate MIME type
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
             if (!$finfo) {
-                sprintf(__('Server error: Unable to open file info.','woocommerce-gateway-cardknox'));
+                add_settings_error(
+                    'woocommerce_cardknox_applepay',
+                    'missing_tmp_file',
+                    __( 'Server error: Unable to open file info.', 'woocommerce-gateway-cardknox' ),
+                    'error'
+                );
                 return;
             }
     
@@ -140,7 +154,12 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             finfo_close($finfo);
     
             if ($mime_type !== 'text/plain') {
-                sprintf(__('Invalid file type. Only plain text files are allowed.','woocommerce-gateway-cardknox'));
+                add_settings_error(
+                    'woocommerce_cardknox_applepay',
+                    'missing_tmp_file',
+                    __( 'Invalid file type. Only plain text files are allowed.', 'woocommerce-gateway-cardknox' ),
+                    'error'
+                );
                 return;
             }
     

@@ -968,22 +968,40 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             <a href="#apple-pay-settings" class="nav-tab"><?php _e('Apple Pay', 'woocommerce'); ?></a>
             <a href="#google-pay-settings" class="nav-tab"><?php _e('Google Pay', 'woocommerce'); ?></a>
         </div>
-        <div id="credit-card-settings" class="panel">
-            <table class="form-table" style="width:400px;">
-                <thead>
-                    <tr>
-                        <th><?php _e('Credit Card Settings', 'woocommerce'); ?></th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    $this->generate_settings_html();
-                    ?>
-                </tbody>
-            </table>
-        </div>
-        <div id="apple-pay-settings" class="panel">
+            <div id="credit-card-settings" class="panel">
+                <table class="form-table" style="width:400px;">
+                    <thead>
+                        <tr>
+                            <th><?php _e('Credit Card Settings', 'woocommerce'); ?></th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $this->generate_settings_html();
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+            <div id="apple-pay-settings" class="panel">
+                <div style="margin-top: 30px;">
+                <h3 style="margin-bottom: 10px;"><?php esc_html_e( 'Apple Pay Registration Instructions', 'woocommerce' ); ?></h3>
+                <ol class="apple-pay-instructions">
+                    <li><?php esc_html_e( 'Login to your', 'woocommerce' ); ?> <strong><?php esc_html_e( 'Sola Portal', 'woocommerce' ); ?></strong></li>
+                    <li>
+                        <?php esc_html_e( 'Go to', 'woocommerce' ); ?> 
+                        <strong><?php esc_html_e( 'Settings > Gateway Settings > Payment Methods', 'woocommerce' ); ?></strong>
+                        <a href="<?php echo esc_url( 'https://portal2.solapayments.com/settings/gateway-settings/payment-methods' ); ?>" target="_blank" rel="noopener">
+                            <?php esc_html_e( 'Open Link', 'woocommerce' ); ?>
+                        </a>
+                    </li>
+                    <li><?php esc_html_e( 'Please use this option:', 'woocommerce' ); ?> <strong><?php esc_html_e( 'Register for Apple Pay with Cardknox Certificate', 'woocommerce' ); ?></strong></li>
+                    <li><?php esc_html_e( 'Click on', 'woocommerce' ); ?> <strong><?php esc_html_e( 'Register', 'woocommerce' ); ?></strong> <?php esc_html_e( 'button', 'woocommerce' ); ?></li>
+                    <li><?php esc_html_e( 'Download the Apple developer association certificate file', 'woocommerce' ); ?></li>
+                    <li><strong><?php esc_html_e( 'Choose Certificate', 'woocommerce' ); ?></strong> <?php esc_html_e( 'file under your domain (root folder)', 'woocommerce' ); ?></li>
+                    <li><?php esc_html_e( 'Register domain', 'woocommerce' ); ?></li>
+                </ol>
+            </div>
             <table class="form-table" style="width:400px;">
                 <thead>
                     <tr>

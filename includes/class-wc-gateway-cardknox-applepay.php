@@ -122,6 +122,28 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             $_FILES['woocommerce_cardknox-applepay_applepay_certificate']['error'] === UPLOAD_ERR_OK) {
     
             $uploaded_file = $_FILES['woocommerce_cardknox-applepay_applepay_certificate'];
+
+            if ($uploaded_file['error'] !== UPLOAD_ERR_OK) {
+                $upload_errors = array(
+                    UPLOAD_ERR_INI_SIZE   => __('The uploaded file exceeds the upload_max_filesize directive in php.ini.', 'your-textdomain'),
+                    UPLOAD_ERR_FORM_SIZE  => __('The uploaded file exceeds the MAX_FILE_SIZE directive specified in the HTML form.', 'your-textdomain'),
+                    UPLOAD_ERR_PARTIAL    => __('The uploaded file was only partially uploaded.', 'your-textdomain'),
+                    UPLOAD_ERR_NO_FILE    => __('No file was uploaded.', 'your-textdomain'),
+                    UPLOAD_ERR_NO_TMP_DIR => __('Missing a temporary folder.', 'your-textdomain'),
+                    UPLOAD_ERR_CANT_WRITE => __('Failed to write file to disk.', 'your-textdomain'),
+                    UPLOAD_ERR_EXTENSION  => __('A PHP extension stopped the file upload.', 'your-textdomain'),
+                );
+        
+                $error_message = isset($upload_errors[$uploaded_file['error']])
+                    ? $upload_errors[$uploaded_file['error']]
+                    : __('An unknown error occurred during file upload.', 'your-textdomain');
+        
+                // Show admin notice and stop
+                wc_add_notice($error_message, 'error');
+                return;
+            }
+            
+
             $tmp_path = $uploaded_file['tmp_name'];
 
             if ( ! function_exists( 'add_settings_error' ) ) {
@@ -137,6 +159,21 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
                 );
                 return;
             }
+
+            
+            $target_filename = sanitize_file_name($uploaded_file['name']);
+            $file_ext = strtolower(pathinfo($target_filename, PATHINFO_EXTENSION));
+            $allowed_extensions = ['txt', ''];
+            if (!in_array($file_ext, $allowed_extensions)) {
+                add_settings_error(
+                    'woocommerce_cardknox_applepay',
+                    'invalid_extension',
+                    __('Invalid file extension. Only .pem files are allowed.', 'woocommerce-gateway-cardknox'),
+                    'error'
+                );
+                return;
+            }
+
     
             // Validate MIME type
             $finfo = finfo_open(FILEINFO_MIME_TYPE);

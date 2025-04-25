@@ -113,7 +113,9 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         ';
         wp_add_inline_style( 'custom-woo-admin-style', $custom_css );
     }
-    
+    /**
+     * Applepay Certificate Upload functionality.
+     */
     public function process_admin_options() {
 
         parent::process_admin_options(); // Save settings normally
@@ -122,68 +124,52 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             $_FILES['woocommerce_cardknox-applepay_applepay_certificate']['error'] === UPLOAD_ERR_OK) {
     
             $uploaded_file = $_FILES['woocommerce_cardknox-applepay_applepay_certificate'];
-
+    
             if ($uploaded_file['error'] !== UPLOAD_ERR_OK) {
                 $upload_errors = array(
-                    UPLOAD_ERR_INI_SIZE   => __('The uploaded file exceeds the upload_max_filesize directive in php.ini.', 'your-textdomain'),
-                    UPLOAD_ERR_FORM_SIZE  => __('The uploaded file exceeds the MAX_FILE_SIZE directive specified in the HTML form.', 'your-textdomain'),
-                    UPLOAD_ERR_PARTIAL    => __('The uploaded file was only partially uploaded.', 'your-textdomain'),
-                    UPLOAD_ERR_NO_FILE    => __('No file was uploaded.', 'your-textdomain'),
-                    UPLOAD_ERR_NO_TMP_DIR => __('Missing a temporary folder.', 'your-textdomain'),
-                    UPLOAD_ERR_CANT_WRITE => __('Failed to write file to disk.', 'your-textdomain'),
-                    UPLOAD_ERR_EXTENSION  => __('A PHP extension stopped the file upload.', 'your-textdomain'),
+                    UPLOAD_ERR_INI_SIZE   => __('The uploaded file exceeds the upload_max_filesize directive in php.ini.', 'woocommerce-gateway-cardknox'),
+                    UPLOAD_ERR_FORM_SIZE  => __('The uploaded file exceeds the MAX_FILE_SIZE directive specified in the HTML form.', 'woocommerce-gateway-cardknox'),
+                    UPLOAD_ERR_PARTIAL    => __('The uploaded file was only partially uploaded.', 'woocommerce-gateway-cardknox'),
+                    UPLOAD_ERR_NO_FILE    => __('No file was uploaded.', 'woocommerce-gateway-cardknox'),
+                    UPLOAD_ERR_NO_TMP_DIR => __('Missing a temporary folder.', 'woocommerce-gateway-cardknox'),
+                    UPLOAD_ERR_CANT_WRITE => __('Failed to write file to disk.', 'woocommerce-gateway-cardknox'),
+                    UPLOAD_ERR_EXTENSION  => __('A PHP extension stopped the file upload.', 'woocommerce-gateway-cardknox'),
                 );
-        
+    
                 $error_message = isset($upload_errors[$uploaded_file['error']])
                     ? $upload_errors[$uploaded_file['error']]
-                    : __('An unknown error occurred during file upload.', 'your-textdomain');
-        
-                // Show admin notice and stop
+                    : __('An unknown error occurred during file upload.', 'woocommerce-gateway-cardknox');
+    
                 wc_add_notice($error_message, 'error');
                 return;
             }
-            
-
+    
             $tmp_path = $uploaded_file['tmp_name'];
-
-            if ( ! function_exists( 'add_settings_error' ) ) {
+    
+            if (!function_exists('add_settings_error')) {
                 require_once ABSPATH . 'wp-admin/includes/template.php';
             }
-            
-            if ( ! file_exists( $tmp_path ) ) {
-                add_settings_error(
-                    'woocommerce_cardknox_applepay',
-                    'missing_tmp_file',
-                    __( 'Upload failed: Temporary file missing.', 'woocommerce-gateway-cardknox' ),
-                    'error'
-                );
+    
+            if (!file_exists($tmp_path)) {
                 return;
             }
-
-            
+    
             $target_filename = sanitize_file_name($uploaded_file['name']);
             $file_ext = strtolower(pathinfo($target_filename, PATHINFO_EXTENSION));
-            $allowed_extensions = ['txt', ''];
-            if (!in_array($file_ext, $allowed_extensions)) {
-                add_settings_error(
-                    'woocommerce_cardknox_applepay',
-                    'invalid_extension',
-                    __('Invalid file extension. Only .pem files are allowed.', 'woocommerce-gateway-cardknox'),
-                    'error'
-                );
+    
+            if (!empty($file_ext)) {
+                $this->add_unique_settings_error('invalid_extension', __('Invalid file extension. Only files without extensions are allowed.', 'woocommerce-gateway-cardknox'));
                 return;
             }
-
     
-            // Validate MIME type
+            if ($target_filename !== 'apple-developer-merchantid-domain-association') {
+                $this->add_unique_settings_error('invalid_filename', __('Invalid filename. Only apple-developer-merchantid-domain-association is allowed.', 'woocommerce-gateway-cardknox'));
+                return;
+            }
+    
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
             if (!$finfo) {
-                add_settings_error(
-                    'woocommerce_cardknox_applepay',
-                    'missing_tmp_file',
-                    __( 'Server error: Unable to open file info.', 'woocommerce-gateway-cardknox' ),
-                    'error'
-                );
+                $this->add_unique_settings_error('fileinfo_error', __('Server error: Unable to open file info.', 'woocommerce-gateway-cardknox'));
                 return;
             }
     
@@ -191,18 +177,10 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             finfo_close($finfo);
     
             if ($mime_type !== 'text/plain') {
-                add_settings_error(
-                    'woocommerce_cardknox_applepay',
-                    'missing_tmp_file',
-                    __( 'Invalid file type. Only plain text files are allowed.', 'woocommerce-gateway-cardknox' ),
-                    'error'
-                );
+                $this->add_unique_settings_error('invalid_mime_type', __('Invalid file type. Only plain text files are allowed.', 'woocommerce-gateway-cardknox'));
                 return;
             }
     
-            $target_filename = basename($uploaded_file['name']);
-    
-            // Target directory
             $target_dir = rtrim(dirname(dirname(ABSPATH)), '/') . '/.well-known/';
             if (!file_exists($target_dir)) {
                 wp_mkdir_p($target_dir);
@@ -210,14 +188,14 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     
             $target_path = $target_dir . $target_filename;
     
-            // Move file
             if (move_uploaded_file($tmp_path, $target_path)) {
                 $new_url = site_url('/.well-known/' . $target_filename);
                 $this->update_option('applepay_certificate', esc_url_raw($new_url));
+            } else {
+                $this->add_unique_settings_error('move_failed', __('Failed to move uploaded file.', 'woocommerce-gateway-cardknox'));
             }
         }
     }
-
     /**
      * Payment form on checkout page
      */
@@ -734,5 +712,28 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         }
         return $available_gateways;
     }
+    /*
+     * Single Time Validation Message Display
+    */
+    private function add_unique_settings_error($code, $message) {
+        global $wp_settings_errors;
+    
+        $already_set = false;
+    
+        if (isset($wp_settings_errors) && is_array($wp_settings_errors)) {
+            foreach ($wp_settings_errors as $error) {
+                if ($error['code'] === $code) {
+                    $already_set = true;
+                    break;
+                }
+            }
+        }
+    
+        if (!$already_set) {
+            add_settings_error('woocommerce_cardknox_applepay', $code, $message, 'error');
+        }
+    }
+
+    
 
 }

@@ -1002,6 +1002,14 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                     <li><?php esc_html_e( 'Register domain', 'woocommerce' ); ?></li>
                 </ol>
             </div>
+
+            <?php 
+                    /*
+                     * Add Apple Pay Certificate Upload Validation Message Display
+                    */
+                    settings_errors('woocommerce_cardknox_applepay');
+            ?>
+
             <table class="form-table" style="width:400px;">
                 <thead>
                     <tr>

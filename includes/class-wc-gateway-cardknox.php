@@ -1020,7 +1020,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                 </thead>
                 <tbody>
                     <?php
-                    $this->apple_pay_gateway->generate_settings_html();
+                        $this->apple_pay_gateway->generate_settings_html();
                     ?>
                 </tbody>
             </table>

@@ -143,8 +143,7 @@ if (!class_exists('WC_Cardknox')) :
         {
             add_action('admin_init', array($this, 'check_environment'));
             add_action('admin_notices', array($this, 'admin_notices'), 15);
-            add_action('plugins_loaded', array($this, 'init'));
-
+            add_action('init', array($this, 'init_plugin'));
             add_action('wp_enqueue_scripts', array($this, 'quickChekoutPaymentScripts'));
 
             add_action('wp_ajax_update_cart_total', array($this, 'updateCartTotal'));
@@ -156,37 +155,41 @@ if (!class_exists('WC_Cardknox')) :
             add_action('wp_ajax_applepay_cardknox_create_order', array($this, 'applepayCardknoxCreateorder'));
             add_action('wp_ajax_nopriv_applepay_cardknox_create_order', array($this, 'applepayCardknoxCreateorder'));
         }
-
-        /**
-         * Init the plugin after plugins_loaded so environment variables are set.
-         */
-        public function init()
-        {
-            // Don't hook anything else in the plugin if we're in an incompatible environment
+        /*
+        *   Initalize the plugin functionality as per the standard
+        */
+        public function init_plugin() {
             if (self::get_environment_warning()) {
                 return;
             }
-
+        
+            load_plugin_textdomain('woocommerce-gateway-cardknox', false, dirname(plugin_basename(__FILE__)) . '/languages');
+        
             include_once(dirname(__FILE__) . '/includes/class-wc-cardknox-api.php');
-            //			include_once( dirname( __FILE__ ) . '/includes/class-wc-cardknox-customer.php' );
-
-            // Init the gateway itself
+        
+            if (class_exists('WC_Payment_Gateway_CC')) {
+                include_once(dirname(__FILE__) . '/includes/class-wc-gateway-cardknox.php');
+                include_once(dirname(__FILE__) . '/includes/class-wc-gateway-cardknox-applepay.php');
+                include_once(dirname(__FILE__) . '/includes/class-wc-gateway-cardknox-googlepay.php');
+            } else {
+                include_once(dirname(__FILE__) . '/includes/legacy/class-wc-gateway-cardknox.php');
+            }
+        
             $this->init_gateways();
+        
             add_filter('plugin_action_links_' . plugin_basename(__FILE__), array($this, 'plugin_action_links'));
             add_action('woocommerce_order_status_on-hold_to_processing', array($this, 'capture_payment'));
             add_action('woocommerce_order_status_on-hold_to_completed', array($this, 'capture_payment'));
             add_action('woocommerce_order_status_on-hold_to_cancelled', array($this, 'refund_payment'));
             add_action('woocommerce_order_status_on-hold_to_refunded', array($this, 'refund_payment'));
-
             add_action('woocommerce_order_status_processing_to_cancelled', array($this, 'refund_payment'));
             add_action('woocommerce_order_status_processing_to_completed', array($this, 'capture_payment'));
-
+        
             $this->settingPage = 'admin.php?page=wc-settings&tab=checkout&section=';
-
+        
             add_action('wp_ajax_nopriv_get_data', array($this, 'threedsAjaxHandler'));
             add_action('wp_ajax_get_data', array($this, 'threedsAjaxHandler'));
         }
-
         /**
          * Allow this class and other classes to add slug keyed notices (to avoid duplication)
          */
@@ -370,42 +373,26 @@ if (!class_exists('WC_Cardknox')) :
                 echo '</p></div>';
             }
         }
-
-        /**
-         * Initialize the gateway. Called very early - in the context of the plugins_loaded action
-         *
-         * @since 1.0.0
-         */
-        public function init_gateways()
-        {
-            if (class_exists('WC_Subscriptions_Order') && function_exists('wcs_create_renewal_order')) {
-                $this->subscription_support_enabled = true;
-            }
-
-            if (class_exists('WC_Pre_Orders_Order')) {
-                $this->pre_order_enabled = true;
-            }
-
+        /*
+         * Set Seprate Call init_gateways
+        */
+        public function init_gateways() {
             if (!class_exists('WC_Payment_Gateway')) {
                 return;
             }
-
-            if (class_exists('WC_Payment_Gateway_CC')) {
-                include_once(dirname(__FILE__) . '/includes/class-wc-gateway-cardknox.php');
-                include_once(dirname(__FILE__) . '/includes/class-wc-gateway-cardknox-applepay.php');
-                include_once(dirname(__FILE__) . '/includes/class-wc-gateway-cardknox-googlepay.php');
-            } else {
-                include_once(dirname(__FILE__) . '/includes/legacy/class-wc-gateway-cardknox.php');
-            }
-
-            load_plugin_textdomain('woocommerce-gateway-cardknox', false, plugin_basename(dirname(__FILE__)) . '/languages');
+        
             add_filter('woocommerce_payment_gateways', array($this, 'add_gateways'));
-
-            $load_addons = ($this->subscription_support_enabled
-                ||
-                $this->pre_order_enabled
-            );
-
+        
+            if (class_exists('WC_Subscriptions_Order') && function_exists('wcs_create_renewal_order')) {
+                $this->subscription_support_enabled = true;
+            }
+        
+            if (class_exists('WC_Pre_Orders_Order')) {
+                $this->pre_order_enabled = true;
+            }
+        
+            $load_addons = ($this->subscription_support_enabled || $this->pre_order_enabled);
+        
             if ($load_addons) {
                 require_once(dirname(__FILE__) . '/includes/class-wc-gateway-cardknox-addons.php');
             }

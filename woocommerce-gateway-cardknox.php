@@ -156,7 +156,7 @@ if (!class_exists('WC_Cardknox')) :
             add_action('wp_ajax_nopriv_applepay_cardknox_create_order', array($this, 'applepayCardknoxCreateorder'));
         }
         /*
-        *   Initalize the plugin functionality as per the standard
+         * Initialize the plugin functionality as per the standard
         */
         public function init_plugin() {
             if (self::get_environment_warning()) {

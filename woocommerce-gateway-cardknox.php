@@ -184,9 +184,7 @@ if (!class_exists('WC_Cardknox')) :
             add_action('woocommerce_order_status_on-hold_to_refunded', array($this, 'refund_payment'));
             add_action('woocommerce_order_status_processing_to_cancelled', array($this, 'refund_payment'));
             add_action('woocommerce_order_status_processing_to_completed', array($this, 'capture_payment'));
-        
             $this->settingPage = 'admin.php?page=wc-settings&tab=checkout&section=';
-        
             add_action('wp_ajax_nopriv_get_data', array($this, 'threedsAjaxHandler'));
             add_action('wp_ajax_get_data', array($this, 'threedsAjaxHandler'));
         }
@@ -386,7 +384,6 @@ if (!class_exists('WC_Cardknox')) :
             if (class_exists('WC_Subscriptions_Order') && function_exists('wcs_create_renewal_order')) {
                 $this->subscription_support_enabled = true;
             }
-        
             if (class_exists('WC_Pre_Orders_Order')) {
                 $this->pre_order_enabled = true;
             }

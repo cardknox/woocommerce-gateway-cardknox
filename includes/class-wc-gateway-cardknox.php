@@ -586,7 +586,24 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                     if (is_wp_error($response)) {
                         $order->add_order_note($response->get_error_message());
                         throw new Exception($response->get_error_message());
-                    } else {
+                    } 
+                    elseif($response['xResult'] === 'A')
+                    {
+                        if ($forceCustomer && wcs_is_subscription($orderId)) {
+                            $postData                = array();
+                            $postData['xCommand']     = 'cc:save';
+                            $postData = self::get_order_data($postData, $order);
+                            $postData = self::get_billing_shiping_info($postData, $order);
+                            $postData = self::get_payment_data($postData);
+                            $response = WC_Cardknox_API::request($postData);
+                            $this->save_payment($forceCustomer, $response);
+                            update_post_meta($orderId, '_cardknox_token', $response['xToken']);
+                            update_post_meta($orderId, '_cardknox_masked_card', $response['xMaskedCardNumber']);
+                            update_post_meta($orderId, '_cardknox_cardtype', $response['xCardType']);
+                        }
+                        $order->payment_complete();
+                    }
+                    else {
                         if ($response['xResult'] === 'V' && $paymentName === 'cardknox') {
                             return array(
                                 'result'   => 'success',

@@ -27,6 +27,7 @@ include_once 'settings-cardknox.php';
 class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 {
 
+    const COMMAND_SAVE = 'cc:save';
     /**
      * Should we capture Credit cards
      *
@@ -587,14 +588,14 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                         $order->add_order_note($response->get_error_message());
                         throw new Exception($response->get_error_message());
                     } 
-                    elseif($response['xResult']==='A'){
+                    elseif( $response['xResult'] === 'A' ){
                         if($forceCustomer&&wcs_is_subscription($orderId)){
-                            $postData=array();
-                            $postData['xCommand']='cc:save';
-                            $postData=self::get_order_data($postData,$order);
-                            $postData=self::get_billing_shiping_info($postData,$order);
-                            $postData=self::get_payment_data($postData);
-                            $response=WC_Cardknox_API::request($postData);
+                            $postData = array();
+                            $postData['xCommand'] = self::COMMAND_SAVE;
+                            $postData = self::get_order_data($postData,$order);
+                            $postData = self::get_billing_shiping_info($postData,$order);
+                            $postData = self::get_payment_data($postData);
+                            $response = WC_Cardknox_API::request($postData);
                             $this->save_payment($forceCustomer,$response);
                             update_post_meta($orderId,'_cardknox_token',$response['xToken']);
                             update_post_meta($orderId,'_cardknox_masked_card',$response['xMaskedCardNumber']);

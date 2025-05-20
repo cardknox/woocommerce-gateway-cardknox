@@ -611,9 +611,9 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                             $postData = self::get_payment_data($postData);
                             $response = WC_Cardknox_API::request($postData);
                             $this->save_payment($forceCustomer,$response);
-                            // update_post_meta($orderId,'_cardknox_token',$response['xToken']);
-                            // update_post_meta($orderId,'_cardknox_masked_card',$response['xMaskedCardNumber']);
-                            // update_post_meta($orderId,'_cardknox_cardtype',$response['xCardType']);
+                            update_post_meta($orderId,'_cardknox_token',$response['xToken']);
+                            update_post_meta($orderId,'_cardknox_masked_card',$response['xMaskedCardNumber']);
+                            update_post_meta($orderId,'_cardknox_cardtype',$response['xCardType']);
                         }
                         $order->payment_complete();
                     }

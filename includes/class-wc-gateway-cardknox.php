@@ -76,8 +76,21 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $this->method_title         = __('Cardknox', 'woocommerce-gateway-cardknox');
         $this->method_description   = sprintf(__('Cardknox works by adding credit card fields on the checkout and then sending the details to Cardknox for verification. <a href="%1$s" target="_blank">Sign up</a> for a Cardknox account.', 'woocommerce-gateway-cardknox'), 'https://www.cardknox.com');
         $this->has_fields           = true;
-        //$this->view_transaction_url = 'https://portal.cardknox.com/transactions?disabled=true&expandedRow=%s&referenceNumber=%s';
-        $this->view_transaction_url = 'https://portal.cardknox.com/transactions?disabled=true&referenceNumber=%s';
+        
+        //$this->view_transaction_url = 'https://portal.cardknox.com/transactions?disabled=true&expandedRow=%s&referenceNumber=%s';  // (previous code)
+        
+
+        //$this->view_transaction_url = 'https://portal.cardknox.com/transactions?disabled=true&referenceNumber=%s'; (19th-may)
+
+
+        if (class_exists('WC_Subscriptions_Order')) {
+            $this->view_transaction_url = 'https://portal2.solapayments.com/transactions?disabled=true&expandedRow=%s&referenceNumber=%s';
+        }
+        else
+        {
+            $this->view_transaction_url = 'https://portal2.solapayments.com/transactions?disabled=true&referenceNumber=%s';
+        }
+
         $this->supports             = array(
             'subscriptions',
             'products',
@@ -116,7 +129,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $this->enable_3ds              = $this->get_option('enable-3ds');
         $this->threeds_env             = $this->get_option('3ds-env');
         $this->applicable_countries    = $this->get_option('applicable_countries');
-        $this->specific_countries     = $this->get_option('specific_countries');
+        $this->specific_countries      = $this->get_option('specific_countries');
 
 
 
@@ -598,9 +611,9 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                             $postData = self::get_payment_data($postData);
                             $response = WC_Cardknox_API::request($postData);
                             $this->save_payment($forceCustomer,$response);
-                            update_post_meta($orderId,'_cardknox_token',$response['xToken']);
-                            update_post_meta($orderId,'_cardknox_masked_card',$response['xMaskedCardNumber']);
-                            update_post_meta($orderId,'_cardknox_cardtype',$response['xCardType']);
+                            // update_post_meta($orderId,'_cardknox_token',$response['xToken']);
+                            // update_post_meta($orderId,'_cardknox_masked_card',$response['xMaskedCardNumber']);
+                            // update_post_meta($orderId,'_cardknox_cardtype',$response['xCardType']);
                         }
                         $order->payment_complete();
                     }

@@ -312,6 +312,16 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
      */
     public function validate_subscription_payment_meta($payment_method_id, $payment_meta)
     {
+        $this->log("Validate Subscription Check");
+
+        $this->log(sprintf(
+            "Debug Info:\n- payment_method_id: %s\n- payment_meta: %s\n- this->id: %s",
+            $payment_method_id,
+            print_r($payment_meta, true),
+            $this->id
+        ));
+
+
         if ($this->id === $payment_method_id) {
             if (empty($payment_meta['post_meta']['_cardknox_token']['value'])) {
                 throw new Exception('Invalid card on file.');

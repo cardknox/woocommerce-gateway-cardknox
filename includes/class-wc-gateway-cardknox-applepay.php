@@ -16,11 +16,12 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
      *
      * @var bool
      */
-    
+
     public $applepay_merchant_identifier;
     public $applepay_environment;
     public $applepay_button_style;
     public $applepay_button_type;
+    public $capture;
     public $authonly_status;
     public $applepay_applicable_countries;
     public $applepay_specific_countries;

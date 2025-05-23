@@ -77,12 +77,6 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $this->method_description   = sprintf(__('Cardknox works by adding credit card fields on the checkout and then sending the details to Cardknox for verification. <a href="%1$s" target="_blank">Sign up</a> for a Cardknox account.', 'woocommerce-gateway-cardknox'), 'https://www.cardknox.com');
         $this->has_fields           = true;
         
-        //$this->view_transaction_url = 'https://portal.cardknox.com/transactions?disabled=true&expandedRow=%s&referenceNumber=%s';  // (previous code)
-        
-
-        //$this->view_transaction_url = 'https://portal.cardknox.com/transactions?disabled=true&referenceNumber=%s'; (19th-may)
-
-
         if (class_exists('WC_Subscriptions_Order')) {
             $this->view_transaction_url = 'https://portal2.solapayments.com/transactions?disabled=true&expandedRow=%s&referenceNumber=%s';
         }

@@ -138,8 +138,14 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
     protected function generate_payment_request_for_subscription($request, $order)
     {
         $request['xCommand']     = 'cc:sale';
+        error_log('After setting xCommand: ' . print_r($request, true));
+        
+
         $request = self::get_order_data($request, $order);
+        error_log('After get_order_data: ' . print_r($request, true));
+
         $request = self::get_billing_shiping_info($request, $order);
+        error_log('After get_billing_shiping_info: ' . print_r($request, true));
 
         return $request;
     }
@@ -341,6 +347,9 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
     public function maybe_render_subscription_payment_method($payment_method_to_display, $subscription)
     {
         $customer_user = $this->wc_pre_30 ? $subscription->customer_user : $subscription->get_customer_id();
+        error_log('Customer User ID: ' . print_r($customer_user, true));
+
+
         // bail for other payment methods
         if ($this->id !== ($this->wc_pre_30 ? $subscription->payment_method : $subscription->get_payment_method()) || !$customer_user) {
             return $payment_method_to_display;
@@ -354,7 +363,10 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
 
         if (!$cardknox_card_id || !is_string($cardknox_card_id)) {
             $user_id            = $customer_user;
+            error_log('Card ID not found on subscription. Trying user meta. User ID: ' . $user_id);
+
             $cardknox_card_id     = get_user_meta($user_id, '_cardknox_token', true);
+            error_log('Fallback Cardknox Token from user meta: ' . print_r($cardknox_card_id, true));
         }
 
         // If we couldn't find a Cardknox customer linked to the account, fallback to the order meta data.

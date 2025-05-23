@@ -17,11 +17,6 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
      * @var bool
      */
     public $capture;
-
-    /**
-    *
-    *   Define the variables
-    */
     public $applepay_merchant_identifier;
 	public $applepay_environment;
 	public $applepay_button_style;

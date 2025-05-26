@@ -17,7 +17,6 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
      * @var bool
      */
     public $capture;
-    public $billing_country;
 
     public function __construct()
     {

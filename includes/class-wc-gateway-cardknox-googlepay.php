@@ -580,7 +580,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
     public function cardknox_allow_gpay_method_by_country($available_gateways)
     {
 
-        if(!is_object(WC()->customer) OR !method_exists(WC()->customer,'get_billing_country') ){
+        if ( is_admin() OR  !is_object(WC()->customer) OR !method_exists(WC()->customer, 'get_billing_country') ) {
             return $available_gateways;
         }
 

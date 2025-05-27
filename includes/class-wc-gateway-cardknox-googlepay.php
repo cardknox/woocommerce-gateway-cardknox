@@ -25,7 +25,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         $this->title                = __('Cardknox', 'woocommerce-other-payment-gateway');
         $this->method_description   = __('Cardknox Google Pay', 'woocommerce-other-payment-gateway');
         $this->has_fields           = true;
-        $this->view_transaction_url = 'https://portal.cardknox.com/transactions?referenceNumber=%s';
+        $this->view_transaction_url = 'https://portal2.solapayments.com/transactions?referenceNumber=%s';
         $this->supports             = array(
             'subscriptions',
             'products',

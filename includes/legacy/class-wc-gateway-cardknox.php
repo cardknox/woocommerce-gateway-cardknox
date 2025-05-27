@@ -269,9 +269,6 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 				echo '</div>';
 			?>
 		</fieldset>
-
-
-
 		<?php
 	}
 

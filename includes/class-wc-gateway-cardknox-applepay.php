@@ -16,7 +16,15 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
      *
      * @var bool
      */
+    public $applepay_merchant_identifier;
+    public $applepay_environment;
+    public $applepay_button_style;
+    public $applepay_button_type;
     public $capture;
+    public $authonly_status;
+    public $applepay_applicable_countries;
+    public $applepay_specific_countries;
+    public $wcVersion;
 
     public function __construct()
     {
@@ -26,7 +34,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
         $methodDescription = '<strong class="important-label" style="color: #e22626;">Important: </strong>';
         $methodDescription .= 'Please complete the Apple Pay Domain Registration ';
-        $methodDescription .= '<a target="_blank" href="https://portal.cardknox.com/account-settings/payment-methods">';
+        $methodDescription .= '<a target="_blank" href="https://portal2.solapayments.com/account-settings/payment-methods">';
         $methodDescription .= 'here</a> ';
         $methodDescription .= 'prior to enabling Cardknox Apple Pay.';
 
@@ -35,7 +43,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             'https://www.cardknox.com'
         );
         $this->has_fields           = true;
-        $this->view_transaction_url = 'https://portal.cardknox.com/transactions?referenceNumber=%s';
+        $this->view_transaction_url = 'https://portal2.solapayments.com/transactions?referenceNumber=%s';
         $this->supports             = array(
             'subscriptions',
             'products',

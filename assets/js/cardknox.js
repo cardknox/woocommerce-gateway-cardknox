@@ -443,6 +443,14 @@ jQuery(function ($) {
 });
 
 jQuery(document).ready(function () {
+
+  // Allow only 4 digit like MM/YY not allowed other digit
+  jQuery(document).on('input', '#cardknox-card-expiry', function () {
+    let val = jQuery(this).val().replace(/\D/g, ''); // Remove non-digits
+    val = val.substring(0, 4); // Limit to 4 characters
+    jQuery(this).val(val);
+  });
+
   // Listen for the 'updated_checkout' event triggered by WooCommerce
   jQuery(document.body).on("updated_checkout", function () {
     jQuery("#ap-container").hide();

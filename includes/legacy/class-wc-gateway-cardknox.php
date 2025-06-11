@@ -65,7 +65,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 		$this->method_title         = __( 'Cardknox', 'woocommerce-gateway-cardknox' );
 		$this->method_description   = __( 'Cardknox works by adding credit card fields on the checkout and then sending the details to Cardknox for verification.', 'woocommerce-gateway-cardknox' );
 		$this->has_fields           = true;
-		$this->view_transaction_url = 'https://portal.cardknox.com/transactions?referenceNumber=%s';
+		$this->view_transaction_url = 'https://portal.solapayments.com/transactions?referenceNumber=%s';
 		$this->supports             = array(
 			'subscriptions',
 			'products',
@@ -94,11 +94,10 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 		$this->enabled                = $this->get_option( 'enabled' );
 		$this->capture                = 'yes' === $this->get_option( 'capture', 'yes' );
 		$this->saved_cards            = 'yes' === $this->get_option( 'saved_cards' );
-		$this->transaction_key      =        $this->get_option( 'transaction_key' );
-		$this->token_key        =  $this->get_option( 'token_key' );
-
+		$this->transaction_key        =        $this->get_option( 'transaction_key' );
+		$this->token_key              =  $this->get_option( 'token_key' );
 		$this->logging                = 'yes' === $this->get_option( 'logging' );
-		$this->authonly_status                 = $this->get_option( 'auth_only_order_status' );
+		$this->authonly_status        = $this->get_option( 'auth_only_order_status' );
 		
 		WC_Cardknox_API::set_transaction_key( $this->transaction_key );
 
@@ -228,14 +227,14 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 			<label for="' . esc_attr( $this->id ) . '-card-number">' . esc_html__( 'Card number', 'woocommerce' ) . ' <span class="required">*</span></label>
 
 			<iframe data-ifields-id="card-number" data-ifields-placeholder="Card Number"
-					src="https://cdn.cardknox.com/ifields/2.5.1905.0801/ifield.htm?" + "'. esc_attr($timestamp).'" frameBorder="0" width="100%"
+					src="https://cdn.cardknox.com/ifields/3.0.2503.2101/ifield.htm?" + "'. esc_attr($timestamp).'" frameBorder="0" width="100%"
 					height="71"></iframe>
 			</p>
 			<input data-ifields-id="card-number-token" name="xCardNum" id="cardknox-card-number" type="hidden"/>', 
 			'card-cvc-field' => '<p class="form-row form-row-last">
 			<label for="' . esc_attr( $this->id ) . '-card-cvc">' . esc_html__( 'Card code', 'woocommerce' ) . ' <span class="required">*</span></label>
 			<iframe data-ifields-id="cvv" data-ifields-placeholder="CVV"
-                        src="https://cdn.cardknox.com/ifields/2.5.1905.0801/ifield.htm?" + "'. esc_attr($timestamp).'" frameBorder="0" width="100%"
+                        src="https://cdn.cardknox.com/ifields/3.0.2503.2101/ifield.htm?" + "'. esc_attr($timestamp).'" frameBorder="0" width="100%"
                         height="71" id="cvv-frame"></iframe>
 			</p><input data-ifields-id="cvv-token" name="xCVV" id="cardknox-card-cvc" type="hidden"/>'
 			
@@ -270,9 +269,6 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 				echo '</div>';
 			?>
 		</fieldset>
-
-
-
 		<?php
 	}
 
@@ -285,7 +281,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 	 */
 	public function payment_scripts() {
 
-			wp_enqueue_script( 'cardknox', 'https://cdn.cardknox.com/ifields/2.5.1905.0801/ifields.min.js', '', filemtime(get_stylesheet_directory()), false );
+			wp_enqueue_script( 'cardknox', 'https://cdn.cardknox.com/ifields/3.0.2503.2101/ifields.min.js', '', filemtime(get_stylesheet_directory()), false );
 			wp_enqueue_script( 'woocommerce_cardknox', plugins_url( 'assets/js/cardknox.js', WC_CARDKNOX_MAIN_FILE ), array( 'jquery-payment', 'cardknox' ), WC_CARDKNOX_VERSION, true );
 		$cardknox_params = array(
 			'key'                  => $this->token_key,
@@ -302,19 +298,18 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 	 * @return array()
 	 */
 	protected function generate_payment_request( $order ) {
-		$post_data                = array();
-        $post_data['xCommand']     = $this->capture ? 'cc:sale' : 'cc:authonly';
-		$post_data['xCurrency']    = strtolower( $order->get_order_currency() ? $order->get_order_currency() : get_woocommerce_currency() );
+		$post_data                  = array();
+        $post_data['xCommand']      = $this->capture ? 'cc:sale' : 'cc:authonly';
+		$post_data['xCurrency']     = strtolower( $order->get_order_currency() ? $order->get_order_currency() : get_woocommerce_currency() );
+		$post_data['xAmount']       = $this->get_cardknox_amount( $order->get_total(), $post_data['currency'] );
+        $post_data['xEmail'] 		= $order->billing_email;
+		$post_data['xDescription'] 	= sprintf( __( '%s - Order %s', 'woocommerce-gateway-cardknox' ), wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ), $order->get_order_number() );
+        $post_data['xInvoice'] 		= $order->get_order_number();
+        $post_data['xIP'] 			= $order->customer_ip_address;
 
-        $post_data['xAmount']      = $this->get_cardknox_amount( $order->get_total(), $post_data['currency'] );
-        $post_data['xEmail'] = $order->billing_email;
-		$post_data['xDescription'] = sprintf( __( '%s - Order %s', 'woocommerce-gateway-cardknox' ), wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ), $order->get_order_number() );
-        $post_data['xInvoice'] = $order->get_order_number();
-        $post_data['xIP'] = $order->customer_ip_address;
-
-        $post_data['xCardNum'] = wc_clean($_POST['xCardNum']);
-        $post_data['xCVV'] = wc_clean( $_POST['xCVV'] );
-        $post_data['xExp'] = wc_clean( $_POST['xExp'] );
+        $post_data['xCardNum'] 		= wc_clean($_POST['xCardNum']);
+        $post_data['xCVV'] 			= wc_clean( $_POST['xCVV'] );
+        $post_data['xExp'] 			= wc_clean( $_POST['xExp'] );
 
         $post_data['xBillCompany'] = $order->billing_company;
         $post_data['xBillFirstName'] = $order->billing_first_name;

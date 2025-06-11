@@ -78,11 +78,11 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $this->has_fields           = true;
       
         if (class_exists('WC_Subscriptions_Order')) {
-            $this->view_transaction_url = 'https://portal2.solapayments.com/transactions?disabled=true&expandedRow=%s&referenceNumber=%s';
+            $this->view_transaction_url = 'https://portal.solapayments.com/transactions?disabled=true&expandedRow=%s&referenceNumber=%s';
         }
         else
         {
-            $this->view_transaction_url = 'https://portal2.solapayments.com/transactions?disabled=true&referenceNumber=%s';
+            $this->view_transaction_url = 'https://portal.solapayments.com/transactions?disabled=true&referenceNumber=%s';
         }
 
         $this->supports             = array(
@@ -1015,7 +1015,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                     <li>
                         <?php esc_html_e( 'Go to', 'woocommerce-gateway-cardknox' ); ?> 
                         <strong><?php esc_html_e( 'Settings > Gateway Settings > Payment Methods', 'woocommerce-gateway-cardknox' ); ?></strong>
-                        <a href="<?php echo esc_url( 'https://portal2.solapayments.com/settings/gateway-settings/payment-methods' ); ?>" target="_blank" rel="noopener">
+                        <a href="<?php echo esc_url( 'https://portal.solapayments.com/settings/gateway-settings/payment-methods' ); ?>" target="_blank" rel="noopener">
                             <?php esc_html_e( 'Open Link', 'woocommerce-gateway-cardknox' ); ?>
                         </a>
                     </li>

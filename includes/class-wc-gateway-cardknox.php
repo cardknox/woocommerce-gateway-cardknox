@@ -27,6 +27,7 @@ include_once 'settings-cardknox.php';
 class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 {
 
+    const COMMAND_SAVE = 'cc:save';
     /**
      * Should we capture Credit cards
      *
@@ -75,7 +76,15 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $this->method_title         = __('Cardknox', 'woocommerce-gateway-cardknox');
         $this->method_description   = sprintf(__('Cardknox works by adding credit card fields on the checkout and then sending the details to Cardknox for verification. <a href="%1$s" target="_blank">Sign up</a> for a Cardknox account.', 'woocommerce-gateway-cardknox'), 'https://www.cardknox.com');
         $this->has_fields           = true;
-        $this->view_transaction_url = 'https://portal.cardknox.com/transactions?disabled=true&expandedRow=%s&referenceNumber=%s';
+      
+        if (class_exists('WC_Subscriptions_Order')) {
+            $this->view_transaction_url = 'https://portal.solapayments.com/transactions?disabled=true&expandedRow=%s&referenceNumber=%s';
+        }
+        else
+        {
+            $this->view_transaction_url = 'https://portal.solapayments.com/transactions?disabled=true&referenceNumber=%s';
+        }
+
         $this->supports             = array(
             'subscriptions',
             'products',
@@ -114,7 +123,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $this->enable_3ds              = $this->get_option('enable-3ds');
         $this->threeds_env             = $this->get_option('3ds-env');
         $this->applicable_countries    = $this->get_option('applicable_countries');
-        $this->specific_countries     = $this->get_option('specific_countries');
+        $this->specific_countries      = $this->get_option('specific_countries');
 
 
 
@@ -586,7 +595,23 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                     if (is_wp_error($response)) {
                         $order->add_order_note($response->get_error_message());
                         throw new Exception($response->get_error_message());
-                    } else {
+                    } 
+                    elseif( $response['xResult'] === 'A' ){
+                        if($forceCustomer&&wcs_is_subscription($orderId)){
+                            $postData = array();
+                            $postData['xCommand'] = self::COMMAND_SAVE;
+                            $postData = self::get_order_data($postData,$order);
+                            $postData = self::get_billing_shiping_info($postData,$order);
+                            $postData = self::get_payment_data($postData);
+                            $response = WC_Cardknox_API::request($postData);
+                            $this->save_payment($forceCustomer,$response);
+                            update_post_meta($orderId,'_cardknox_token',$response['xToken']);
+                            update_post_meta($orderId,'_cardknox_masked_card',$response['xMaskedCardNumber']);
+                            update_post_meta($orderId,'_cardknox_cardtype',$response['xCardType']);
+                        }
+                        $order->payment_complete();
+                    }
+                    else {
                         if ($response['xResult'] === 'V' && $paymentName === 'cardknox') {
                             return array(
                                 'result'   => 'success',
@@ -990,7 +1015,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                     <li>
                         <?php esc_html_e( 'Go to', 'woocommerce-gateway-cardknox' ); ?> 
                         <strong><?php esc_html_e( 'Settings > Gateway Settings > Payment Methods', 'woocommerce-gateway-cardknox' ); ?></strong>
-                        <a href="<?php echo esc_url( 'https://portal2.solapayments.com/settings/gateway-settings/payment-methods' ); ?>" target="_blank" rel="noopener">
+                        <a href="<?php echo esc_url( 'https://portal.solapayments.com/settings/gateway-settings/payment-methods' ); ?>" target="_blank" rel="noopener">
                             <?php esc_html_e( 'Open Link', 'woocommerce-gateway-cardknox' ); ?>
                         </a>
                     </li>

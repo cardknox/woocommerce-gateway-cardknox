@@ -18,7 +18,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
      */
 
     public $capture;
-    public $applepay_merchant_identifier;
+    public $applepaymerchantidentifier;
     public $applepay_environment;
     public $applepay_button_style;
     public $applepay_button_type; 
@@ -65,14 +65,12 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
         // Load the settings.
         $this->init_settings();
-
-        $option = get_option('woocommerce_cardknox_settings');
-
+        $option                                 = get_option('woocommerce_cardknox_settings');
         $this->enabled                          = $this->get_option('applepay_enabled');
         $this->apple_quickcheckout              = $this->get_option('applepay_quickcheckout');
         $this->title                            = $this->get_option('applepay_title');
         $this->description                      = __('Pay with your apple card.', 'woocommerce-gateway-cardknox');
-        $this->applepay_merchant_identifier     = $this->get_option('applepay_merchant_identifier');
+        $this->applepaymerchantidentifier       = $this->get_option('applepay_merchant_identifier');
         $this->applepay_environment             = $this->get_option('applepay_environment');
         $this->applepay_button_style            = $this->get_option('applepay_button_style');
         $this->applepay_button_type             = $this->get_option('applepay_button_type');
@@ -190,7 +188,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         $cardknoxApplepaySettings = array(
             'enabled'                 => $this->enabled,
             'title'                   => $this->title,
-            'merchant_identifier'     => $this->applepay_merchant_identifier,
+            'merchant_identifier'     => $this->applepaymerchantidentifier,
             'environment'             => $this->applepay_environment,
             'button_style'            => $this->applepay_button_style,
             'button_type'             => $this->applepay_button_type,

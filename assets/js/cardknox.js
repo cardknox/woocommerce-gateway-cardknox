@@ -447,7 +447,8 @@ jQuery(document).ready(function () {
   // Allow only 4 digit like MM/YY not allowed other digit
   jQuery(document).on('input', '#cardknox-card-expiry', function () {
     let val = jQuery(this).val().replace(/\D/g, ''); // Remove non-digits
-    val = val.substring(0, 4); // Limit to 4 characters
+    //val = val.substring(0, 4); // Limit to 4 characters
+    val = val.length > 2 ? val.substring(0,2) + '/' + val.substring(2,4) : val; // Limit to 4 digits and auto-insert '/' after MM for MM/YY format
     jQuery(this).val(val);
   });
 

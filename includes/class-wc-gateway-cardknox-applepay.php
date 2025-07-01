@@ -17,7 +17,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
      *
      * @var bool
      */
-    public $applepay_merchant_identifier;
+    public $applepaymerchantidentifier;
     public $applepay_environment;
     public $applepay_button_style;
     public $applepay_button_type;
@@ -35,7 +35,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
         $methodDescription = '<strong class="important-label" style="color: #e22626;">Important: </strong>';
         $methodDescription .= 'Please complete the Apple Pay Domain Registration ';
-        $methodDescription .= '<a target="_blank" href="https://portal2.solapayments.com/account-settings/payment-methods">';
+        $methodDescription .= '<a target="_blank" href="https://portal.solapayments.com/account-settings/payment-methods">';
         $methodDescription .= 'here</a> ';
         $methodDescription .= 'prior to enabling Cardknox Apple Pay.';
 
@@ -44,7 +44,8 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             'https://www.cardknox.com'
         );
         $this->has_fields           = true;
-        $this->view_transaction_url = 'https://portal2.solapayments.com/transactions?referenceNumber=%s';
+        $this->view_transaction_url =  'https://portal.solapayments.com/transactions?referenceNumber=%s';
+
         $this->supports             = array(
             'subscriptions',
             'products',
@@ -73,7 +74,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         $this->apple_quickcheckout              = $this->get_option('applepay_quickcheckout');
         $this->title                            = $this->get_option('applepay_title');
         $this->description                      = __('Pay with your apple card.', 'woocommerce-gateway-cardknox');
-        $this->applepay_merchant_identifier     = $this->get_option('applepay_merchant_identifier');
+        $this->applepaymerchantidentifier       = $this->get_option('applepay_merchant_identifier');
         $this->applepay_environment             = $this->get_option('applepay_environment');
         $this->applepay_button_style            = $this->get_option('applepay_button_style');
         $this->applepay_button_type             = $this->get_option('applepay_button_type');
@@ -299,7 +300,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         $cardknoxApplepaySettings = array(
             'enabled'                 => $this->enabled,
             'title'                   => $this->title,
-            'merchant_identifier'     => $this->applepay_merchant_identifier,
+            'merchant_identifier'     => $this->applepaymerchantidentifier,
             'environment'             => $this->applepay_environment,
             'button_style'            => $this->applepay_button_style,
             'button_type'             => $this->applepay_button_type,

@@ -17,7 +17,15 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
      *
      * @var bool
      */
+    public $applepaymerchantidentifier;
+    public $applepay_environment;
+    public $applepay_button_style;
+    public $applepay_button_type;
     public $capture;
+    public $authonly_status;
+    public $applepay_applicable_countries;
+    public $applepay_specific_countries;
+    public $wcVersion;
 
     public function __construct()
     {
@@ -37,6 +45,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         );
         $this->has_fields           = true;
         $this->view_transaction_url =  'https://portal.solapayments.com/transactions?referenceNumber=%s';
+
         $this->supports             = array(
             'subscriptions',
             'products',
@@ -65,7 +74,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         $this->apple_quickcheckout              = $this->get_option('applepay_quickcheckout');
         $this->title                            = $this->get_option('applepay_title');
         $this->description                      = __('Pay with your apple card.', 'woocommerce-gateway-cardknox');
-        $this->applepay_merchant_identifier     = $this->get_option('applepay_merchant_identifier');
+        $this->applepaymerchantidentifier       = $this->get_option('applepay_merchant_identifier');
         $this->applepay_environment             = $this->get_option('applepay_environment');
         $this->applepay_button_style            = $this->get_option('applepay_button_style');
         $this->applepay_button_type             = $this->get_option('applepay_button_type');
@@ -291,7 +300,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         $cardknoxApplepaySettings = array(
             'enabled'                 => $this->enabled,
             'title'                   => $this->title,
-            'merchant_identifier'     => $this->applepay_merchant_identifier,
+            'merchant_identifier'     => $this->applepaymerchantidentifier,
             'environment'             => $this->applepay_environment,
             'button_style'            => $this->applepay_button_style,
             'button_type'             => $this->applepay_button_type,
@@ -691,8 +700,9 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
      */
     public function cardknox_allow_payment_method_by_country($available_gateways)
     {
-
-        if (is_admin()) return $available_gateways;
+        if ( is_admin() ||  !is_object(WC()->customer) || !method_exists(WC()->customer, 'get_billing_country') ) {
+            return $available_gateways;
+        }
 
         $applicable_countries = $this->applepay_applicable_countries;
         $specific_countries    = $this->applepay_specific_countries;
@@ -733,7 +743,4 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             add_settings_error('woocommerce_cardknox_applepay', $code, $message, 'error');
         }
     }
-
-    
-
 }

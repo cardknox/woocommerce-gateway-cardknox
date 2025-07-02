@@ -1084,7 +1084,9 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
     public function cardknox_allow_payment_method_by_country($available_gateways)
     {
 
-        if (is_admin()) return $available_gateways;
+        if ( is_admin() ||  !is_object(WC()->customer) || !method_exists(WC()->customer, 'get_billing_country') ) {
+            return $available_gateways;
+        }
 
         $applicable_countries = $this->applicable_countries;
         $specific_countries    = $this->specific_countries;

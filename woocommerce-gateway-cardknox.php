@@ -1017,6 +1017,21 @@ if (!class_exists('WC_Cardknox')) :
             die();
         }
     }
+
+    /*
+       Declare compatibility with WooCommerce HPOS
+    */
+    add_action('before_woocommerce_init', function() {
+        if (class_exists(\Automattic\WooCommerce\Utilities\FeaturesUtil::class)) {
+            \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
+                'custom_order_tables',
+                __FILE__,
+                true
+            );
+        }
+    });
+
+
     $GLOBALS['wc_cardknox'] = WC_Cardknox::get_instance();
 
 endif;

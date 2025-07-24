@@ -16,12 +16,12 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
      *
      * @var bool
      */
-
-    public $capture;
+  
     public $applepaymerchantidentifier;
     public $applepay_environment;
     public $applepay_button_style;
-    public $applepay_button_type; 
+    public $applepay_button_type;
+    public $capture;
     public $authonly_status;
     public $applepay_applicable_countries;
     public $applepay_specific_countries;
@@ -44,7 +44,8 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             'https://www.cardknox.com'
         );
         $this->has_fields           = true;
-        $this->view_transaction_url = 'https://portal.solapayments.com/transactions?referenceNumber=%s';
+        $this->view_transaction_url =  'https://portal.solapayments.com/transactions?referenceNumber=%s';
+
         $this->supports             = array(
             'subscriptions',
             'products',
@@ -698,8 +699,9 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
      */
     public function cardknox_allow_payment_method_by_country($available_gateways)
     {
-
-        if (is_admin()) return $available_gateways;
+        if ( is_admin() ||  !is_object(WC()->customer) || !method_exists(WC()->customer, 'get_billing_country') ) {
+            return $available_gateways;
+        }
 
         $applicable_countries = $this->applepay_applicable_countries;
         $specific_countries    = $this->applepay_specific_countries;

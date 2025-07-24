@@ -45,7 +45,6 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             'https://www.cardknox.com'
         );
         $this->has_fields           = true;
-
         $this->view_transaction_url = 'https://portal.solapayments.com/transactions?referenceNumber=%s';
 
         $this->supports             = array(

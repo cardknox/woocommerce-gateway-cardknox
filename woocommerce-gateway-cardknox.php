@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name: WooCommerce Cardknox Gateway
-Description: Accept credit card payments on your store using the Cardknox gateway.
-Author: Cardknox Development Inc.
-Author URI: https://www.cardknox.com/
+Description: Accept payments via credit card, Apple Pay, Google Pay, and manage transactions within WordPress.
+Author: Sola Payments.
+Author URI: https://solapayments.com/
 Version: 1.2.73
 Requires at least: 4.4
 Tested up to: 6.7.1
@@ -12,6 +12,7 @@ WC tested up to: 8.4.0
 WooCommerce Subscriptions tested up to: 6.7.0
 Text Domain: woocommerce-gateway-cardknox
 Domain Path: /languages
+Requires Plugins: woocommerce
 
 Copyright © 2018 Cardknox Development Inc. All rights reserved.
 

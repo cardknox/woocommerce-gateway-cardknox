@@ -1019,7 +1019,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                             <?php esc_html_e( 'Open Link', 'woocommerce-gateway-cardknox' ); ?>
                         </a>
                     </li>
-                    <li><?php esc_html_e( 'Please use this option:', 'woocommerce-gateway-cardknox' ); ?> <strong><?php esc_html_e( 'Register for Apple Pay with Cardknox Certificate', 'woocommerce-gateway-cardknox' ); ?></strong></li>
+                    <li><?php esc_html_e( 'Please use this option:', 'woocommerce-gateway-cardknox' ); ?> <strong><?php esc_html_e( 'Register for Apple Pay with Sola Certificate', 'woocommerce-gateway-cardknox' ); ?></strong></li>
                     <li><?php esc_html_e( 'Click on', 'woocommerce-gateway-cardknox' ); ?> <strong><?php esc_html_e( 'Register', 'woocommerce-gateway-cardknox' ); ?></strong> <?php esc_html_e( 'button', 'woocommerce-gateway-cardknox' ); ?></li>
                     <li><?php esc_html_e( 'Download the Apple developer association certificate file', 'woocommerce-gateway-cardknox' ); ?></li>
                     <li><?php printf(esc_html__( 'Upload Applepay Certificate by click on below %s button', 'woocommerce-gateway-cardknox' ),'<strong>' . esc_html__( '"Choose Certificate"', 'woocommerce-gateway-cardknox' ) . '</strong>');?></li>

@@ -85,7 +85,7 @@ $wc_cardknox_settings = array(
         'title'       => __('Saved Cards', 'woocommerce-gateway-cardknox'),
         'label'       => __('Enable Payment via Saved Cards', 'woocommerce-gateway-cardknox'),
         'type'        => 'checkbox',
-        'description' => __('If enabled, users will be able to pay with a saved card during checkout. Card details are saved on Cardknox servers, not on your store.', 'woocommerce-gateway-cardknox'),
+        'description' => __('If enabled, users will be able to pay with a saved card during checkout. Card details are saved on Sola servers, not on your store.', 'woocommerce-gateway-cardknox'),
         'default'     => 'no',
         'desc_tip'    => true,
     ),

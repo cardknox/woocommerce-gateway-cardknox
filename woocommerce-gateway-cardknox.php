@@ -54,7 +54,7 @@ if (version_compare(get_bloginfo('version'), '6.5', '<')) {
     add_action('admin_notices', function () {
         echo '<div class="error"><p>';
         esc_html_e(
-            'WooCommerce Cardknox Gateway requires WordPress version 6.5 or higher. Please update WordPress to use this plugin.',
+            'WooCommerce Sola Gateway requires WordPress version 6.5 or higher. Please update WordPress to use this plugin.',
             'woocommerce-gateway-cardknox'
         );
         echo '</p></div>';
@@ -839,7 +839,7 @@ if (!class_exists('WC_Cardknox')) :
 
             // Set payment method and order status
             $order->set_payment_method('cardknox-googlepay');
-            $order->set_payment_method_title('Cardknox Google Pay');
+            $order->set_payment_method_title('Sola Google Pay');
             $order->calculate_totals();
             $order->update_status('pending', __('Order pending payment', 'woocommerce'));
 

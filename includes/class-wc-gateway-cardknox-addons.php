@@ -244,7 +244,7 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
         $response = $this->process_subscription_payment($renewal_order, $amount_to_charge);
 
         if (is_wp_error($response)) {
-            $renewal_order->update_status('failed', sprintf(__('Cardknox Transaction Failed (%s)', 'woocommerce-gateway-cardknox'), $response->get_error_message()));
+            $renewal_order->update_status('failed', sprintf(__('Sola Transaction Failed (%s)', 'woocommerce-gateway-cardknox'), $response->get_error_message()));
         }
     }
 

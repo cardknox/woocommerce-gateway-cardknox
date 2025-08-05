@@ -292,15 +292,15 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
             'post_meta' => array(
                 '_cardknox_token' => array(
                     'value' => get_post_meta(($this->wc_pre_30 ? $subscription->id : $subscription->get_id()), '_cardknox_token', true),
-                    'label' => 'Cardknox Token',
+                    'label' => 'Sola Token',
                 ),
                 '_cardknox_MaskedCardNumber' => array(
                     'value' => get_post_meta(($this->wc_pre_30 ? $subscription->id : $subscription->get_id()), '_cardknox_masked_card', true),
-                    'label' => 'Cardknox Masked Card',
+                    'label' => 'Sola Masked Card',
                 ),
                 '_cardknox_cardtype' => array(
                     'value' => get_post_meta(($this->wc_pre_30 ? $subscription->id : $subscription->get_id()), '_cardknox_cardtype', true),
-                    'label' => 'Cardknox Card Type',
+                    'label' => 'Sola Card Type',
                 ),
             ),
         );
@@ -366,7 +366,7 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
             error_log('Card ID not found on subscription. Trying user meta. User ID: ' . $user_id);
 
             $cardknox_card_id     = get_user_meta($user_id, '_cardknox_token', true);
-            error_log('Fallback Cardknox Token from user meta: ' . print_r($cardknox_card_id, true));
+            error_log('Fallback Sola Token from user meta: ' . print_r($cardknox_card_id, true));
         }
 
         // If we couldn't find a Cardknox customer linked to the account, fallback to the order meta data.

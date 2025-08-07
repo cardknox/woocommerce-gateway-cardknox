@@ -246,35 +246,6 @@ const CardknoxPaymentForm = (props) => {
 
     return (
         <div className="wc-cardknox-payment-form">
-            {settings.savedCards && settings.savedCards.length > 0 && (
-                <div className="wc-cardknox-saved-cards">
-                    {settings.savedCards.map((card) => (
-                        <div className="wc-cardknox-saved-card-option" key={card.token_id}>
-                            <label>
-                                <input
-                                    type="radio"
-                                    value={card.token_id}
-                                    checked={selectedToken === card.token_id}
-                                    onChange={() => handleTokenChange(card.token_id)}
-                                />
-                                {`${card.card_type} ending in ${card.last4} (${card.exp_month}/${card.exp_year})`}
-                            </label>
-                        </div>
-                    ))}
-                    <div className="wc-cardknox-saved-card-option">
-                        <label>
-                            <input
-                                type="radio"
-                                value="new"
-                                checked={selectedToken === 'new'}
-                                onChange={() => handleTokenChange('new')}
-                            />
-                            {__('Use a new card', 'woocommerce-gateway-cardknox')}
-                        </label>
-                    </div>
-                </div>
-            )}
-
             {selectedToken === 'new' && (
                 <>
                     <CardknoxIFields

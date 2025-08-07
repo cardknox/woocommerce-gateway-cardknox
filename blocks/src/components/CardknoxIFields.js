@@ -69,15 +69,15 @@ const CardknoxIFields = ({ errors, onExpiryChange, ValidationInputError, cardDat
             const defaultStyle = {
                 outline: 'none',
                 border: '1px solid #c3c3c3',
-                'border-radius': '4px',
+                borderRadius: '4px',
                 padding: '0.6180469716em',
                 width: '95%',
-                height: '40px !important',
-                'background-color': 'transparent',
-                'font-weight': 'inherit',
-                'box-shadow': 'none',
-                'font-size': '16px',
-                'font-family': '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                height: '35px',
+                backgroundColor: 'transparent',
+                fontWeight: 'inherit',
+                boxShadow: 'none',
+                fontSize: '16px',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
             };
             const defaultStyleCvv = {
                 outline: 'none',

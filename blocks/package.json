@@ -1,0 +1,22 @@
+{
+  "name": "wc-cardknox-blocks",
+  "version": "1.0.0",
+  "description": "Cardknox payment gateway blocks for WooCommerce",
+  "main": "build/index.js",
+  "scripts": {
+    "dev": "wp-scripts build --watch",
+    "build": "wp-scripts build",
+    "start": "wp-scripts start"
+  },
+  "keywords": [
+    "wordpress",
+    "woocommerce",
+    "cardknox",
+    "payment"
+  ],
+  "author": "Cardknox",
+  "license": "GPL-3.0",
+  "devDependencies": {
+    "@wordpress/scripts": "^26.19.0"
+  }
+}

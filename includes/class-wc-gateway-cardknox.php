@@ -500,6 +500,31 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
     }
     public function get_payment_data($postData)
     {
+        // Check for block editor payment data
+        if (isset($_POST['cardknox_card_token']) && isset($_POST['cardknox_cvv_token'])) {
+            // For iFields tokens, use the proper parameter names
+            $card_token = wc_clean($_POST['cardknox_card_token']);
+            $cvv_token = wc_clean($_POST['cardknox_cvv_token']);
+            
+            // Debug logging to see token format
+            error_log('Block Editor Card Token: ' . $card_token);
+            error_log('Block Editor CVV Token: ' . $cvv_token);
+            error_log('Block Editor Card Token Length: ' . strlen($card_token));
+            
+            $postData['xCardNum'] = $card_token;
+            $postData['xCVV'] = $cvv_token;
+            
+            // Format expiration date properly - use 2 digits for year instead of 4
+            $month = wc_clean($_POST['cardknox_exp_month']);
+            $year = wc_clean($_POST['cardknox_exp_year']);
+            $year_short = substr($year, -2); // Get last 2 digits of year
+            $postData['xExp'] = $month . $year_short;
+            
+            // Don't call validate_payment_data for block editor as tokens are already validated
+            return $postData;
+        }
+        
+        // Original code for classic checkout
         if (isset($_POST['wc-cardknox-payment-token']) && 'new' !== $_POST['wc-cardknox-payment-token']) {
             $token_id = wc_clean($_POST['wc-cardknox-payment-token']);
             $token = WC_Payment_Tokens::get($token_id);
@@ -507,8 +532,16 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         } elseif (isset($_POST['xToken'])) {
             //token came in (recurring charge)
         } else {
-            $postData['xCardNum'] = wc_clean($_POST['xCardNum']);
-            $postData['xCVV'] = wc_clean($_POST['xCVV']);
+            $card_num = wc_clean($_POST['xCardNum']);
+            $cvv = wc_clean($_POST['xCVV']);
+            
+            // Debug logging to see classic checkout token format
+            error_log('Classic Checkout Card Token: ' . $card_num);
+            error_log('Classic Checkout CVV Token: ' . $cvv);
+            error_log('Classic Checkout Card Token Length: ' . strlen($card_num));
+            
+            $postData['xCardNum'] = $card_num;
+            $postData['xCVV'] = $cvv;
             $postData['xExp'] = str_replace(' ', '', wc_clean($_POST['xExp']));
         }
 
@@ -521,6 +554,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         if (isset($postData['xToken'])) {
             return true;
         } else {
+            // Check if we have card data in any format (classic checkout or block editor)
             if ($this->is_unset_or_empty($postData['xCardNum'])) {
                 throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: card number", 400);
             }
@@ -702,7 +736,9 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
     public function save_payment($forceCustomer, $response)
     {
         $my_force_customer  = apply_filters('wc_cardknox_force_customer_creation', $forceCustomer, get_current_user_id());
-        $maybe_saved_card = isset($_POST['wc-cardknox-new-payment-method']) && !empty($_POST['wc-cardknox-new-payment-method']);
+        // Check both classic checkout and block editor save card fields
+        $maybe_saved_card = (isset($_POST['wc-cardknox-new-payment-method']) && !empty($_POST['wc-cardknox-new-payment-method'])) ||
+                           (isset($_POST['cardknox_save_card']) && $_POST['cardknox_save_card'] === 'yes');
         // This is true if the user wants to store the card to their account.
         if ((get_current_user_id() && $this->saved_cards && $maybe_saved_card) || $my_force_customer) {
             try {

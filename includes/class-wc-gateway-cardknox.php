@@ -154,7 +154,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $timestamp  = filemtime(get_stylesheet_directory());
         $fields = array();
         $cvc_field = '<p class="form-row form-row-last">
-			<label for="' . esc_attr($this->id) . '-card-cvc">' . esc_html__('Card Code', 'woocommerce') . ' <span class="required">*</span></label>
+			<label style="margin:0px;" for="' . esc_attr($this->id) . '-card-cvc">' . esc_html__('Card Code', 'woocommerce') . ' <span class="required">*</span></label>
 			<iframe data-ifields-id="cvv" data-ifields-placeholder="CVV"
                         src="https://cdn.cardknox.com/ifields/3.0.2503.2101/ifield.htm?" + "' . esc_attr($timestamp) . '" frameBorder="0" width="100%"
                         height="55" id="cvv-frame"></iframe>

@@ -181,55 +181,36 @@ if (!class_exists('WC_Cardknox')) :
                 return;
             }
         
+            // Only handle assets specific to Blocks checkout here; the Blocks integration
+            // class is responsible for registering/enqueuing the JS handle.
             $script_path = '/blocks/build/index.js';
-            $script_url = WC_CARDKNOX_PLUGIN_URL . $script_path;
-            $script_asset_path = WC_CARDKNOX_PLUGIN_PATH . '/blocks/build/index.asset.php';
-            
-            // Check if the build file exists
             if (!file_exists(WC_CARDKNOX_PLUGIN_PATH . $script_path)) {
                 return;
             }
             
-            $script_asset = file_exists($script_asset_path)
-                ? require($script_asset_path)
-                : array(
-                    'dependencies' => array(
-                        'wp-element',
-                        'wp-i18n',
-                        'wc-blocks-registry',
-                        'wc-settings',
-                    ),
-                    'version' => WC_CARDKNOX_VERSION
-                );
-        
-            wp_register_script(
-                'wc-cardknox-blocks',
-                $script_url,
-                $script_asset['dependencies'],
-                $script_asset['version'],
-                true
-            );
-        
-            // Register and enqueue styles
+            // Register styles (enqueue only when Blocks checkout is active)
             wp_register_style(
                 'wc-cardknox-blocks-style',
                 WC_CARDKNOX_PLUGIN_URL . '/blocks/src/style.css',
                 array(),
-                WC_CARDKNOX_VERSION . '.' . time() // Add timestamp to force cache refresh
+                WC_CARDKNOX_VERSION . '.' . time()
             );
-            wp_enqueue_style('wc-cardknox-blocks-style');
+            if ( $this->is_blocks_checkout_active() ) {
+                wp_enqueue_style('wc-cardknox-blocks-style');
+            }
         
             // Load iFields SDK
-            wp_register_script(
-                'cardknox-ifields',
-                'https://cdn.cardknox.com/ifields/3.0.2503.2101/ifields.min.js',
-                array(),
-                '3.0.2503.2101',
-                false
-            );
-            // Ensure we enqueue the shared SDK once
-            if (! wp_script_is('cardknox-ifields', 'enqueued')) {
-                wp_enqueue_script('cardknox-ifields');
+            if ( $this->is_blocks_checkout_active() ) {
+                wp_register_script(
+                    'cardknox-ifields',
+                    'https://cdn.cardknox.com/ifields/3.0.2503.2101/ifields.min.js',
+                    array(),
+                    '3.0.2503.2101',
+                    false
+                );
+                if (! wp_script_is('cardknox-ifields', 'enqueued')) {
+                    wp_enqueue_script('cardknox-ifields');
+                }
             }
         
             // Pass data to the block scripts
@@ -245,14 +226,28 @@ if (!class_exists('WC_Cardknox')) :
          * Enqueue block styles on checkout pages
          */
         public function enqueue_block_styles() {
-            if (is_checkout() && !is_admin()) {
+            if ( ! is_admin() && $this->is_blocks_checkout_active() ) {
                 wp_enqueue_style(
                     'wc-cardknox-blocks-style',
                     WC_CARDKNOX_PLUGIN_URL . '/blocks/src/style.css',
                     array(),
-                    WC_CARDKNOX_VERSION . '.' . time() // Add timestamp to force cache refresh
+                    WC_CARDKNOX_VERSION . '.' . time()
                 );
             }
+        }
+
+        /**
+         * Detect whether the site is using the Checkout Block on the checkout page.
+         */
+        private function is_blocks_checkout_active() {
+            if ( ! function_exists('has_block') ) {
+                return false;
+            }
+            $checkout_page_id = wc_get_page_id('checkout');
+            if ( $checkout_page_id && $checkout_page_id !== -1 ) {
+                return has_block('woocommerce/checkout', $checkout_page_id);
+            }
+            return false;
         }
         
         /*

@@ -98,10 +98,10 @@ iframe[data-ifields-id="cvv"] {
     width: 100%;
 }
 
-.cardknox-error-container .wc-block-components-validation-error,
+/* .cardknox-error-container .wc-block-components-validation-error,
 .cardknox-row  .wc-block-components-validation-error{
     display: none;
-}
+} */
 /* Error messages after ifields */
 [data-ifields-id="card-number-error"],
 [data-ifields-id="cvv-error"] {

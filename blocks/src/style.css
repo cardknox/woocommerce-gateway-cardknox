@@ -21,8 +21,8 @@
     width: 100%;
     max-width: 100%;
     margin-bottom: 5px;
-    background-color: #fff !important;
-    border:none !important;
+    background-color: #fff;
+    /* no outer border; iField draws its own */
 }
 
 .wc-cardknox-ifields label {
@@ -69,20 +69,24 @@
     min-width: 150px;
 }
 
-/* Ensure proper iframe styling */
+/* Ensure proper iframe styling; borders are inside iField */
 iframe[data-ifields-id="card-number"],
 iframe[data-ifields-id="cvv"] {
-    background-color: #fff !important;
-    height: 100% !important;
-    width: 100% !important;
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
+    background-color: #fff;
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: 0; /* the iField content draws its own border via setIfieldStyle */
 }
 
-.cardknox-iframe-container {
-    position: relative !important;
-    overflow: hidden !important;
+.cardknox-iframe-container { position: relative !important; overflow: hidden !important; }
+
+/* Ensure iField container has enough height and no visible border */
+.cardknox-iframe-container,
+.cardknox-iframe-container.cvv-container {
+    min-height: 48px;
 }
 
 /* Fix error message display */
@@ -94,6 +98,10 @@ iframe[data-ifields-id="cvv"] {
     width: 100%;
 }
 
+.cardknox-error-container .wc-block-components-validation-error,
+.cardknox-row  .wc-block-components-validation-error{
+    display: none;
+}
 /* Error messages after ifields */
 [data-ifields-id="card-number-error"],
 [data-ifields-id="cvv-error"] {

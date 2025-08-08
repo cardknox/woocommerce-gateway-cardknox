@@ -107,6 +107,10 @@ final class WC_Gateway_Cardknox_Blocks_Support extends AbstractPaymentMethodType
                 // Try to get from API settings
                 $ifields_key = $gateway->get_option( 'public_key' );
             }
+            if ( empty( $ifields_key ) ) {
+                // Fallback to main publishable key used by classic checkout
+                $ifields_key = $gateway->get_option( 'token_key' );
+            }
         }
 
         return array(

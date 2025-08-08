@@ -227,6 +227,10 @@ if (!class_exists('WC_Cardknox')) :
                 '3.0.2503.2101',
                 false
             );
+            // Ensure we enqueue the shared SDK once
+            if (! wp_script_is('cardknox-ifields', 'enqueued')) {
+                wp_enqueue_script('cardknox-ifields');
+            }
         
             // Pass data to the block scripts
             wp_localize_script('wc-cardknox-blocks', 'wc_cardknox_blocks_params', array(

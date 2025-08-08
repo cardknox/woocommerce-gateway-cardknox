@@ -431,8 +431,25 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         );
 
         $suffix = defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? '' : '.min';
-        wp_enqueue_script('cardknox', 'https://cdn.cardknox.com/ifields/3.0.2503.2101/ifields.min.js', '', '1.0.0', false);
-        wp_enqueue_script('woocommerce_cardknox', plugins_url('assets/js/cardknox' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE), array('jquery-payment'), filemtime(plugin_dir_path(dirname(__FILE__)) . 'assets/js/cardknox' . $suffix . '.js'), true);
+
+        $blocks_scripts_registered = wp_script_is('wc-cardknox-blocks', 'registered') || wp_script_is('wc-cardknox-blocks', 'enqueued');
+        $ifields_already_registered = wp_script_is('cardknox-ifields', 'registered') || wp_script_is('cardknox-ifields', 'enqueued') || wp_script_is('cardknox', 'enqueued');
+
+        // Avoid loading iFields twice (classic + blocks) which causes global redeclaration errors
+        if (! $ifields_already_registered) {
+            wp_enqueue_script('cardknox', 'https://cdn.cardknox.com/ifields/3.0.2503.2101/ifields.min.js', '', '1.0.0', false);
+        }
+
+        // Do not enqueue the classic checkout controller when using the Blocks checkout
+        if (! $blocks_scripts_registered) {
+            wp_enqueue_script(
+                'woocommerce_cardknox',
+                plugins_url('assets/js/cardknox' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE),
+                array('jquery-payment'),
+                filemtime(plugin_dir_path(dirname(__FILE__)) . 'assets/js/cardknox' . $suffix . '.js'),
+                true
+            );
+        }
         
 
         $token_key = $this->token_key;

@@ -26,7 +26,7 @@ const getSettings = () => {
 const CardknoxPaymentForm = (props) => {
     // Handle both possible prop structures
     const eventRegistration = props.eventRegistration || props.events;
-    const emitResponse = props.emitResponse || props.emitResponse;
+    const emitResponse = props.emitResponse;
     const components = props.components || {};
     
     const settings = getSettings();
@@ -61,15 +61,26 @@ const CardknoxPaymentForm = (props) => {
 
     useEffect(() => {
         // Initialize iFields when component mounts
-        if (window.setAccount && settings.iFieldsKey) {
-            initializeIFields({
-                iFieldsKey: settings.iFieldsKey,
-                softwareName: settings.softwareName || 'WooCommerce',
-                softwareVersion: settings.softwareVersion || '1.0.0',
-                onUpdate: handleIFieldUpdate,
-                onSubmit: handleIFieldSubmit,
-            });
-        }
+        const attemptInit = () => {
+            const hasKey = !!settings.iFieldsKey;
+            const hasSDK = !!window.setAccount && !!window.setIfieldStyle && !!window.addIfieldCallback;
+            // eslint-disable-next-line no-console
+            console.log('[Cardknox][CardknoxPaymentForm] attempt init', { hasKey, hasSDK });
+            if (hasKey && hasSDK) {
+                initializeIFields({
+                    iFieldsKey: settings.iFieldsKey,
+                    softwareName: settings.softwareName || 'WooCommerce',
+                    softwareVersion: settings.softwareVersion || '1.0.0',
+                    onUpdate: handleIFieldUpdate,
+                    onSubmit: handleIFieldSubmit,
+                });
+            }
+        };
+
+        attemptInit();
+        // As the SDK may be enqueued separately, re-attempt after a short delay
+        const t = window.setTimeout(attemptInit, 300);
+        return () => window.clearTimeout(t);
     }, [settings.iFieldsKey]);
 
     useEffect(() => {
@@ -79,59 +90,64 @@ const CardknoxPaymentForm = (props) => {
 
         const { onPaymentProcessing, onPaymentSetup } = eventRegistration;
         
-        // Use the appropriate event based on what's available
-        const paymentEvent = onPaymentProcessing || onPaymentSetup;
+        // Prefer onPaymentSetup to avoid deprecation warnings; fallback to onPaymentProcessing
+        const paymentEvent = onPaymentSetup || onPaymentProcessing;
         
         if (!paymentEvent) {
             return;
         }
 
         const unsubscribe = paymentEvent(async () => {
-            if (selectedToken !== 'new') {
-                // Using saved card
-                return {
-                    type: emitResponse.responseTypes.SUCCESS,
-                    meta: {
-                        paymentMethodData: {
-                            wc_token: selectedToken,
-                        },
-                    },
-                };
-            }
-
-            // Validate form data
-            const validationErrors = validateCardData(cardData);
-            
-            // Additional validation for expiry date format like classic checkout
-            if (cardData.expiryMonth && cardData.expiryYear) {
-                const currentDate = new Date();
-                const currentYear = currentDate.getFullYear();
-                const currentMonth = currentDate.getMonth() + 1;
-                const expMonth = parseInt(cardData.expiryMonth, 10);
-                const expYear = parseInt(cardData.expiryYear, 10);
-
-                if (expYear < currentYear || (expYear === currentYear && expMonth < currentMonth)) {
-                    validationErrors.expiry = __('Expiration must be in the future', 'woocommerce-gateway-cardknox');
-                }
-            } else {
-                validationErrors.expiry = __('Expiry date is required', 'woocommerce-gateway-cardknox');
-            }
-            
-            if (Object.keys(validationErrors).length > 0) {
-                setErrors(validationErrors);
-                return {
-                    type: emitResponse.responseTypes.ERROR,
-                    message: __('Please check your card details.', 'woocommerce-gateway-cardknox'),
-                };
-            }
-
+            // eslint-disable-next-line no-console
+            console.log('[Cardknox][CardknoxPaymentForm] payment event fired');
             try {
+                if (selectedToken !== 'new') {
+                    return {
+                        type: emitResponse.responseTypes.SUCCESS,
+                        meta: { paymentMethodData: { wc_token: selectedToken } },
+                    };
+                }
+
+                // Validate expiry fields (card number and cvv validation is handled by getTokens/iFields)
+                const validationErrors = validateCardData(cardData);
+                if (cardData.expiryMonth && cardData.expiryYear) {
+                    const currentDate = new Date();
+                    const currentYear = currentDate.getFullYear();
+                    const currentMonth = currentDate.getMonth() + 1;
+                    const expMonth = parseInt(cardData.expiryMonth, 10);
+                    const expYear = parseInt(cardData.expiryYear, 10);
+                    if (expYear < currentYear || (expYear === currentYear && expMonth < currentMonth)) {
+                        validationErrors.expiry = __('Expiration must be in the future', 'woocommerce-gateway-cardknox');
+                    }
+                } else {
+                    validationErrors.expiry = __('Expiry date is required', 'woocommerce-gateway-cardknox');
+                }
+
+                // Capture any inline errors already present from iFields
+                const cardNumberInlineError = (document.querySelector('[data-ifields-id="card-number-error"]')?.textContent || '').trim();
+                const cvvInlineError = (document.querySelector('[data-ifields-id="cvv-error"]')?.textContent || '').trim();
+
+                if (Object.keys(validationErrors).length > 0 || cardNumberInlineError || cvvInlineError || errors.cardNumber || errors.cvv) {
+                    // eslint-disable-next-line no-console
+                    console.warn('[Cardknox][CardknoxPaymentForm] inline validation failed', { validationErrors, cardNumberInlineError, cvvInlineError, errors });
+                    setErrors(validationErrors);
+                    return {
+                        type: emitResponse.responseTypes.ERROR,
+                        message: __('Please check your card details.', 'woocommerce-gateway-cardknox'),
+                    };
+                }
+
                 // Clear any existing errors before getting tokens
                 setErrors({});
-                
-                // Get tokens from iFields
-                const tokens = await getTokens();
-                
+
+                // If tokens already exist, reuse; otherwise fetch
+                const existingCardToken = document.querySelector('[data-ifields-id="card-number-token"]')?.value;
+                const existingCvvToken = document.querySelector('[data-ifields-id="cvv-token"]')?.value;
+                const tokens = existingCardToken && existingCvvToken
+                    ? { cardNumberToken: existingCardToken, cvvToken: existingCvvToken }
+                    : await getTokens();
+                // eslint-disable-next-line no-console
+                console.log('[Cardknox][CardknoxPaymentForm] tokens result', tokens);
                 if (!tokens.cardNumberToken || !tokens.cvvToken) {
                     return {
                         type: emitResponse.responseTypes.ERROR,
@@ -153,9 +169,11 @@ const CardknoxPaymentForm = (props) => {
                     },
                 };
             } catch (error) {
+                // eslint-disable-next-line no-console
+                console.error('[Cardknox][CardknoxPaymentForm] payment event error', error);
                 return {
                     type: emitResponse.responseTypes.ERROR,
-                    message: error.message || __('Payment processing failed.', 'woocommerce-gateway-cardknox'),
+                    message: error?.message || __('Payment processing failed.', 'woocommerce-gateway-cardknox'),
                 };
             }
         });
@@ -175,50 +193,51 @@ const CardknoxPaymentForm = (props) => {
     ]);
 
     const handleIFieldUpdate = useCallback((data) => {
-        // Update validation state based on iField data - only show errors for invalid input, not empty fields
-        if (data.event === 'input') {
-            const newErrors = { ...errors };
-            
-            // Check if tokens exist first
-            const cardNumberToken = document.querySelector('[data-ifields-id="card-number-token"]')?.value;
-            const cvvToken = document.querySelector('[data-ifields-id="cvv-token"]')?.value;
-            
-            if (data.lastActiveField === 'card-number') {
-                if (cardNumberToken || data.cardNumberIsValid) {
-                    // Valid card number or token exists
-                    delete newErrors.cardNumber;
-                } else if (data.cardNumberLength > 0 && !data.cardNumberIsValid) {
-                    // Invalid card number (has content but invalid)
-                    newErrors.cardNumber = __('Invalid card number', 'woocommerce-gateway-cardknox');
-                } else {
-                    // Empty field - remove any existing errors but don't add new ones
-                    delete newErrors.cardNumber;
-                }
+        // Update validation state based on iField data
+        // eslint-disable-next-line no-console
+        console.log('[Cardknox][CardknoxPaymentForm] onUpdate', data);
+        const newErrors = { ...errors };
+
+        // Check if tokens exist first
+        const cardNumberToken = document.querySelector('[data-ifields-id="card-number-token"]')?.value;
+        const cvvToken = document.querySelector('[data-ifields-id="cvv-token"]')?.value;
+
+        if (data.lastActiveField === 'card-number' || data.cardNumberLength !== undefined) {
+            if (cardNumberToken || data.cardNumberIsValid) {
+                delete newErrors.cardNumber;
+            } else if (data.cardNumberLength > 0 && !data.cardNumberIsValid) {
+                newErrors.cardNumber = __('Invalid card number', 'woocommerce-gateway-cardknox');
+            } else {
+                delete newErrors.cardNumber;
             }
-            
-            if (data.lastActiveField === 'cvv') {
-                if (cvvToken || data.cvvIsValid) {
-                    // Valid CVV or token exists
-                    delete newErrors.cvv;
-                } else if (data.cvvLength > 0 && !data.cvvIsValid) {
-                    // Invalid CVV (has content but invalid)
-                    newErrors.cvv = __('Invalid CVV', 'woocommerce-gateway-cardknox');
-                } else {
-                    // Empty field - remove any existing errors but don't add new ones
-                    delete newErrors.cvv;
-                }
-            }
-            
-            setErrors(newErrors);
-            // Consider valid if tokens exist OR if iField validation passes
-            const cardNumberValid = cardNumberToken || data.cardNumberIsValid;
-            const cvvValid = cvvToken || data.cvvIsValid;
-            setIsValid(cardNumberValid && cvvValid);
         }
+
+        if (data.lastActiveField === 'cvv' || data.cvvLength !== undefined) {
+            if (cvvToken || data.cvvIsValid) {
+                delete newErrors.cvv;
+            } else if (data.cvvLength > 0 && !data.cvvIsValid) {
+                newErrors.cvv = __('Invalid CVV', 'woocommerce-gateway-cardknox');
+            } else {
+                delete newErrors.cvv;
+            }
+        }
+
+        setErrors(newErrors);
+        const cardNumberValid = !!(cardNumberToken || data.cardNumberIsValid);
+        const cvvValid = !!(cvvToken || data.cvvIsValid);
+        setIsValid(cardNumberValid && cvvValid);
+
+        // Containers must not draw borders now; iField content handles it. Clear any container borders.
+        const cardContainer = document.querySelector('.cardknox-iframe-container');
+        const cvvContainer = document.querySelector('.cvv-container');
+        if (cardContainer) cardContainer.style.border = '0';
+        if (cvvContainer) cvvContainer.style.border = '0';
     }, [errors]);
 
     const handleIFieldSubmit = useCallback(() => {
         // Handle enter key press in iFields
+        // eslint-disable-next-line no-console
+        console.log('[Cardknox][CardknoxPaymentForm] onSubmit ENTER');
         const placeOrderButton = document.querySelector('.wc-block-components-checkout-place-order-button');
         if (placeOrderButton) {
             placeOrderButton.click();

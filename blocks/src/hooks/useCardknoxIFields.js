@@ -15,7 +15,12 @@ const useCardknoxIFields = () => {
         onUpdate,
         onSubmit,
     }) => {
-        if (isInitializedRef.current || !window.setAccount) {
+        if (isInitializedRef.current) {
+            console.log('[Cardknox][useCardknoxIFields] initializeIFields: already initialized');
+            return;
+        }
+        if (!window.setAccount) {
+            console.warn('[Cardknox][useCardknoxIFields] initializeIFields: SDK not ready');
             return;
         }
 
@@ -24,18 +29,17 @@ const useCardknoxIFields = () => {
         submitCallbackRef.current = onSubmit;
 
         // Initialize iFields
+        // eslint-disable-next-line no-console
+        console.log('[Cardknox][useCardknoxIFields] setAccount()', { hasKey: !!iFieldsKey, softwareName, softwareVersion });
         window.setAccount(iFieldsKey, softwareName, softwareVersion);
 
-        // Set up styles to match classic checkout
-        // Get the card logos image path
-        
         const defaultStyle = {
             outline: 'none',
             border: '1px solid #c3c3c3',
             'border-radius': '4px',
             padding: '0.6180469716em',
             width: '93%',
-            height: '40px',
+            height: '30px',
             'background-color': 'transparent',
             'font-weight': 'inherit',
             'box-shadow': 'none',
@@ -48,8 +52,8 @@ const useCardknoxIFields = () => {
             border: '1px solid #c3c3c3',
             'border-radius': '4px',
             padding: '0.6180469716em',
-            width: '95%',
-            height: '30px',
+            width: '86%',
+            height: '28px',
             'background-color': 'transparent',
             'font-weight': 'inherit',
             'box-shadow': 'none',
@@ -57,95 +61,160 @@ const useCardknoxIFields = () => {
             'font-family': '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         };
 
-        const validStyle = {
-            ...defaultStyle,
-            border: '1px solid green',
-        };
-
-        const invalidStyle = {
-            ...defaultStyle,
-            border: '1px solid red',
-        };
-
-        const validStyleCvv = {
-            ...defaultStyleCvv,
-            border: '1px solid green',
-        };
-
-        const invalidStyleCvv = {
-            ...defaultStyleCvv,
-            border: '1px solid red',
-        };
+        // State styles applied inside the iField (not on container)
+        const validStyle = { ...defaultStyle, border: '1px solid #46b450', 'background-color': '#f0f9f0' };
+        const invalidStyle = { ...defaultStyle, border: '1px solid #d63638', 'background-color': '#fef5f5' };
+        const validStyleCvv = { ...defaultStyleCvv, border: '1px solid #46b450', 'background-color': '#f0f9f0' };
+        const invalidStyleCvv = { ...defaultStyleCvv, border: '1px solid #d63638', 'background-color': '#fef5f5' };
 
         window.setIfieldStyle('card-number', defaultStyle);
         window.setIfieldStyle('cvv', defaultStyleCvv);
+        // eslint-disable-next-line no-console
+        console.log('[Cardknox][useCardknoxIFields] default styles applied');
 
-        // Auto-format card number
         window.enableAutoFormatting();
+        // eslint-disable-next-line no-console
+        console.log('[Cardknox][useCardknoxIFields] enableAutoFormatting');
 
-        // Auto-submit when Enter is pressed
-        window.enableAutoSubmit(function() {
-            if (submitCallbackRef.current) {
-                submitCallbackRef.current();
-            }
-        });
+        // Avoid Invalid formId by not using global auto-submit on Blocks; enable ENTER per field
+        if (window.enableEnterKey) {
+            window.enableEnterKey('card-number');
+            window.enableEnterKey('cvv');
+            // eslint-disable-next-line no-console
+            console.log('[Cardknox][useCardknoxIFields] enableEnterKey for card-number & cvv');
+        }
 
-        // Add validation callback
-        window.addIfieldKeyPressCallback(function(data) {
-            if (updateCallbackRef.current) {
-                updateCallbackRef.current(data);
-            }
+        // Prefer modern callbacks like in assets cardknox.js
+        if (window.addIfieldCallback) {
+            window.addIfieldCallback('input', function(data) {
+                // eslint-disable-next-line no-console
+                console.log('[Cardknox][useCardknoxIFields] input callback fired', data);
+                if (updateCallbackRef.current) {
+                    updateCallbackRef.current(data);
+                }
 
-            // Update styles based on validation - only show errors for invalid input, not empty fields
-            const cardNumberErrorElement = document.querySelector('[data-ifields-id="card-number-error"]');
-            const cvvErrorElement = document.querySelector('[data-ifields-id="cvv-error"]');
-            
-            // Apply styles directly to the parent container for better visibility
-            const cardNumberContainer = document.querySelector('.cardknox-iframe-container');
-            const cvvContainer = document.querySelector('.cvv-container');
-            
-            // Check if tokens already exist
-            const cardNumberToken = document.querySelector('[data-ifields-id="card-number-token"]')?.value;
-            const cvvToken = document.querySelector('[data-ifields-id="cvv-token"]')?.value;
-            
-            // Card number validation
-            if (cardNumberToken || data.cardNumberIsValid) {
-                // Valid card number or token exists
-                window.setIfieldStyle('card-number', validStyle);
-                if (cardNumberErrorElement) cardNumberErrorElement.textContent = '';
-                if (cardNumberContainer) cardNumberContainer.style.border = '1px solid green';
-            } else if (data.cardNumberLength > 0 && !data.cardNumberIsValid) {
-                // Invalid card number (has content but invalid)
-                window.setIfieldStyle('card-number', invalidStyle);
-                if (cardNumberErrorElement) cardNumberErrorElement.textContent = 'Invalid card number';
-                if (cardNumberContainer) cardNumberContainer.style.border = '1px solid red';
-            } else {
-                // Empty field or neutral state - no error message
-                window.setIfieldStyle('card-number', defaultStyle);
-                if (cardNumberErrorElement) cardNumberErrorElement.textContent = '';
-                if (cardNumberContainer) cardNumberContainer.style.border = '1px solid #c3c3c3';
-            }
+                if (data.ifieldValueChanged) {
+                    const cardNumberErrorElement = document.querySelector('[data-ifields-id="card-number-error"]');
+                    const cvvErrorElement = document.querySelector('[data-ifields-id="cvv-error"]');
+                    const cardLen = typeof data.cardNumberFormattedLength === 'number' ? data.cardNumberFormattedLength : (typeof data.cardNumberLength === 'number' ? data.cardNumberLength : 0);
+                    const cvvLen = typeof data.cvvLength === 'number' ? data.cvvLength : 0;
 
-            // CVV validation
-            if (cvvToken || data.cvvIsValid) {
-                // Valid CVV or token exists
-                window.setIfieldStyle('cvv', validStyleCvv);
-                if (cvvErrorElement) cvvErrorElement.textContent = '';
-                if (cvvContainer) cvvContainer.style.border = '1px solid green';
-            } else if (data.cvvLength > 0 && !data.cvvIsValid) {
-                // Invalid CVV (has content but invalid)
-                window.setIfieldStyle('cvv', invalidStyleCvv);
-                if (cvvErrorElement) cvvErrorElement.textContent = 'Invalid CVV';
-                if (cvvContainer) cvvContainer.style.border = '1px solid red';
-            } else {
-                // Empty field or neutral state - no error message
-                window.setIfieldStyle('cvv', defaultStyleCvv);
-                if (cvvErrorElement) cvvErrorElement.textContent = '';
-                if (cvvContainer) cvvContainer.style.border = '1px solid #c3c3c3';
-            }
-        });
+                    // card number
+                    window.setIfieldStyle(
+                        'card-number',
+                        cardLen <= 0
+                            ? defaultStyle
+                            : data.cardNumberIsValid
+                            ? validStyle
+                            : invalidStyle
+                    );
+
+                    // card number error text
+                    if (cardNumberErrorElement) {
+                        if (cardLen <= 0) {
+                            cardNumberErrorElement.textContent = 'Card Number is required';
+                        } else if (!data.cardNumberIsValid) {
+                            cardNumberErrorElement.textContent = 'Invalid card number';
+                        } else {
+                            cardNumberErrorElement.textContent = '';
+                        }
+                    }
+
+                    // cvv depending on what changed
+                    if (data.lastIfieldChanged === 'cvv') {
+                        window.setIfieldStyle(
+                            'cvv',
+                            data.issuer === 'unknown' || cvvLen <= 0
+                                ? defaultStyleCvv
+                                : data.cvvIsValid
+                                ? validStyleCvv
+                                : invalidStyleCvv
+                        );
+
+                        if (cvvErrorElement) {
+                            if (cvvLen <= 0) {
+                                cvvErrorElement.textContent = 'CVV is required';
+                            } else if (!data.cvvIsValid) {
+                                cvvErrorElement.textContent = 'Invalid CVV';
+                            } else {
+                                cvvErrorElement.textContent = '';
+                            }
+                        }
+                    } else if (data.lastIfieldChanged === 'card-number') {
+                        if (data.issuer === 'unknown' || cvvLen <= 0) {
+                            window.setIfieldStyle('cvv', defaultStyleCvv);
+                        } else if (data.issuer === 'amex') {
+                            window.setIfieldStyle('cvv', cvvLen === 4 ? validStyleCvv : invalidStyleCvv);
+                        } else {
+                            window.setIfieldStyle('cvv', cvvLen === 3 ? validStyleCvv : invalidStyleCvv);
+                        }
+
+                        if (cvvErrorElement) {
+                            if (cvvLen <= 0) {
+                                cvvErrorElement.textContent = 'CVV is required';
+                            } else if (!data.cvvIsValid) {
+                                cvvErrorElement.textContent = 'Invalid CVV';
+                            } else {
+                                cvvErrorElement.textContent = '';
+                            }
+                        }
+                    }
+                }
+            });
+
+            window.addIfieldCallback('issuerupdated', function(data) {
+                // eslint-disable-next-line no-console
+                console.log('[Cardknox][useCardknoxIFields] issuerupdated', data);
+                window.setIfieldStyle(
+                    'cvv',
+                    data.issuer === 'unknown' || data.cvvLength <= 0
+                        ? defaultStyleCvv
+                        : data.cvvIsValid
+                        ? validStyleCvv
+                        : invalidStyleCvv
+                );
+            });
+        } else if (window.addIfieldKeyPressCallback) {
+            // Fallback: basic behavior when only keypress callback exists
+            window.addIfieldKeyPressCallback(function(data) {
+                // eslint-disable-next-line no-console
+                console.log('[Cardknox][useCardknoxIFields] keypress callback', data);
+                if (updateCallbackRef.current) {
+                    updateCallbackRef.current(data);
+                }
+
+                const cardNumberToken = document.querySelector('[data-ifields-id="card-number-token"]')?.value;
+                const cvvToken = document.querySelector('[data-ifields-id="cvv-token"]')?.value;
+                const cardNumberErrorElement = document.querySelector('[data-ifields-id="card-number-error"]');
+                const cvvErrorElement = document.querySelector('[data-ifields-id="cvv-error"]');
+
+                if (cardNumberToken || data.cardNumberIsValid) {
+                    window.setIfieldStyle('card-number', validStyle);
+                    if (cardNumberErrorElement) cardNumberErrorElement.textContent = '';
+                } else if (data.cardNumberLength > 0) {
+                    window.setIfieldStyle('card-number', invalidStyle);
+                    if (cardNumberErrorElement) cardNumberErrorElement.textContent = 'Invalid card number';
+                } else {
+                    window.setIfieldStyle('card-number', defaultStyle);
+                    if (cardNumberErrorElement) cardNumberErrorElement.textContent = 'Card Number is required';
+                }
+
+                if (cvvToken || data.cvvIsValid) {
+                    window.setIfieldStyle('cvv', validStyleCvv);
+                    if (cvvErrorElement) cvvErrorElement.textContent = '';
+                } else if (data.cvvLength > 0) {
+                    window.setIfieldStyle('cvv', invalidStyleCvv);
+                    if (cvvErrorElement) cvvErrorElement.textContent = 'Invalid CVV';
+                } else {
+                    window.setIfieldStyle('cvv', defaultStyleCvv);
+                    if (cvvErrorElement) cvvErrorElement.textContent = 'CVV is required';
+                }
+            });
+        }
 
         isInitializedRef.current = true;
+        // eslint-disable-next-line no-console
+        console.log('[Cardknox][useCardknoxIFields] initializeIFields complete');
     }, []);
 
     const getTokens = useCallback(() => {
@@ -183,16 +252,13 @@ const useCardknoxIFields = () => {
                     // If no tokens were generated, it means the fields are empty
                     if (!cardNumberToken) {
                         if (cardNumberErrorElement) cardNumberErrorElement.textContent = 'Card Number is required';
-                        const cardNumberContainer = document.querySelector('.cardknox-iframe-container');
-                        if (cardNumberContainer) cardNumberContainer.style.border = '1px solid red';
-                        window.setIfieldStyle('card-number', { border: '1px solid red' });
+                        // Apply invalid style to the inner iField (local style object; avoid outer-scope refs)
+                        window.setIfieldStyle('card-number', { border: '1px solid #d63638' });
                     }
                     
                     if (!cvvToken) {
                         if (cvvErrorElement) cvvErrorElement.textContent = 'CVV is required';
-                        const cvvContainer = document.querySelector('.cvv-container');
-                        if (cvvContainer) cvvContainer.style.border = '1px solid red';
-                        window.setIfieldStyle('cvv', { border: '1px solid red' });
+                        window.setIfieldStyle('cvv', { border: '1px solid #d63638' });
                     }
                     
                     if (!cardNumberToken || !cvvToken) {
@@ -206,8 +272,16 @@ const useCardknoxIFields = () => {
                     });
                 },
                 function(error) {
-                    // Error callback - this means validation failed or fields are invalid
-                    reject(new Error(error || 'Failed to get tokens'));
+                    // Error callback - ensure user sees errors and we pass a safe message back
+                    const cardNumberErrorElement = document.querySelector('[data-ifields-id="card-number-error"]');
+                    const cvvErrorElement = document.querySelector('[data-ifields-id="cvv-error"]');
+                    if (cardNumberErrorElement && !cardNumberErrorElement.textContent) {
+                        cardNumberErrorElement.textContent = 'Invalid card number';
+                    }
+                    if (cvvErrorElement && !cvvErrorElement.textContent) {
+                        cvvErrorElement.textContent = 'Invalid CVV';
+                    }
+                    reject(new Error(typeof error === 'string' ? error : 'Failed to get tokens'));
                 },
                 15000 // 15 second timeout
             );

@@ -67,12 +67,16 @@ const useCardknoxIFields = () => {
         const validStyleCvv = { ...defaultStyleCvv, border: '1px solid #46b450', 'background-color': '#f0f9f0' };
         const invalidStyleCvv = { ...defaultStyleCvv, border: '1px solid #d63638', 'background-color': '#fef5f5' };
 
-        window.setIfieldStyle('card-number', defaultStyle);
-        window.setIfieldStyle('cvv', defaultStyleCvv);
+        if (window.setIfieldStyle) {
+            window.setIfieldStyle('card-number', defaultStyle);
+            window.setIfieldStyle('cvv', defaultStyleCvv);
+        }
         // eslint-disable-next-line no-console
         console.log('[Cardknox][useCardknoxIFields] default styles applied');
 
-        window.enableAutoFormatting();
+        if (window.enableAutoFormatting) {
+            window.enableAutoFormatting();
+        }
         // eslint-disable-next-line no-console
         console.log('[Cardknox][useCardknoxIFields] enableAutoFormatting');
 
@@ -85,7 +89,7 @@ const useCardknoxIFields = () => {
         }
 
         // Prefer modern callbacks like in assets cardknox.js
-        if (window.addIfieldCallback) {
+        if (window.addIfieldCallback && window.setIfieldStyle) {
             window.addIfieldCallback('input', function(data) {
                 // eslint-disable-next-line no-console
                 console.log('[Cardknox][useCardknoxIFields] input callback fired', data);
@@ -174,7 +178,7 @@ const useCardknoxIFields = () => {
                         : invalidStyleCvv
                 );
             });
-        } else if (window.addIfieldKeyPressCallback) {
+        } else if (window.addIfieldKeyPressCallback && window.setIfieldStyle) {
             // Fallback: basic behavior when only keypress callback exists
             window.addIfieldKeyPressCallback(function(data) {
                 // eslint-disable-next-line no-console

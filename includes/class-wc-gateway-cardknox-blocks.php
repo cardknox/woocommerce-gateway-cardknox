@@ -59,10 +59,18 @@ final class WC_Gateway_Cardknox_Blocks_Support extends AbstractPaymentMethodType
                 'version' => WC_CARDKNOX_VERSION
             );
 
+        // Ensure the iFields SDK is loaded before our script to avoid race conditions
+        $deps = isset($script_asset['dependencies']) && is_array($script_asset['dependencies'])
+            ? $script_asset['dependencies']
+            : array();
+        if (!in_array('cardknox-ifields', $deps, true)) {
+            $deps[] = 'cardknox-ifields';
+        }
+
         wp_register_script(
             'wc-cardknox-blocks',
             $script_url,
-            $script_asset['dependencies'],
+            $deps,
             $script_asset['version'],
             true
         );

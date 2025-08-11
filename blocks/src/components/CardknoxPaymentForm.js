@@ -341,18 +341,6 @@ return (
     <div className="wc-cardknox-payment-form">
         {Array.isArray(settings.savedCards) && settings.savedCards.length > 0 && (
             <div className="wc-cardknox-saved-cards">
-                <div className="wc-cardknox-saved-card-option">
-                    <label>
-                        <input
-                            type="radio"
-                            name="wc-cardknox-payment-token"
-                            value="new"
-                            checked={selectedToken === 'new'}
-                            onChange={() => handleTokenChange('new')}
-                        />{' '}
-                        {__('Use a new card', 'woocommerce-gateway-cardknox')}
-                    </label>
-                </div>
                 {settings.savedCards.map((t) => (
                     <div className="wc-cardknox-saved-card-option" key={t.token_id}>
                         <label>
@@ -367,6 +355,18 @@ return (
                         </label>
                     </div>
                 ))}
+                <div className="wc-cardknox-saved-card-option">
+                    <label>
+                        <input
+                            type="radio"
+                            name="wc-cardknox-payment-token"
+                            value="new"
+                            checked={selectedToken === 'new'}
+                            onChange={() => handleTokenChange('new')}
+                        />{' '}
+                        {__('Use a new card', 'woocommerce-gateway-cardknox')}
+                    </label>
+                </div>
             </div>
         )}
         {selectedToken === 'new' && (
@@ -377,7 +377,7 @@ return (
                     ValidationInputError={ValidationInputError}
                     cardData={cardData}
                 />
-                
+
                 {settings.showSaveOption && (
                     <SavePaymentCheckbox
                         checked={saveCard}

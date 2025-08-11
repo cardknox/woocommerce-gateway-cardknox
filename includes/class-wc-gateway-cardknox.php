@@ -527,8 +527,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             $card_token = $req['cardknox_card_token'];
             $cvv_token  = $req['cardknox_cvv_token'];
 
-            // Debug: log lengths only, not raw tokens
-            $this->log('Blocks payment data detected. card_token_len=' . strlen((string) $card_token) . ' cvv_token_len=' . strlen((string) $cvv_token));
+            // tokens present from Blocks Store API
 
             $postData['xCardNum'] = $card_token;
             $postData['xCVV']     = $cvv_token;
@@ -564,8 +563,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             $card_num = isset($req['xCardNum']) ? $req['xCardNum'] : '';
             $cvv      = isset($req['xCVV']) ? $req['xCVV'] : '';
             
-            // Debug logging to see classic checkout token format
-            $this->log('Classic payment data detected. card_token_len=' . strlen((string) $card_num) . ' cvv_token_len=' . strlen((string) $cvv));
+            // tokens present from classic checkout
             
             $postData['xCardNum'] = $card_num;
             $postData['xCVV'] = $cvv;
@@ -651,7 +649,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                 $response = WC_Cardknox_API::request($this->generate_payment_request($order));
                 $paymentName = get_post_meta($orderId, '_payment_method', true);
 
-                $this->log('Debug: enable_3ds=' . (string) $this->enable_3ds . ' xResult=' . (isset($response['xResult']) ? $response['xResult'] : '')); 
+                // 3DS branch
                 if ($this->enable_3ds === 'yes') {
 
                     if (is_wp_error($response)) {
@@ -662,14 +660,14 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                         $this->log("Info: set_transaction_id");
                         $order->set_transaction_id($response['xRefNum']);
 
-                        $this->log("Info: save_payment (3DS)");
+                        $this->log("Info: save_payment");
                         $this->save_payment($forceCustomer, $response);
 
                         if ($forceCustomer) {
                             $this->save_payment_for_subscription($orderId, $response);
                         }
 
-                        $this->log("Info: process_response (3DS)");
+                        $this->log("Info: process_response");
                         $this->process_response($response, $order);
                     } else {
                         if ($response['xResult'] === 'V' && $paymentName === 'cardknox') {
@@ -691,10 +689,10 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                         throw new Exception("The transaction was declined please try again");
                     }
 
-                    $this->log("Info: set_transaction_id (non-3DS)");
+                    $this->log("Info: set_transaction_id");
                     $order->set_transaction_id($response['xRefNum']);
 
-                    $this->log("Info: save_payment (non-3DS)");
+                    $this->log("Info: save_payment");
                     $this->save_payment($forceCustomer, $response);
 
                     //the below get sets when a subscription charge gets fired
@@ -702,7 +700,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                         $this->save_payment_for_subscription($orderId, $response);
                     }
                     // Process valid response.
-                    $this->log("Info: process_response (non-3DS)");
+                    $this->log("Info: process_response");
                     $this->process_response($response, $order);
                 }
             } else {
@@ -770,14 +768,8 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             $this->is_flag_enabled_in_store_payment_data('wc-cardknox-new-payment-method') ||
             $this->is_flag_enabled_in_store_payment_data('cardknox_save_card')
         );
-        $this->log('Saving card? ' . ($maybe_saved_card ? 'yes' : 'no') . ' forceCustomer=' . ($my_force_customer ? 'yes' : 'no')
-            . ' flags={'
-            . 'wc-cardknox-new-payment-method:' . (isset($req['wc-cardknox-new-payment-method']) ? var_export($req['wc-cardknox-new-payment-method'], true) : 'unset') . ', '
-            . 'cardknox_save_card:' . (isset($req['cardknox_save_card']) ? var_export($req['cardknox_save_card'], true) : 'unset') . ', '
-            . 'store_wc-cardknox-new-payment-method:' . ($this->is_flag_enabled_in_store_payment_data('wc-cardknox-new-payment-method') ? 'true' : 'false') . ', '
-            . 'store_cardknox_save_card:' . ($this->is_flag_enabled_in_store_payment_data('cardknox_save_card') ? 'true' : 'false')
-            . ' }'
-        );
+        // Log whether a save will be attempted
+        $this->log('Save payment requested=' . ($maybe_saved_card ? 'yes' : 'no'));
         // This is true if the user wants to store the card to their account.
         if ((get_current_user_id() && $this->saved_cards && $maybe_saved_card) || $my_force_customer) {
             try {
@@ -807,12 +799,12 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                         }
                     }
 
-                    $this->log('Attempting explicit cc:save request (fallback)');
+                $this->log('Attempting cc:save (fallback)');
                     $saveResp = WC_Cardknox_API::request($saveReq);
                     if (is_wp_error($saveResp)) {
                         $this->log('cc:save failed: ' . $saveResp->get_error_message());
                     } elseif (!empty($saveResp['xToken'])) {
-                        $this->log('cc:save succeeded, token received');
+                        $this->log('cc:save succeeded');
                         $response = $saveResp;
                     } else {
                         $this->log('cc:save returned without token');

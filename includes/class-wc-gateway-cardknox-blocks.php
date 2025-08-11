@@ -148,15 +148,59 @@ final class WC_Gateway_Cardknox_Blocks_Support extends AbstractPaymentMethodType
         $saved_cards = array();
 
         foreach ( $tokens as $token ) {
+            $masked = $token->get_meta( 'cardknox_masked', true );
+            if ( empty( $masked ) ) {
+                $masked = $this->derive_masked_from_brand_and_last4( $token->get_card_type(), $token->get_last4() );
+                if ( $masked ) {
+                    $token->update_meta_data( 'cardknox_masked', $masked );
+                    $token->save();
+                }
+            }
             $saved_cards[] = array(
                 'token_id' => $token->get_id(),
                 'card_type' => $token->get_card_type(),
                 'last4' => $token->get_last4(),
                 'exp_month' => $token->get_expiry_month(),
                 'exp_year' => $token->get_expiry_year(),
+                'masked' => $masked,
             );
         }
 
         return $saved_cards;
+    }
+
+    /**
+     * Derive Cardknox-style masked number like 4xxxxxxxxxxx1111 from brand + last4.
+     */
+    private function derive_masked_from_brand_and_last4( $brand, $last4 ) {
+        $brand = strtolower( trim( (string) $brand ) );
+        $last4 = preg_replace( '/\D+/', '', (string) $last4 );
+        if ( strlen( $last4 ) !== 4 ) {
+            return '';
+        }
+        $len_by_brand = array(
+            'amex' => 15,
+            'american express' => 15,
+            'visa' => 16,
+            'mastercard' => 16,
+            'discover' => 16,
+            'diners' => 16,
+            'diners club' => 16,
+            'jcb' => 16,
+        );
+        $first_digit = array(
+            'amex' => '3',
+            'american express' => '3',
+            'visa' => '4',
+            'mastercard' => '5',
+            'discover' => '6',
+            'diners' => '3',
+            'diners club' => '3',
+            'jcb' => '3',
+        );
+        $length = isset( $len_by_brand[ $brand ] ) ? $len_by_brand[ $brand ] : 16;
+        $first  = isset( $first_digit[ $brand ] ) ? $first_digit[ $brand ] : '4';
+        $num_xs = max( 0, $length - 1 - 4 );
+        return $first . str_repeat( 'x', $num_xs ) . $last4;
     }
 }

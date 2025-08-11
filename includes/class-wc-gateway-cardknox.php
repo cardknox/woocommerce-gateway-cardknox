@@ -141,6 +141,8 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         add_action('woocommerce_admin_order_data_after_order_details', array($this, 'cardknox_order_meta_general'));
         add_filter('woocommerce_gateway_icon', array($this, 'cardknox_gateway_icon'), 10, 2);
         add_filter('woocommerce_available_payment_gateways', array($this, 'cardknox_allow_payment_method_by_country'));
+        // Improve saved token display to include Cardknox masked number when available
+        add_filter('woocommerce_payment_token_get_display_name', array($this, 'filter_token_display_name'), 10, 2);
     }
 
 
@@ -1194,11 +1196,91 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                 $token->set_expiry_year('20' . substr($myExp, 2, 2));
                 $token->set_user_id(get_current_user_id());
                 $saved_id = $token->save();
+                // Persist masked number for display purposes (classic + blocks)
+                if (!empty($response['xMaskedCardNumber'])) {
+                    $token->update_meta_data('cardknox_masked', (string) $response['xMaskedCardNumber']);
+                    $token->save();
+                }
                 $this->log('add_card saved WC token id=' . $saved_id . ' type=' . $token->get_card_type() . ' last4=' . $token->get_last4() . ' exp=' . $token->get_expiry_month() . '/' . $token->get_expiry_year());
                 do_action('woocommerce_cardknox_add_card', get_current_user_id(), $saved_id);
             }
         }
         return "";
+    }
+
+    /**
+     * Customize saved token display to use Cardknox masked number when available
+     *
+     * @param string               $display
+     * @param WC_Payment_Token_CC  $token
+     * @return string
+     */
+    public function filter_token_display_name($display, $token)
+    {
+        if (! $token instanceof WC_Payment_Token_CC) {
+            return $display;
+        }
+        if ($token->get_gateway_id() !== 'cardknox') {
+            return $display;
+        }
+        $masked = $token->get_meta('cardknox_masked', true);
+        if (!$masked) {
+            // Derive a Cardknox-like masked number from brand + last4 and persist for future
+            $masked = $this->derive_masked_from_brand_and_last4($token->get_card_type(), $token->get_last4());
+            if ($masked) {
+                $token->update_meta_data('cardknox_masked', $masked);
+                $token->save();
+            }
+        }
+
+        if ($masked) {
+            $brand = strtoupper($token->get_card_type());
+            $exp   = sprintf('%02d/%02d', (int) $token->get_expiry_month(), (int) substr((string) $token->get_expiry_year(), -2));
+            // Match requested format: VISA •••• 4xxxxxxxxxxx1111 (MM/YY)
+            return sprintf('%s •••• %s (%s)', $brand, $masked, $exp);
+        }
+        return $display;
+    }
+
+    /**
+     * Derive Cardknox-style masked number like 4xxxxxxxxxxx1111 from brand + last4.
+     */
+    private function derive_masked_from_brand_and_last4($brand, $last4)
+    {
+        $brand = strtolower(trim((string) $brand));
+        $last4 = preg_replace('/\D+/', '', (string) $last4);
+        if (strlen($last4) !== 4) {
+            return '';
+        }
+
+        // Card length by brand (approx.)
+        $lenByBrand = array(
+            'amex' => 15,
+            'american express' => 15,
+            'visa' => 16,
+            'mastercard' => 16,
+            'discover' => 16,
+            'diners' => 16,
+            'diners club' => 16,
+            'jcb' => 16,
+        );
+        $firstDigitByBrand = array(
+            'amex' => '3',
+            'american express' => '3',
+            'visa' => '4',
+            'mastercard' => '5',
+            'discover' => '6',
+            'diners' => '3',
+            'diners club' => '3',
+            'jcb' => '3',
+        );
+
+        $length = isset($lenByBrand[$brand]) ? $lenByBrand[$brand] : 16;
+        $first  = isset($firstDigitByBrand[$brand]) ? $firstDigitByBrand[$brand] : '4';
+
+        // 1 leading digit + N x's + 4 last digits must equal length
+        $numXs = max(0, $length - 1 - 4);
+        return $first . str_repeat('x', $numXs) . $last4;
     }
 
     private function normalize_card_type($type)

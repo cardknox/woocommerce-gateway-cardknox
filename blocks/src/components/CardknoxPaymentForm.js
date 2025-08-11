@@ -405,7 +405,7 @@ return (
                                 checked={selectedToken === String(t.token_id)}
                                 onChange={() => handleTokenChange(String(t.token_id))}
                             />{' '}
-                            {`${(t.card_type || '').toUpperCase()} •••• ${t.last4} ${t.exp_month && t.exp_year ? `(${t.exp_month}/${String(t.exp_year).slice(-2)})` : ''}`}
+                            {`${(t.card_type || '').toUpperCase()} •••• ${t.masked || t.last4} ${t.exp_month && t.exp_year ? `(${t.exp_month}/${String(t.exp_year).slice(-2)})` : ''}`}
                         </label>
                     </div>
                 ))}

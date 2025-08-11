@@ -187,3 +187,7 @@ iframe[data-ifields-id="cvv"] {
 #radio-control-wc-payment-method-options-cardknox__content .wc-block-components-checkbox.wc-block-components-payment-methods__save-card-info{
     display: none !important;
 }
+.cardknox-error-container [data-ifields-id="card-number-error"] ~ .wc-block-components-validation-error,
+[data-ifields-id="cvv-error"] ~ .wc-block-components-validation-error {
+    display: none;
+}

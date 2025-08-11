@@ -372,7 +372,7 @@ const handleExpiryChange = (field, value) => {
     setErrors(newErrors);
 };
 
-const handleTokenChange = (token) => {
+    const handleTokenChange = (token) => {
     setSelectedToken(token);
     if (token !== 'new') {
         clearFields();
@@ -381,6 +381,36 @@ const handleTokenChange = (token) => {
 
 return (
     <div className="wc-cardknox-payment-form">
+        {Array.isArray(settings.savedCards) && settings.savedCards.length > 0 && (
+            <div className="wc-cardknox-saved-cards">
+                <div className="wc-cardknox-saved-card-option">
+                    <label>
+                        <input
+                            type="radio"
+                            name="wc-cardknox-payment-token"
+                            value="new"
+                            checked={selectedToken === 'new'}
+                            onChange={() => handleTokenChange('new')}
+                        />{' '}
+                        {__('Use a new card', 'woocommerce-gateway-cardknox')}
+                    </label>
+                </div>
+                {settings.savedCards.map((t) => (
+                    <div className="wc-cardknox-saved-card-option" key={t.token_id}>
+                        <label>
+                            <input
+                                type="radio"
+                                name="wc-cardknox-payment-token"
+                                value={String(t.token_id)}
+                                checked={selectedToken === String(t.token_id)}
+                                onChange={() => handleTokenChange(String(t.token_id))}
+                            />{' '}
+                            {`${(t.card_type || '').toUpperCase()} •••• ${t.last4} ${t.exp_month && t.exp_year ? `(${t.exp_month}/${String(t.exp_year).slice(-2)})` : ''}`}
+                        </label>
+                    </div>
+                ))}
+            </div>
+        )}
         {selectedToken === 'new' && (
             <>
                 <CardknoxIFields

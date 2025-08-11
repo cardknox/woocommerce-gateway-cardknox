@@ -51,6 +51,7 @@ const CardknoxPaymentMethod = {
     supports: {
         features: settings.supports ?? ['products'],
         showSaveOption: settings.showSaveOption ?? false,
+        showSavedCards: Array.isArray(settings.savedCards) && settings.savedCards.length > 0,
     },
     placeOrderButtonLabel: __('Place Order', 'woocommerce-gateway-cardknox'),
 };

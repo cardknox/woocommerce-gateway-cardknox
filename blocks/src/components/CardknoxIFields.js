@@ -33,8 +33,7 @@ const CardknoxIFields = ({ errors, onExpiryChange, ValidationInputError, cardDat
         const cvvContainer = document.querySelector('.cvv-container');
         if (cardContainer) cardContainer.style.border = '0';
         if (cvvContainer) cvvContainer.style.border = '0';
-        // eslint-disable-next-line no-console
-        console.log('[Cardknox][CardknoxIFields] containers prepared');
+        
     }, []);
 
     return (

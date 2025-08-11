@@ -16,11 +16,11 @@ const useCardknoxIFields = () => {
         onSubmit,
     }) => {
         if (isInitializedRef.current) {
-            console.log('[Cardknox][useCardknoxIFields] initializeIFields: already initialized');
+            
             return;
         }
         if (!window.setAccount) {
-            console.warn('[Cardknox][useCardknoxIFields] initializeIFields: SDK not ready');
+            
             return;
         }
 
@@ -30,7 +30,7 @@ const useCardknoxIFields = () => {
 
         // Initialize iFields
         // eslint-disable-next-line no-console
-        console.log('[Cardknox][useCardknoxIFields] setAccount()', { hasKey: !!iFieldsKey, softwareName, softwareVersion });
+        
         window.setAccount(iFieldsKey, softwareName, softwareVersion);
 
         const defaultStyle = {
@@ -72,27 +72,27 @@ const useCardknoxIFields = () => {
             window.setIfieldStyle('cvv', defaultStyleCvv);
         }
         // eslint-disable-next-line no-console
-        console.log('[Cardknox][useCardknoxIFields] default styles applied');
+        
 
         if (window.enableAutoFormatting) {
             window.enableAutoFormatting();
         }
         // eslint-disable-next-line no-console
-        console.log('[Cardknox][useCardknoxIFields] enableAutoFormatting');
+        
 
         // Avoid Invalid formId by not using global auto-submit on Blocks; enable ENTER per field
         if (window.enableEnterKey) {
             window.enableEnterKey('card-number');
             window.enableEnterKey('cvv');
             // eslint-disable-next-line no-console
-            console.log('[Cardknox][useCardknoxIFields] enableEnterKey for card-number & cvv');
+            
         }
 
         // Prefer modern callbacks like in assets cardknox.js
         if (window.addIfieldCallback && window.setIfieldStyle) {
             window.addIfieldCallback('input', function(data) {
                 // eslint-disable-next-line no-console
-                console.log('[Cardknox][useCardknoxIFields] input callback fired', data);
+                
                 if (updateCallbackRef.current) {
                     updateCallbackRef.current(data);
                 }
@@ -168,7 +168,7 @@ const useCardknoxIFields = () => {
 
             window.addIfieldCallback('issuerupdated', function(data) {
                 // eslint-disable-next-line no-console
-                console.log('[Cardknox][useCardknoxIFields] issuerupdated', data);
+                
                 window.setIfieldStyle(
                     'cvv',
                     data.issuer === 'unknown' || data.cvvLength <= 0
@@ -182,7 +182,7 @@ const useCardknoxIFields = () => {
             // Fallback: basic behavior when only keypress callback exists
             window.addIfieldKeyPressCallback(function(data) {
                 // eslint-disable-next-line no-console
-                console.log('[Cardknox][useCardknoxIFields] keypress callback', data);
+            
                 if (updateCallbackRef.current) {
                     updateCallbackRef.current(data);
                 }
@@ -218,7 +218,7 @@ const useCardknoxIFields = () => {
 
         isInitializedRef.current = true;
         // eslint-disable-next-line no-console
-        console.log('[Cardknox][useCardknoxIFields] initializeIFields complete');
+        
     }, []);
 
     const getTokens = useCallback(() => {

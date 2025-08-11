@@ -61,10 +61,7 @@ const CardknoxPaymentForm = (props) => {
     // Log every render (throttled)
     useEffect(() => {
         renderCountRef.current += 1;
-        if (renderCountRef.current % 25 === 0) {
-            // eslint-disable-next-line no-console
-            console.log('[Cardknox][CardknoxPaymentForm] render count:', renderCountRef.current);
-        }
+        // removed debug logging
     });
 
     const {
@@ -86,32 +83,22 @@ const CardknoxPaymentForm = (props) => {
     // Log getTokens identity stability
     useEffect(() => {
         const changed = prevGetTokensRef.current !== getTokens;
-        if (changed) {
-            // eslint-disable-next-line no-console
-            console.log('[Cardknox][CardknoxPaymentForm] getTokens ref changed:', changed);
-        }
         prevGetTokensRef.current = getTokens;
     }, [getTokens]);
 
     // Log cardData ref stability
     useEffect(() => {
         const sameRef = prevCardDataRef.current === cardData;
-        if (!sameRef) {
-            // eslint-disable-next-line no-console
-            console.log('[Cardknox][CardknoxPaymentForm] cardData ref changed:', !sameRef, cardData);
-        }
         prevCardDataRef.current = cardData;
     }, [cardData]);
 
     // Log state changes that often drive re-renders
     useEffect(() => {
-        // eslint-disable-next-line no-console
-        console.log('[Cardknox][CardknoxPaymentForm] errors changed:', errors);
+        // removed debug logging
     }, [errors]);
 
     useEffect(() => {
-        // eslint-disable-next-line no-console
-        console.log('[Cardknox][CardknoxPaymentForm] selectedToken/saveCard changed:', { selectedToken, saveCard });
+        // removed debug logging
     }, [selectedToken, saveCard]);
 
     // Get ValidationInputError component or create a fallback
@@ -128,12 +115,10 @@ const CardknoxPaymentForm = (props) => {
         const attemptInit = () => {
             const hasKey = !!settings.iFieldsKey;
             const hasSDK = !!window.setAccount && !!window.setIfieldStyle && !!window.addIfieldCallback;
-            // eslint-disable-next-line no-console
-            console.log('[Cardknox][CardknoxPaymentForm] attempt init', { hasKey, hasSDK, iFieldsKey: settings.iFieldsKey });
+            // removed debug logging
 
             if (hasKey && hasSDK) {
-                // eslint-disable-next-line no-console
-                console.log('[Cardknox][CardknoxPaymentForm] initializing iFields');
+                // removed debug logging
                 initializeIFields({
                     iFieldsKey: settings.iFieldsKey,
                     softwareName: settings.softwareName || 'WooCommerce',
@@ -148,8 +133,7 @@ const CardknoxPaymentForm = (props) => {
         // As the SDK may be enqueued separately, re-attempt after a short delay
         const t = window.setTimeout(attemptInit, 300);
         return () => {
-            // eslint-disable-next-line no-console
-            console.log('[Cardknox][CardknoxPaymentForm] cleanup iFields init timeout');
+            // removed debug logging
             window.clearTimeout(t);
         };
     }, [settings.iFieldsKey]);
@@ -176,12 +160,7 @@ const CardknoxPaymentForm = (props) => {
             }
 
             const subscriptionId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-            // eslint-disable-next-line no-console
-            console.log('[Cardknox][CardknoxPaymentForm] subscribing to paymentEvent', {
-                subscriptionId,
-                hasOnSetup: !!onSetup,
-                hasOnProcessing: !!onProcessing,
-            });
+            // removed debug logging
 
             const unsubscribe = paymentEvent(async () => {
             const emitRes = emitResponseRef.current;
@@ -189,17 +168,10 @@ const CardknoxPaymentForm = (props) => {
             const card = cardDataRef.current;
             const currentErrors = errorsRef.current || {};
 
-            // eslint-disable-next-line no-console
-            console.log('[Cardknox][CardknoxPaymentForm] payment callback fired', {
-                subscriptionId,
-                selectedToken: selected,
-                cardData: card,
-                currentErrors,
-            });
+            // removed debug logging
             try {
                 if (selected !== 'new') {
-                    // eslint-disable-next-line no-console
-                    console.log('[Cardknox][CardknoxPaymentForm] using saved token', selected);
+                    
                     return {
                         type: emitRes.responseTypes.SUCCESS,
                         meta: { paymentMethodData: { wc_token: selected } },
@@ -226,18 +198,10 @@ const CardknoxPaymentForm = (props) => {
                 const cvvInlineError = (document.querySelector('[data-ifields-id="cvv-error"]')?.textContent || '').trim();
 
                 const willSetErrors = Object.keys(validationErrors).length > 0 || cardNumberInlineError || cvvInlineError || currentErrors.cardNumber || currentErrors.cvv;
-                // eslint-disable-next-line no-console
-                console.log('[Cardknox][CardknoxPaymentForm] validation snapshot', {
-                    validationErrors,
-                    cardNumberInlineError,
-                    cvvInlineError,
-                    existingErrors: currentErrors,
-                    willSetErrors,
-                });
+                
 
                 if (willSetErrors) {
-                    // eslint-disable-next-line no-console
-                    console.warn('[Cardknox][CardknoxPaymentForm] inline validation failed, setting errors');
+                    
                     setErrors(validationErrors);
                     return {
                         type: emitRes.responseTypes.ERROR,
@@ -246,8 +210,7 @@ const CardknoxPaymentForm = (props) => {
                 }
 
                 // Clear any existing errors before getting tokens
-                // eslint-disable-next-line no-console
-                console.log('[Cardknox][CardknoxPaymentForm] clearing errors before getTokens');
+                
                 setErrors({});
 
                 const existingCardToken = document.querySelector('[data-ifields-id="card-number-token"]')?.value;
@@ -256,8 +219,7 @@ const CardknoxPaymentForm = (props) => {
                     ? { cardNumberToken: existingCardToken, cvvToken: existingCvvToken }
                     : await getTokensRef.current();
 
-                // eslint-disable-next-line no-console
-                console.log('[Cardknox][CardknoxPaymentForm] tokens result', tokens);
+                
 
                 if (!tokens.cardNumberToken || !tokens.cvvToken) {
                     return {
@@ -280,8 +242,7 @@ const CardknoxPaymentForm = (props) => {
                     },
                 };
             } catch (error) {
-                // eslint-disable-next-line no-console
-                console.error('[Cardknox][CardknoxPaymentForm] payment event error', error);
+                
                 return {
                     type: emitRes.responseTypes.ERROR,
                     message: error?.message || __('Payment processing failed.', 'woocommerce-gateway-cardknox'),
@@ -301,8 +262,7 @@ const CardknoxPaymentForm = (props) => {
             }
             const { unsubscribe } = paymentSubscriptionRef.current || {};
             if (typeof unsubscribe === 'function') {
-                // eslint-disable-next-line no-console
-                console.log('[Cardknox][CardknoxPaymentForm] unsubscribing paymentEvent on unmount');
+                
                 unsubscribe();
             }
         };
@@ -310,8 +270,7 @@ const CardknoxPaymentForm = (props) => {
 
 const handleIFieldUpdate = useCallback((data) => {
     // Update validation state based on iField data
-    // eslint-disable-next-line no-console
-    console.log('[Cardknox][CardknoxPaymentForm] onUpdate', data);
+    
     const newErrors = { ...errors };
 
     // Check if tokens exist first
@@ -352,8 +311,7 @@ const handleIFieldUpdate = useCallback((data) => {
 
 const handleIFieldSubmit = useCallback(() => {
     // Handle enter key press in iFields
-    // eslint-disable-next-line no-console
-    console.log('[Cardknox][CardknoxPaymentForm] onSubmit ENTER');
+    
     const placeOrderButton = document.querySelector('.wc-block-components-checkout-place-order-button');
     if (placeOrderButton) {
         placeOrderButton.click();

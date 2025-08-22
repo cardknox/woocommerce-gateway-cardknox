@@ -70,7 +70,8 @@
 }
 
 /* Ensure proper iframe styling; borders are inside iField */
-iframe[data-ifields-id="card-number"],
+
+/* iframe[data-ifields-id="card-number"],
 iframe[data-ifields-id="cvv"] {
     background-color: #fff;
     height: 100%;
@@ -78,8 +79,8 @@ iframe[data-ifields-id="cvv"] {
     position: absolute;
     top: 0;
     left: 0;
-    border: 0; /* the iField content draws its own border via setIfieldStyle */
-}
+    border: 0;
+} */
 
 .cardknox-iframe-container { position: relative !important; overflow: hidden !important; }
 

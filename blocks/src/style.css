@@ -92,7 +92,7 @@ iframe[data-ifields-id="cvv"] {
 
 /* Fix error message display */
 .cardknox-error-container {
-    min-height: 25px;
+    /* min-height: 25px; */
     margin-top: 5px;
     display: block;
     clear: both;
@@ -178,7 +178,7 @@ iframe[data-ifields-id="cvv"] {
 }
 
 .wc-block-components-checkbox__label {
-    font-size: 0.875em;
+    font-size: 12px;
     line-height: 1.4;
     position: relative;
     user-select: none;
@@ -191,4 +191,8 @@ iframe[data-ifields-id="cvv"] {
 .cardknox-error-container [data-ifields-id="card-number-error"] ~ .wc-block-components-validation-error,
 [data-ifields-id="cvv-error"] ~ .wc-block-components-validation-error {
     display: none;
+}
+.credit-row{
+    display: flex;
+    flex-direction: column;
 }

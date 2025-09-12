@@ -37,7 +37,7 @@ const CardknoxIFields = ({ errors, onExpiryChange, ValidationInputError, cardDat
     }, []);
 
     return (
-        <div className="wc-cardknox-ifields">
+        <div className="wc-cardknox-ifields credit-row">
             <div id="ifieldsError" style={{ display: 'none', color: 'red', marginBottom: '10px' }}></div>
 
             <div className="form-row form-row-wide" style={{ paddingBottom: '0', margin: '0 0 15px 0', width: '100%' }}>
@@ -84,7 +84,7 @@ const CardknoxIFields = ({ errors, onExpiryChange, ValidationInputError, cardDat
                 </div>
             </div>
 
-            <div className="cardknox-row" style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
+            <div className="cardknox-row" style={{ display: 'flex', gap: '15px', marginBottom: '0px' }}>
                 <div className="form-row form-row-first" style={{ flex: '1', margin: '0' }}>
                     <label style={{ margin: '0 0 5px 0', lineHeight: 'inherit', display: 'block', fontWeight: 400 }} htmlFor="cardknox-expiry">
                         {__('Expiry (MM/YY)', 'woocommerce-gateway-cardknox')} <span className="required">*</span>
@@ -142,7 +142,7 @@ const CardknoxIFields = ({ errors, onExpiryChange, ValidationInputError, cardDat
 
                 <div className="form-row form-row-last" style={{ flex: '1', margin: '0' }}>
                     <label style={{ margin: '0 0 5px 0', lineHeight: 'inherit', display: 'block', fontWeight: 400 }} htmlFor="cardknox-cvv">
-                        {__('Card Code', 'woocommerce-gateway-cardknox')} <span className="required">*</span>
+                        {__('CVV Code', 'woocommerce-gateway-cardknox')} <span className="required">*</span>
                     </label>
                     <div className="cardknox-iframe-container cvv-container" style={{ position: 'relative', overflow: 'hidden', backgroundColor: '#fff', height: '65px' }}>
                         <iframe

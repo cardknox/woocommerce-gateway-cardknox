@@ -702,7 +702,7 @@ const SavePaymentCheckbox = ({
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("path", {
     d: "M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"
   })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
-    className: "wc-block-components-chesckbox__label"
+    className: "wc-block-components-checkbox__label"
   }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Save payment information to my account for future purchases.', 'woocommerce-gateway-cardknox'))));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (SavePaymentCheckbox);

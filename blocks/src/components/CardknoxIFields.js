@@ -7,10 +7,10 @@ import { useEffect } from '@wordpress/element';
 const cardLogoUrl = 'https://plugin.cardknox.net/demo/wpdemo/wp-content/plugins/woocommerce-gateway-cardknox/images/card-logos.png';
 
 const CardknoxIFields = ({ errors, onExpiryChange, ValidationInputError, cardData }) => {
-    const currentYear = new Date().getFullYear();
+    //const currentYear = new Date().getFullYear();
 
     const validateExpiry = () => {
-        
+
         if (!cardData.expiryMonth || !cardData.expiryYear) {
             return false;
         }

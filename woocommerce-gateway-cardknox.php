@@ -43,6 +43,9 @@ define('WC_CARDKNOX_MAIN_FILE', __FILE__);
 define('WC_CARDKNOX_PLUGIN_URL', untrailingslashit(plugins_url(basename(plugin_dir_path(__FILE__)), basename(__FILE__))));
 define('WC_CARDKNOX_PLUGIN_PATH', untrailingslashit(plugin_dir_path(__FILE__)));
 
+define( 'CARDKNOX_IFIELDS_URL', 'https://cdn.cardknox.com/ifields/3.0.2503.2101/ifields.min.js' );
+
+
 
 /** 
  * WordPress version Check, if WordPress Version 6.5 or Higher
@@ -203,7 +206,7 @@ if (!class_exists('WC_Cardknox')) :
             if ( $this->isBlocksCheckoutActive() ) {
                 wp_register_script(
                     'cardknox-ifields',
-                    'https://cdn.cardknox.com/ifields/3.0.2503.2101/ifields.min.js',
+                    CARDKNOX_IFIELDS_URL,
                     array(),
                     '3.0.2503.2101',
                     false
@@ -216,7 +219,7 @@ if (!class_exists('WC_Cardknox')) :
             // Pass data to the block scripts
             wp_localize_script('wc-cardknox-blocks', 'wc_cardknox_blocks_params', array(
                 'ajax_url' => admin_url('admin-ajax.php'),
-                'ifields_cdn_url' => 'https://cdn.cardknox.com/ifields/3.0.2503.2101/ifields.min.js',
+                'ifields_cdn_url' => CARDKNOX_IFIELDS_URL,
                 'card_logos_url' => WC_CARDKNOX_PLUGIN_URL . '/images/card-logos.png',
                 'nonce' => wp_create_nonce('wc-cardknox-blocks'),
             ));
@@ -655,7 +658,7 @@ if (!class_exists('WC_Cardknox')) :
             $applePay_quickcheckout = isset($applePayoptions['applepay_quickcheckout']) ? $applePayoptions['applepay_quickcheckout'] : 'no';
 
             if (is_cart()) {
-                wp_enqueue_script('cardknox', 'https://cdn.cardknox.com/ifields/3.0.2503.2101/ifields.min.js', '', '1.0.0', false);
+                wp_enqueue_script('cardknox', CARDKNOX_IFIELDS_URL, '', '1.0.0', false);
             }
 
             if (is_cart() && $googlepay_quickcheckout == 'no') {

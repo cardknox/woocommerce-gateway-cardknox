@@ -80,7 +80,7 @@ final class WC_Gateway_Cardknox_Blocks_Support extends AbstractPaymentMethodType
         // Load iFields SDK before our script
         wp_register_script(
             'cardknox-ifields',
-            'https://cdn.cardknox.com/ifields/3.0.2503.2101/ifields.min.js',
+            CARDKNOX_IFIELDS_URL,
             array(),
             '3.0.2503.2101',
             false // Load in header to ensure it's available

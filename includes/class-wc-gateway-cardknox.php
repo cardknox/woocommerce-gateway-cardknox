@@ -439,7 +439,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
         // Avoid loading iFields twice (classic + blocks) which causes global redeclaration errors
         if (! $ifields_already_registered) {
-            wp_enqueue_script('cardknox', 'https://cdn.cardknox.com/ifields/3.0.2503.2101/ifields.min.js', '', '1.0.0', false);
+            wp_enqueue_script('cardknox', CARDKNOX_IFIELDS_URL, '', '1.0.0', false);
         }
 
         // Do not enqueue the classic checkout controller when using the Blocks checkout

@@ -153,7 +153,8 @@ export const REGEX = {
     NUMBERS_ONLY: /^\d+$/,
     LETTERS_ONLY: /^[a-zA-Z\s]+$/,
     ALPHANUMERIC: /^[a-zA-Z0-9]+$/,
-    EMAIL: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    //EMAIL: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    EMAIL: /^(?=.{1,320}$)(?=.{1,64}@)[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}$/,
     WHITESPACE: /\s/g,
 };
 

@@ -195,12 +195,12 @@ if (!class_exists('WC_Cardknox')) :
                 array(),
                 WC_CARDKNOX_VERSION . '.' . time()
             );
-            if ( $this->is_blocks_checkout_active() ) {
+            if ( $this->isBlocksCheckoutActive() ) {
                 wp_enqueue_style('wc-cardknox-blocks-style');
             }
         
             // Load iFields SDK
-            if ( $this->is_blocks_checkout_active() ) {
+            if ( $this->isBlocksCheckoutActive() ) {
                 wp_register_script(
                     'cardknox-ifields',
                     'https://cdn.cardknox.com/ifields/3.0.2503.2101/ifields.min.js',
@@ -226,7 +226,7 @@ if (!class_exists('WC_Cardknox')) :
          * Enqueue block styles on checkout pages
          */
         public function enqueue_block_styles() {
-            if ( ! is_admin() && $this->is_blocks_checkout_active() ) {
+            if ( ! is_admin() && $this->isBlocksCheckoutActive() ) {
                 wp_enqueue_style(
                     'wc-cardknox-blocks-style',
                     WC_CARDKNOX_PLUGIN_URL . '/blocks/src/style.css',
@@ -239,7 +239,7 @@ if (!class_exists('WC_Cardknox')) :
         /**
          * Detect whether the site is using the Checkout Block on the checkout page.
          */
-        private function is_blocks_checkout_active() {
+        private function isBlocksCheckoutActive() {
             if ( ! function_exists('has_block') ) {
                 return false;
             }

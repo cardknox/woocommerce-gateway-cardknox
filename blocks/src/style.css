@@ -71,17 +71,6 @@
 
 /* Ensure proper iframe styling; borders are inside iField */
 
-/* iframe[data-ifields-id="card-number"],
-iframe[data-ifields-id="cvv"] {
-    background-color: #fff;
-    height: 100%;
-    width: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    border: 0;
-} */
-
 .cardknox-iframe-container { position: relative !important; overflow: hidden !important; }
 
 /* Ensure iField container has enough height and no visible border */
@@ -92,17 +81,13 @@ iframe[data-ifields-id="cvv"] {
 
 /* Fix error message display */
 .cardknox-error-container {
-    /* min-height: 25px; */
     margin-top: 5px;
     display: block;
     clear: both;
     width: 100%;
 }
 
-/* .cardknox-error-container .wc-block-components-validation-error,
-.cardknox-row  .wc-block-components-validation-error{
-    display: none;
-} */
+
 /* Error messages after ifields */
 [data-ifields-id="card-number-error"],
 [data-ifields-id="cvv-error"] {

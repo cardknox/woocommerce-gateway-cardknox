@@ -47,7 +47,7 @@ final class WC_Gateway_Cardknox_Blocks_Support extends AbstractPaymentMethodType
         $script_asset_path = WC_CARDKNOX_PLUGIN_PATH . '/blocks/build/index.asset.php';
         
         $script_asset = file_exists( $script_asset_path )
-            ? require( $script_asset_path )
+            ? require_once( $script_asset_path )
             : array(
                 'dependencies' => array(
                     'wc-blocks-registry',

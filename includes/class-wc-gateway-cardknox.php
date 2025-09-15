@@ -1176,7 +1176,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                 $token = new WC_Payment_Token_CC();
                 $token->set_token($response['xToken']);
                 $token->set_gateway_id('cardknox');
-                $token->set_card_type($this->normalize_card_type(isset($response['xCardType']) ? (string) $response['xCardType'] : ''));
+                $token->set_card_type($this->normalizeCardType(isset($response['xCardType']) ? (string) $response['xCardType'] : ''));
                 // Ensure only last 4 digits are stored
                 $last4 = isset($response['xMaskedCardNumber']) ? $response['xMaskedCardNumber'] : '';
                 $last4 = preg_replace('/\D+/', '', (string) $last4);
@@ -1275,7 +1275,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         return $first . str_repeat('x', $numXs) . $last4;
     }
 
-    private function normalize_card_type($type)
+    private function normalizeCardType($type)
     {
         $t = strtolower(trim($type));
         $map = array(

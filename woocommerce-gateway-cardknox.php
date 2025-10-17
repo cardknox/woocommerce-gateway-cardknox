@@ -44,6 +44,9 @@ define('WC_CARDKNOX_MAIN_FILE', __FILE__);
 define('WC_CARDKNOX_PLUGIN_URL', untrailingslashit(plugins_url(basename(plugin_dir_path(__FILE__)), basename(__FILE__))));
 define('WC_CARDKNOX_PLUGIN_PATH', untrailingslashit(plugin_dir_path(__FILE__)));
 
+define( 'CARDKNOX_IFIELDS_URL', 'https://cdn.cardknox.com/ifields/3.0.2503.2101/ifields.min.js' );
+
+
 
 /** 
  * WordPress version Check, if WordPress Version 6.5 or Higher
@@ -68,6 +71,41 @@ if (version_compare(get_bloginfo('version'), '6.5', '<')) {
     // Stop further execution of the plugin
     return;
 }
+
+// Check and register Block Editor support early
+// add_action('init', function() {
+//     // Check if WooCommerce Blocks is available and register support
+//     if (class_exists('Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType')) {
+//         require_once dirname(__FILE__) . '/includes/class-wc-gateway-cardknox-blocks.php';
+        
+//         add_action(
+//             'woocommerce_blocks_payment_method_type_registration',
+//             function(Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry $payment_method_registry) {
+//                 $payment_method_registry->register(new WC_Gateway_Cardknox_Blocks_Support());
+//             }
+//         );
+//     }
+// }, 5); // Priority 5 to run early
+
+
+add_action('init', function() {
+    if (class_exists('Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType')) {
+        require_once __DIR__ . '/includes/class-wc-gateway-cardknox-blocks.php';              // card
+        require_once __DIR__ . '/includes/class-wc-cardknox-applepay-blocks-support.php';     // apple
+
+        add_action(
+            'woocommerce_blocks_payment_method_type_registration',
+            function(Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry $registry) {
+                $registry->register(new WC_Gateway_Cardknox_Blocks_Support());
+
+                $apple = new WC_Cardknox_ApplePay_Blocks_Support();
+                if ($apple->is_active()) {
+                    $registry->register($apple);
+                }
+            }
+        );
+    }
+}, 5);
 
 
 if (!class_exists('WC_Cardknox')) :
@@ -145,7 +183,9 @@ if (!class_exists('WC_Cardknox')) :
             add_action('admin_init', array($this, 'check_environment'));
             add_action('admin_notices', array($this, 'admin_notices'), 15);
             add_action('init', array($this, 'init_plugin'));
+            add_action('init', array($this, 'register_block_scripts'));
             add_action('wp_enqueue_scripts', array($this, 'quickChekoutPaymentScripts'));
+            add_action('wp_enqueue_scripts', array($this, 'enqueue_block_styles'));
 
             add_action('wp_ajax_update_cart_total', array($this, 'updateCartTotal'));
             add_action('wp_ajax_nopriv_update_cart_total', array($this, 'updateCartTotal'));
@@ -156,6 +196,84 @@ if (!class_exists('WC_Cardknox')) :
             add_action('wp_ajax_applepay_cardknox_create_order', array($this, 'applepayCardknoxCreateorder'));
             add_action('wp_ajax_nopriv_applepay_cardknox_create_order', array($this, 'applepayCardknoxCreateorder'));
         }
+
+        /**
+         * Register scripts for block editor support
+         */
+        public function register_block_scripts() {
+            if (!class_exists('Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType')) {
+                return;
+            }
+        
+            // Only handle assets specific to Blocks checkout here; the Blocks integration
+            // class is responsible for registering/enqueuing the JS handle.
+            $script_path = '/blocks/build/index.js';
+            if (!file_exists(WC_CARDKNOX_PLUGIN_PATH . $script_path)) {
+                return;
+            }
+            
+            // Register styles (enqueue only when Blocks checkout is active)
+            wp_register_style(
+                'wc-cardknox-blocks-style',
+                WC_CARDKNOX_PLUGIN_URL . '/blocks/src/style.css',
+                array(),
+                WC_CARDKNOX_VERSION . '.' . time()
+            );
+            if ( $this->isBlocksCheckoutActive() ) {
+                wp_enqueue_style('wc-cardknox-blocks-style');
+            }
+        
+            // Load iFields SDK
+            if ( $this->isBlocksCheckoutActive() ) {
+                wp_register_script(
+                    'cardknox-ifields',
+                    CARDKNOX_IFIELDS_URL,
+                    array(),
+                    '3.0.2503.2101',
+                    false
+                );
+                if (! wp_script_is('cardknox-ifields', 'enqueued')) {
+                    wp_enqueue_script('cardknox-ifields');
+                }
+            }
+        
+            // Pass data to the block scripts
+            wp_localize_script('wc-cardknox-blocks', 'wc_cardknox_blocks_params', array(
+                'ajax_url' => admin_url('admin-ajax.php'),
+                'ifields_cdn_url' => CARDKNOX_IFIELDS_URL,
+                'card_logos_url' => WC_CARDKNOX_PLUGIN_URL . '/images/card-logos.png',
+                'nonce' => wp_create_nonce('wc-cardknox-blocks'),
+            ));
+        }
+        
+        /**
+         * Enqueue block styles on checkout pages
+         */
+        public function enqueue_block_styles() {
+            if ( ! is_admin() && $this->isBlocksCheckoutActive() ) {
+                wp_enqueue_style(
+                    'wc-cardknox-blocks-style',
+                    WC_CARDKNOX_PLUGIN_URL . '/blocks/src/style.css',
+                    array(),
+                    WC_CARDKNOX_VERSION . '.' . time()
+                );
+            }
+        }
+
+        /**
+         * Detect whether the site is using the Checkout Block on the checkout page.
+         */
+        private function isBlocksCheckoutActive() {
+            if ( ! function_exists('has_block') ) {
+                return false;
+            }
+            $checkout_page_id = wc_get_page_id('checkout');
+            if ( $checkout_page_id && $checkout_page_id !== -1 ) {
+                return has_block('woocommerce/checkout', $checkout_page_id);
+            }
+            return false;
+        }
+        
         /*
          * Initialize the plugin functionality as per the standard
         */
@@ -561,7 +679,7 @@ if (!class_exists('WC_Cardknox')) :
             $applePay_quickcheckout = isset($applePayoptions['applepay_quickcheckout']) ? $applePayoptions['applepay_quickcheckout'] : 'no';
 
             if (is_cart()) {
-                wp_enqueue_script('cardknox', 'https://cdn.cardknox.com/ifields/3.0.2503.2101/ifields.min.js', '', '1.0.0', false);
+                wp_enqueue_script('cardknox', CARDKNOX_IFIELDS_URL, '', '1.0.0', false);
             }
 
             if (is_cart() && $googlepay_quickcheckout == 'no') {

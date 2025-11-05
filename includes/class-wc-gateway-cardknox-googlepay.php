@@ -463,7 +463,8 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
 
             if (!is_null($amount) && $amount < 0.01) {
                 $this->glog('Error: Amount Required ' . $amount);
-                $result = new WP_Error('Error', 'Refund Amount Required ' . $amount);
+                $result = new WP_Error('Error', __( 'Refund Amount Required', 'woocommerce-gateway-cardknox') . $amount);
+                
             } else {
                 if (!is_null($amount)) {
                     $body['xAmount'] = $this->get_cardknox_gamount($amount);
@@ -489,7 +490,6 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
                         $this->glog('Success: ' . html_entity_decode(strip_tags((string) $refundMessage)));
                         $result = true;
                     } else {
-                        //$result = new WP_Error("refund failed", 'woocommerce-gateway-cardknox');
                         $result = new WP_Error('refund_failed', __( 'Refund failed', 'woocommerce-gateway-cardknox' ));
                     }
                 }

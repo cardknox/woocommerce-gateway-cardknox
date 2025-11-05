@@ -825,8 +825,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             } catch (\Throwable $th) {
                 // Handle general errors during card addition
                 $this->log('Error: ' . $th->getMessage());
-                $error_msg = __( 'An error occurred while Adding Payment Method.', 'woocommerce-gateway-cardknox' );
-                wc_add_notice( $error_msg, 'error');
+                wc_add_notice( __( 'An error occurred while Adding Payment Method.', 'woocommerce-gateway-cardknox' ), 'error');
             }
         } else {
             // No 'xToken' found in the API response, return a WP_Error
@@ -862,7 +861,16 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             //check if amount is set to 0
             if ($amount < .01) {
                 $this->log('Error: Amount Required ' . $amount);
-                return new WP_Error('Error', 'Refund Amount Required ' . $amount);
+                return new WP_Error(
+                    'refund_amount_required',
+                    sprintf(
+                        /* translators: %s = refund amount */
+                        __( 'Refund amount required: %s', 'woocommerce-gateway-cardknox' ),
+                        $amount
+                    )
+                );
+                
+                
             }
             $body['xAmount']    = $this->get_cardknox_amount($amount);
         }
@@ -873,7 +881,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         if ($total !=  $amount) {
             $command = 'cc:refund';
             if ($captured === "no") {
-                return new WP_Error('Error', 'Partial Refund Not Allowed On Authorize Only Transactions');
+                return new WP_Error( 'Error', __( 'Partial Refund Not Allowed On Authorize Only Transactions', 'woocommerce-gateway-cardknox' ) );
             }
         }
 

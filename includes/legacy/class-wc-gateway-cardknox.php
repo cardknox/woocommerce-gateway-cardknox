@@ -498,7 +498,14 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
             //check if amount is set to 0
             if ($amount < .01) {
                 WC_Cardknox::log( 'Error: Amount Required ' . $amount);
-                return new WP_Error('Error', 'Refund Amount Required ' . $amount);
+				return new WP_Error(
+					'Error',
+					sprintf(
+						/* translators: %s = refund amount */
+						__( 'Refund Amount Required %s', 'woocommerce-gateway-cardknox' ),
+						$amount
+					)
+				);
             }
             $body['xAmount']	= $this->get_cardknox_amount( $amount );
         }
@@ -510,7 +517,6 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 		if ( $total !=  $amount) {
 			$command = 'cc:refund';
             if ($captured === "no") {
-                //return new WP_Error('Error', 'Partial Refund Not Allowed On Authorize Only Transactions');
 				return new WP_Error('Error', __( 'Partial Refund Not Allowed On Authorize Only Transactions', 'woocommerce-gateway-cardknox' ) );
             }
 		}

@@ -862,15 +862,13 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             if ($amount < .01) {
                 $this->log('Error: Amount Required ' . $amount);
                 return new WP_Error(
-                    'refund_amount_required',
-                    sprintf(
-                        /* translators: %s = refund amount */
-                        __( 'Refund amount required: %s', 'woocommerce-gateway-cardknox' ),
-                        $amount
-                    )
-                );
-                
-                
+					'Error',
+					sprintf(
+						/* translators: %s = refund amount */
+						__( 'Refund Amount Required %s', 'woocommerce-gateway-cardknox' ),
+						$amount
+					)
+				);
             }
             $body['xAmount']    = $this->get_cardknox_amount($amount);
         }

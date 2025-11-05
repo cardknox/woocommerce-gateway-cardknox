@@ -522,10 +522,10 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             return true;
         } else {
             if ($this->is_unset_or_empty($postData['xCardNum'])) {
-                throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: card number", 400);
+                throw new WC_Data_Exception('wc_gateway_cardknox_process_payment_error', __( 'Required: card number', 'woocommerce-gateway-cardknox' ), 400);
             }
             if ($this->is_unset_or_empty($postData['xCVV'])) {
-                throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: cvv", 400);
+                throw new WC_Data_Exception('wc_gateway_cardknox_process_payment_error', __( 'Required: CVV', 'woocommerce-gateway-cardknox' ), 400);
             }
         }
     }
@@ -622,13 +622,10 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                 } else {
 
                     if (is_wp_error($response)) {
-                        //					$localized_messages = $this->get_localized_messages();
-                        //
-                        //					$message = isset( $localized_messages[ $response->get_error_code() ] ) ? $localized_messages[ $response->get_error_code() ] : $response->get_error_message();
-                        //
-                        //					$order->add_order_note( $message );
                         $order->add_order_note($response->get_error_message());
-                        throw new Exception("The transaction was declined please try again");
+                        throw new Exception(
+                            __( 'The transaction was declined please try again.', 'woocommerce-gateway-cardknox' )
+                        );
                     }
 
                     $this->log("Info: set_transaction_id");
@@ -828,7 +825,8 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             } catch (\Throwable $th) {
                 // Handle general errors during card addition
                 $this->log('Error: ' . $th->getMessage());
-                wc_add_notice('An error occurred while Adding Payment Method', 'error');
+                $error_msg = __( 'An error occurred while Adding Payment Method.', 'woocommerce-gateway-cardknox' );
+                wc_add_notice( $error_msg, 'error');
             }
         } else {
             // No 'xToken' found in the API response, return a WP_Error

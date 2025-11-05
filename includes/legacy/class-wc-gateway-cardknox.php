@@ -510,7 +510,8 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 		if ( $total !=  $amount) {
 			$command = 'cc:refund';
             if ($captured === "no") {
-                return new WP_Error('Error', 'Partial Refund Not Allowed On Authorize Only Transactions');
+                //return new WP_Error('Error', 'Partial Refund Not Allowed On Authorize Only Transactions');
+				return new WP_Error('Error', __( 'Partial Refund Not Allowed On Authorize Only Transactions', 'woocommerce-gateway-cardknox' ) );
             }
 		}
 

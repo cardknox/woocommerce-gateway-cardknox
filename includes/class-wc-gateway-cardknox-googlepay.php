@@ -325,7 +325,9 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
 
                 if (is_wp_error($response)) {
                     $orderGooglePay->add_order_note($response->get_error_message());
-                    throw new Exception("The transaction was declined please try again");
+                    throw new Exception(
+                        __( 'The transaction was declined please try again.', 'woocommerce-gateway-cardknox' )
+                    );
                 }
 
                 $this->glog("Info: set_transaction_id");
@@ -487,7 +489,8 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
                         $this->glog('Success: ' . html_entity_decode(strip_tags((string) $refundMessage)));
                         $result = true;
                     } else {
-                        $result = new WP_Error("refund failed", 'woocommerce-gateway-cardknox');
+                        //$result = new WP_Error("refund failed", 'woocommerce-gateway-cardknox');
+                        $result = new WP_Error('refund_failed', __( 'Refund failed', 'woocommerce-gateway-cardknox' ));
                     }
                 }
             }
@@ -502,7 +505,8 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
 
         if ($total != $amount) {
             if ($captured === "no") {
-                return new WP_Error('Error', 'Partial Refund Not Allowed On Authorize Only Transactions');
+                //return new WP_Error('Error', 'Partial Refund Not Allowed On Authorize Only Transactions');
+                return new WP_Error('Error', __( 'Partial Refund Not Allowed On Authorize Only Transactions', 'woocommerce-gateway-cardknox' ) );                
             } else {
                 return 'cc:refund';
             }

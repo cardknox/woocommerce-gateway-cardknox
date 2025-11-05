@@ -450,7 +450,9 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
                 if (is_wp_error($response)) {
                     $order->add_order_note($response->get_error_message());
-                    throw new Exception("The transaction was declined please try again");
+                    throw new Exception(
+                        __( 'The transaction was declined please try again.', 'woocommerce-gateway-cardknox' )
+                    );
                 }
 
                 $this->log("Info: set_transaction_id");
@@ -587,7 +589,8 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             if (!is_null($amount)) {
                 if ($amount < .01) {
                     $this->log('Error: Amount Required ' . $amount);
-                    return new WP_Error('Error', 'Refund Amount Required ' . $amount);
+                    $error_message = __( 'Refund Amount Required.', 'woocommerce-gateway-cardknox' );
+                    return new WP_Error('Error', $error_message . $amount);
                 } else {
                     $body['xAmount'] = $this->get_cardknox_amount($amount);
                 }
@@ -613,7 +616,8 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
                     $this->log('Success: ' . html_entity_decode(strip_tags((string) $refundMessage)));
                     $result = true;
                 } else {
-                    $result = new WP_Error("refund failed", 'woocommerce-gateway-cardknox');
+                    //$result = new WP_Error("refund failed", 'woocommerce-gateway-cardknox');
+                    $result = new WP_Error('refund_failed', __( 'Refund failed', 'woocommerce-gateway-cardknox' ));
                 }
             }
         }
@@ -627,7 +631,8 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
         if ($total != $amount) {
             if ($captured === "no") {
-                return new WP_Error('Error', 'Partial Refund Not Allowed On Authorize Only Transactions');
+                //return new WP_Error('Error', 'Partial Refund Not Allowed On Authorize Only Transactions');
+                return new WP_Error('Error', __( 'Partial Refund Not Allowed On Authorize Only Transactions', 'woocommerce-gateway-cardknox' ) );                
             } else {
                 return 'cc:refund';
             }

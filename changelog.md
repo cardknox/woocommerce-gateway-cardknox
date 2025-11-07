@@ -1,5 +1,13 @@
 # Changelog
 
+## changelog for version Version: 1.2.81
+
+- Added compatibility with WooCommerce Block Editor Checkout.
+- Updated all Cardknox references to Sola.
+- Added compatibility with WooCommerce High-Performance Order Storage (HPOS).
+- Fixed critical get_billing_country error .
+- Limited expiration year input to two digits on checkout.
+
 ## changelog for version Version: 1.2.73
 
 - Updated iFields latest version 3.0.2503.2101

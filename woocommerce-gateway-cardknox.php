@@ -4,7 +4,7 @@ Plugin Name: WooCommerce Cardknox Gateway
 Description: Accept payments via credit card, Apple Pay, Google Pay, and manage transactions within WordPress.
 Author: Sola Payments.
 Author URI: https://solapayments.com/
-Version: 1.1.2.81
+Version: 1.2.81
 Requires at least: 4.4
 Tested up to: 6.7.1
 WC requires at least: 2.5
@@ -37,7 +37,7 @@ if (!defined('ABSPATH')) {
 /**
  * Required minimums and constants
  */
-define('WC_CARDKNOX_VERSION', '1.1.2.81');
+define('WC_CARDKNOX_VERSION', '1.2.81');
 define('WC_CARDKNOX_MIN_PHP_VER', '5.6.0');
 define('WC_CARDKNOX_MIN_WC_VER', '2.5.0');
 define('WC_CARDKNOX_MAIN_FILE', __FILE__);

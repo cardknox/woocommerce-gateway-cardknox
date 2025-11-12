@@ -32,15 +32,10 @@ final class WC_Cardknox_ApplePay_Blocks_Support extends AbstractPaymentMethodTyp
         ];
     
         if ( file_exists($asset_file) ) {
-            $loaded = include_once $asset_file;
+            $loaded = include_once $asset_file;     // NOSONAR php:S2006
             if ( is_array($loaded) ) {
-                if ( isset($loaded['dependencies']) ) 
-                { 
-                    $asset['dependencies'] = $loaded['dependencies'];
-                }
-                if ( isset($loaded['version']) ){
-                    $asset['version'] = $loaded['version'];
-                }
+                if ( isset($loaded['dependencies']) ) { $asset['dependencies'] = $loaded['dependencies']; }
+                if ( isset($loaded['version']) ){ $asset['version'] = $loaded['version']; }
             }
         }
     

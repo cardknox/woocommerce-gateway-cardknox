@@ -26,7 +26,7 @@ final class WC_Cardknox_ApplePay_Blocks_Support extends AbstractPaymentMethodTyp
         $script_url = plugins_url('../blocks/build/index.js', __FILE__);
 
         $asset = file_exists($asset_file)
-            ? include $asset_file
+            ? include_once $asset_file
             : [
                 'dependencies' => [ 'wp-element', 'wc-blocks-registry', 'wc-blocks-checkout' ],
                 'version'      => file_exists($base_dir . 'index.js') ? filemtime($base_dir . 'index.js') : time(),

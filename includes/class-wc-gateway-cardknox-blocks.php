@@ -41,14 +41,19 @@ final class WC_Gateway_Cardknox_Blocks_Support extends AbstractPaymentMethodType
      *
      * @return array
      */
-    public function get_payment_method_script_handles() {
-        $script_path = '/blocks/build/index.js';
-        $script_url = WC_CARDKNOX_PLUGIN_URL . $script_path;
-        $script_asset_path = WC_CARDKNOX_PLUGIN_PATH . '/blocks/build/index.asset.php';
-        
-        $script_asset = file_exists( $script_asset_path )
-            ? require_once $script_asset_path
-            : array(
+    
+     /*----Start PLGN-186----*/
+     public function get_payment_method_script_handles() {
+        $script_path       = '/blocks/build/index.js';
+        $script_url        = WC_CARDKNOX_PLUGIN_URL . $script_path;
+        $asset_php         = WC_CARDKNOX_PLUGIN_PATH . '/blocks/build/index.asset.php';
+        $script_js         = WC_CARDKNOX_PLUGIN_PATH . $script_path;
+    
+        $loaded = file_exists($asset_php) ? include_once $asset_php : false;
+    
+        // If include_once returned TRUE (already included) or file missing, use fallbacks
+        if ( ! is_array($loaded) ) {
+            $loaded = array(
                 'dependencies' => array(
                     'wc-blocks-registry',
                     'wc-settings',
@@ -56,41 +61,33 @@ final class WC_Gateway_Cardknox_Blocks_Support extends AbstractPaymentMethodType
                     'wp-html-entities',
                     'wp-i18n',
                 ),
-                'version' => WC_CARDKNOX_VERSION
+                'version' => ( file_exists($script_js) ? filemtime($script_js) :
+                             ( defined('WC_CARDKNOX_VERSION') ? WC_CARDKNOX_VERSION : time() ) ),
             );
-
-        // Ensure the iFields SDK is loaded before our script to avoid race conditions
-        $deps = isset($script_asset['dependencies']) && is_array($script_asset['dependencies'])
-            ? $script_asset['dependencies']
-            : array();
-        if (!in_array('cardknox-ifields', $deps, true)) {
+        }
+    
+        $deps = is_array($loaded['dependencies'] ?? null) ? $loaded['dependencies'] : array();
+        if ( ! in_array('cardknox-ifields', $deps, true) ) {
             $deps[] = 'cardknox-ifields';
         }
-
+    
+        // Register iFields first (header)
+        wp_register_script('cardknox-ifields', CARDKNOX_IFIELDS_URL, array(), '3.0.2503.2101', false);
+        wp_enqueue_script('cardknox-ifields');
+    
         wp_register_script(
             'wc-cardknox-blocks',
             $script_url,
             $deps,
-            $script_asset['version'],
+            $loaded['version'] ?? time(),
             true
         );
-
-        wp_set_script_translations( 'wc-cardknox-blocks', 'woocommerce-gateway-cardknox' );
-
-        // Load iFields SDK before our script
-        wp_register_script(
-            'cardknox-ifields',
-            CARDKNOX_IFIELDS_URL,
-            array(),
-            '3.0.2503.2101',
-            false // Load in header to ensure it's available
-        );
-        
-        // Enqueue iFields first
-        wp_enqueue_script( 'cardknox-ifields' );
-
-        return array( 'wc-cardknox-blocks' );
-    }
+    
+        wp_set_script_translations('wc-cardknox-blocks', 'woocommerce-gateway-cardknox');
+    
+        return array('wc-cardknox-blocks');
+    }    
+     /*----End   PLGN-186----*/
 
     /**
      * Returns an array of data to be used by the block on the frontend.

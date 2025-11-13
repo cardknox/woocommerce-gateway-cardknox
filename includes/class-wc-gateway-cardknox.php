@@ -67,6 +67,19 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
     public $authonly_status;
 
+    /*----Start PLGN-186----*/
+    public $bgcolor = '';
+    public $enable_3ds; 
+    public $threeds_env;
+    public $applicable_countries;
+    public $specific_countries;
+    public $apple_quickcheckout;
+    public $apple_pay_gateway;
+    public $google_pay_gateway;
+    /*----End   PLGN-186----*/
+
+
+
     /**
      * Constructor
      */

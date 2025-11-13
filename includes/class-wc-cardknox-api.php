@@ -51,14 +51,32 @@ class WC_Cardknox_API
      * Get transaction key.
      * @return string
      */
-    public static function get_transaction_key()
-    {
-        if (!self::$transaction_key) {
-            $options = get_option('woocommerce_cardknox_settings');
-            self::set_transaction_key($options['transaction_key']);
+    // public static function get_transaction_key()
+    // {
+    //     if (!self::$transaction_key) {
+    //         $options = get_option('woocommerce_cardknox_settings');
+    //         self::set_transaction_key($options['transaction_key']);
+    //     }
+    //     return self::$transaction_key;
+    // }
+
+    /*----Start PLGN-186----*/
+    public static function get_transaction_key() {
+        if ( ! self::$transaction_key ) {
+            // use the right option key for your gateway!
+            $options = get_option( 'woocommerce_cardknox_settings', [] );
+    
+            $tx = '';
+            if ( is_array( $options ) && ! empty( $options['transaction_key'] ) ) {
+                $tx = trim( (string) $options['transaction_key'] );
+            }
+    
+            self::set_transaction_key( $tx ); // safe even if empty
         }
+    
         return self::$transaction_key;
     }
+    /*----End   PLGN-186----*/
 
     /**
      * Send the request to Cardknox's API

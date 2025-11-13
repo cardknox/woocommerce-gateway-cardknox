@@ -18,6 +18,18 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
      */
     public $capture;
 
+    /*----Start PLGN-186----*/
+    public $googlepay_quickcheckout;
+    public $google_quickcheckout;
+    public $googlepay_merchant_name;
+    public $googlepay_environment;
+    public $googlepay_button_style;
+    public $authonly_status;
+    public $googlepay_applicable_countries;
+    public $googlepay_specific_countries;
+    public $wcVersion;
+    /*----End   PLGN-186----*/
+
     public function __construct()
     {
         $this->id                   = 'cardknox-googlepay';
@@ -57,11 +69,17 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         $this->googlepay_environment            = $this->get_option('googlepay_environment');
         $this->googlepay_button_style           = $this->get_option('googlepay_button_style');
         
-        $this->capture                          = 'yes' === $option['capture'];
+        /*$this->capture                        = 'yes' === $option['capture'];
         $this->authonly_status                  = $option['auth_only_order_status'];
-
         $this->googlepay_applicable_countries   = $option['applicable_countries'];
-        $this->googlepay_specific_countries     = $option['specific_countries'];
+        $this->googlepay_specific_countries     = $option['specific_countries'];*/
+
+        /*----Start PLGN-186----*/
+        $this->capture                          = 'yes' === $this->get_option( 'capture', 'no' );   // New Code
+        $this->authonly_status                  = isset( $option['auth_only_order_status'] ) ? $option['auth_only_order_status'] : 'wc-on-hold';    // New Code
+        $this->googlepay_applicable_countries   = in_array((string)($option['applicable_countries'] ?? '0'), ['0','1'], true) ? (string)($option['applicable_countries'] ?? '0') : '0';   // New Code
+        $this->googlepay_specific_countries     = isset( $option['specific_countries'] ) && is_array( $option['specific_countries'] ) ? $option['specific_countries'] : []; // New Code
+        /*----End   PLGN-186----*/
 
 
         $this->wcVersion = version_compare(WC_VERSION, '3.0.0', '<');

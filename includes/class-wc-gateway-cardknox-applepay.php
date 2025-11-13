@@ -27,6 +27,10 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     public $applepay_specific_countries;
     public $wcVersion;
 
+    /*----Start PLGN-186----*/
+    public $apple_quickcheckout;
+    /*----End   PLGN-186----*/
+
     public function __construct()
     {
         $this->id                   = 'cardknox-applepay';
@@ -76,10 +80,18 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         $this->applepay_environment             = $this->get_option('applepay_environment');
         $this->applepay_button_style            = $this->get_option('applepay_button_style');
         $this->applepay_button_type             = $this->get_option('applepay_button_type');
-        $this->capture                          = 'yes' === $option['capture'];
+        
+        /*$this->capture                        = 'yes' === $option['capture'];
         $this->authonly_status                  = $option['auth_only_order_status'];
         $this->applepay_applicable_countries    = $option['applicable_countries'];
-        $this->applepay_specific_countries      = $option['specific_countries'];
+        $this->applepay_specific_countries      = $option['specific_countries'];*/
+
+        /*----Start PLGN-186----*/
+        $this->capture                       = 'yes' === $this->get_option( 'capture', 'no' );
+        $this->authonly_status               = $this->get_option( 'auth_only_order_status', 'processing' );
+        $this->applepay_applicable_countries = $this->get_option( 'applicable_countries', 'all' );
+        $this->applepay_specific_countries   = (array) $this->get_option( 'specific_countries', array() );
+        /*----End   PLGN-186----*/
 
         $this->wcVersion = version_compare(WC_VERSION, '3.0.0', '<');
 

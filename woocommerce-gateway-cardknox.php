@@ -174,6 +174,11 @@ if (!class_exists('WC_Cardknox')) :
          */
         public $notices = array();
 
+        /*----Start PLGN-186----*/
+        public $settingPage;
+        /*----End PLGN-186----*/
+
+
         /**
          * Protected constructor to prevent creating a new instance of the
          * *Singleton* via the `new` operator from outside of this class.
@@ -669,7 +674,7 @@ if (!class_exists('WC_Cardknox')) :
         /**
          * For cart page load gpay button.
          */
-        public function quickChekoutPaymentScripts()
+        /*public function quickChekoutPaymentScripts()
         {
 
             $options = get_option('woocommerce_cardknox-googlepay_settings');
@@ -848,7 +853,175 @@ if (!class_exists('WC_Cardknox')) :
 
                 wp_localize_script('woocommerce_cardknox_apple_pay', 'applePaysettings', $cardknoxApplepaySettings);
             }
+        }*/
+
+        /*----------Start New Code PLGN-186----------*/
+        public function quickChekoutPaymentScripts() {
+
+            // ---- Read options safely (Google Pay) ----
+            $options  = (array) get_option('woocommerce_cardknox-googlepay_settings', []);
+            $gpay_defaults = [
+                'googlepay_quickcheckout'        => 'no',
+                'googlepay_enabled'              => 'no',
+                'googlepay_title'                => 'Google Pay',
+                'googlepay_merchant_name'        => '',
+                'googlepay_environment'          => 'TEST',
+                'googlepay_button_style'         => 'black',
+                'googlepay_capture'              => 'capture',   // or 'authorize'
+                'googlepay_applicable_countries' => 'all',       // 'all' | 'specific'
+                'googlepay_specific_countries'   => [],          // array of ISO codes
+            ];
+            $options = wp_parse_args( $options, $gpay_defaults );
+        
+            // ---- Read options safely (Apple Pay) ----
+            $applePayoptions  = (array) get_option('woocommerce_cardknox-applepay_settings', []);
+            $apple_defaults = [
+                'applepay_quickcheckout'         => 'no',
+                'applepay_enabled'               => 'no',
+                'applepay_title'                 => 'Apple Pay',
+                'applepay_merchant_identifier'   => '',
+                'applepay_environment'           => 'TEST',
+                'applepay_button_style'          => 'black',
+                'applepay_button_type'           => 'plain',
+                'applepay_capture'               => 'capture',
+                'applepay_applicable_countries'  => 'all',
+                'applepay_specific_countries'    => [],
+            ];
+            $applePayoptions = wp_parse_args( $applePayoptions, $apple_defaults );
+        
+            $googlepay_quickcheckout = $options['googlepay_quickcheckout'];
+            $applePay_quickcheckout  = $applePayoptions['applepay_quickcheckout'];
+        
+            if ( is_cart() ) {
+                wp_enqueue_script(
+                    'cardknox',
+                    'https://cdn.cardknox.com/ifields/3.0.2503.2101/ifields.min.js',
+                    [],
+                    '3.0.2503.2101',
+                    false
+                );
+            }
+        
+            // ---------- Google Pay on Cart ----------
+            if ( is_cart() && $googlepay_quickcheckout === 'no' ) {
+        
+                wp_enqueue_style(
+                    'woocommerce_cardknox_gpay',
+                    plugins_url('/assets/css/google-pay.css', WC_CARDKNOX_MAIN_FILE),
+                    [],
+                    '1.0',
+                    'all'
+                );
+        
+                wp_enqueue_script(
+                    'woocommerce_cardknox_google_pay',
+                    plugins_url('assets/js/cardknox-google-pay-cart.min.js', WC_CARDKNOX_MAIN_FILE),
+                    [ 'jquery' ], // keep your deps if you really have 'jquery-payment'
+                    '1.0',
+                    true
+                );
+        
+                // Build shipping costs
+                $shippingCostsGoogle = [];
+                foreach ( WC_Shipping_Zones::get_zones() as $zone ) {
+                    foreach ( $zone['shipping_methods'] as $shipping_method ) {
+                        if ( $shipping_method instanceof WC_Shipping_Method ) {
+                            $method_id   = $shipping_method->id;
+                            $method_cost = ($shipping_method instanceof WC_Shipping_Free_Shipping) ? 0.00 : (float) $shipping_method->cost;
+                            $shippingCostsGoogle[$method_id] = $method_cost;
+                        }
+                    }
+                }
+        
+                // Method labels
+                $methods = [];
+                foreach ( WC()->shipping()->get_shipping_methods() as $method ) {
+                    $methods[] = [
+                        'id'          => $method->id,
+                        'label'       => $method->method_title,
+                        'description' => $method->method_description,
+                    ];
+                }
+        
+                // Read normalized values
+                $cardknoxGooglepaySettings = [
+                    'enabled'               => $options['googlepay_enabled'],
+                    'title'                 => $options['googlepay_title'],
+                    'merchant_name'         => $options['googlepay_merchant_name'],
+                    'environment'           => $options['googlepay_environment'],
+                    'button_style'          => $options['googlepay_button_style'],
+                    'payment_action'        => $options['googlepay_capture'],
+                    'applicable_countries'  => $options['googlepay_applicable_countries'],
+                    'specific_countries'    => (array) $options['googlepay_specific_countries'],
+                    'total'                 => (float) WC()->cart->total,
+                    'currencyCode'          => get_woocommerce_currency(),
+                    'shippingMethods'       => $methods,
+                    'shippingCosts'         => $shippingCostsGoogle,
+                    'ajax_url'              => admin_url('admin-ajax.php'),
+                    'create_order_nonce'    => wp_create_nonce('create_order_nonce'),
+                ];
+        
+                wp_localize_script( 'woocommerce_cardknox_google_pay', 'googlePaysettings', $cardknoxGooglepaySettings );
+            }
+        
+            // ---------- Apple Pay on Cart ----------
+            if ( is_cart() && $applePay_quickcheckout === 'no' ) {
+        
+                wp_enqueue_style(
+                    'woocommerce_cardknox_applepay',
+                    plugins_url('/assets/css/apple-pay.css', WC_CARDKNOX_MAIN_FILE),
+                    [],
+                    '1.0',
+                    'all'
+                );
+        
+                wp_enqueue_script(
+                    'woocommerce_cardknox_apple_pay',
+                    plugins_url('assets/js/cardknox-apple-pay-cart.min.js', WC_CARDKNOX_MAIN_FILE),
+                    [ 'jquery' ],
+                    '1.0',
+                    true
+                );
+        
+                $shippingCostsApple = [];
+                foreach ( WC_Shipping_Zones::get_zones() as $zone ) {
+                    foreach ( $zone['shipping_methods'] as $shipping_method ) {
+                        if ( $shipping_method instanceof WC_Shipping_Method ) {
+                            $method_id   = $shipping_method->id;
+                            $method_cost = ($shipping_method instanceof WC_Shipping_Free_Shipping) ? 0.00 : (float) $shipping_method->cost;
+                            $detail      = str_replace(["\n","\r"], '', strip_tags($shipping_method->get_method_description()));
+        
+                            $shippingCostsApple[] = [
+                                'identifier' => $method_id,
+                                'label'      => $shipping_method->get_method_title(),
+                                'amount'     => number_format($method_cost, 2, '.', ''),
+                                'detail'     => $detail,
+                            ];
+                        }
+                    }
+                }
+        
+                $cardknoxApplepaySettings = [
+                    'enabled'               => $applePayoptions['applepay_enabled'],
+                    'title'                 => $applePayoptions['applepay_title'],
+                    'merchant_identifier'   => $applePayoptions['applepay_merchant_identifier'],
+                    'environment'           => $applePayoptions['applepay_environment'],
+                    'button_style'          => $applePayoptions['applepay_button_style'],
+                    'button_type'           => $applePayoptions['applepay_button_type'],
+                    'payment_action'        => $applePayoptions['applepay_capture'],
+                    'applicable_countries'  => $applePayoptions['applepay_applicable_countries'],
+                    'specific_countries'    => (array) $applePayoptions['applepay_specific_countries'],
+                    'total'                 => (float) WC()->cart->total,
+                    'shippingMethods'       => $shippingCostsApple,
+                    'ajax_url'              => admin_url('admin-ajax.php'),
+                    'create_order_nonce'    => wp_create_nonce('create_order_nonce'),
+                ];
+        
+                wp_localize_script( 'woocommerce_cardknox_apple_pay', 'applePaysettings', $cardknoxApplepaySettings );
+            }
         }
+        /*----------End   New Code PLGN-186----------*/
+
 
         /**
          * For shipping method details.
@@ -1106,9 +1279,15 @@ if (!class_exists('WC_Cardknox')) :
 
                     $this->log("Info: set_transaction_id");
                     $order->set_transaction_id($parsedResponse['xRefNum']);
-
+                    
+                    
                     $this->log("Info: save_payment");
                     $paymentInfo->save_payment($forceCustomer, $parsedResponse);
+                    
+                    /*----Start PLGN-186----*/
+                    $this->log("Info: save_payment forceCustomer=".$forceCustomer );
+                    $this->log("Info: parsedResponse parsedResponse=".$parsedResponse );
+                    /*----End   PLGN-186----*/
 
                     $this->log("Info: process_response");
                     $paymentInfo->process_response($parsedResponse, $order);

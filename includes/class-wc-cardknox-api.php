@@ -47,19 +47,6 @@ class WC_Cardknox_API
         self::$transaction_key = $transaction_key;
     }
 
-    /**
-     * Get transaction key.
-     * @return string
-     */
-    // public static function get_transaction_key()
-    // {
-    //     if (!self::$transaction_key) {
-    //         $options = get_option('woocommerce_cardknox_settings');
-    //         self::set_transaction_key($options['transaction_key']);
-    //     }
-    //     return self::$transaction_key;
-    // }
-
     /*----Start PLGN-186----*/
     public static function get_transaction_key() {
         if ( ! self::$transaction_key ) {

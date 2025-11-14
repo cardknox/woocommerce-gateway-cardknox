@@ -48,7 +48,7 @@ class WC_Cardknox_API
     }
 
     /*----Start PLGN-186----*/
-    public static function get_transaction_key() {
+    public static function getTransactionKey() {
         if ( ! self::$transaction_key ) {
             // use the right option key for your gateway!
             $options = get_option( 'woocommerce_cardknox_settings', [] );
@@ -74,7 +74,7 @@ class WC_Cardknox_API
      */
     public static function request($request, $method = 'POST')
     {
-        $request['xKey'] =  self::get_transaction_key();
+        $request['xKey'] =  self::getTransactionKey();
         $request['xVersion'] =  '5.0.0';
         $request['xSoftwareVersion'] =  WC()->version;
         $request['xSoftwareName'] =  'Wordpress_WooCommerce';

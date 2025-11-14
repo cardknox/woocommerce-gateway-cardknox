@@ -44,49 +44,59 @@ final class WC_Gateway_Cardknox_Blocks_Support extends AbstractPaymentMethodType
     
      /*----Start PLGN-186----*/
      public function get_payment_method_script_handles() {
-        $script_path       = '/blocks/build/index.js';
-        $script_url        = WC_CARDKNOX_PLUGIN_URL . $script_path;
-        $asset_php         = WC_CARDKNOX_PLUGIN_PATH . '/blocks/build/index.asset.php';
-        $script_js         = WC_CARDKNOX_PLUGIN_PATH . $script_path;
+        $script_path = '/blocks/build/index.js';
+        $script_url  = WC_CARDKNOX_PLUGIN_URL . $script_path;
+        $asset_php   = WC_CARDKNOX_PLUGIN_PATH . '/blocks/build/index.asset.php';
+        $script_js   = WC_CARDKNOX_PLUGIN_PATH . $script_path;
     
-        $loaded = file_exists($asset_php) ? include_once $asset_php : false;
+        // Default / fallback
+        $loaded = array(
+            'dependencies' => array(
+                'wc-blocks-registry',
+                'wc-settings',
+                'wp-element',
+                'wp-html-entities',
+                'wp-i18n',
+            ),
+            'version' => file_exists( $script_js )
+                ? filemtime( $script_js )
+                : ( defined( 'WC_CARDKNOX_VERSION' ) ? WC_CARDKNOX_VERSION : time() ),
+        );
     
-        // If include_once returned TRUE (already included) or file missing, use fallbacks
-        if ( ! is_array($loaded) ) {
-            $loaded = array(
-                'dependencies' => array(
-                    'wc-blocks-registry',
-                    'wc-settings',
-                    'wp-element',
-                    'wp-html-entities',
-                    'wp-i18n',
-                ),
-                'version' => ( file_exists($script_js) ? filemtime($script_js) :
-                             ( defined('WC_CARDKNOX_VERSION') ? WC_CARDKNOX_VERSION : time() ) ),
-            );
+        // Try to load asset file (no include_once)
+        if ( file_exists( $asset_php ) ) {
+            $asset = include $asset_php; // 
+    
+            if ( is_array( $asset ) ) {
+                if ( isset( $asset['dependencies'] ) && is_array( $asset['dependencies'] ) ) {
+                    $loaded['dependencies'] = $asset['dependencies'];
+                }
+                if ( isset( $asset['version'] ) ) {
+                    $loaded['version'] = $asset['version'];
+                }
+            }
         }
     
-        $deps = is_array($loaded['dependencies'] ?? null) ? $loaded['dependencies'] : array();
-        if ( ! in_array('cardknox-ifields', $deps, true) ) {
+        $deps = $loaded['dependencies'];
+        if ( ! in_array( 'cardknox-ifields', $deps, true ) ) {
             $deps[] = 'cardknox-ifields';
         }
     
-        // Register iFields first (header)
-        wp_register_script('cardknox-ifields', CARDKNOX_IFIELDS_URL, array(), '3.0.2503.2101', false);
-        wp_enqueue_script('cardknox-ifields');
+        wp_register_script( 'cardknox-ifields', CARDKNOX_IFIELDS_URL, array(), '3.0.2503.2101', false );
+        wp_enqueue_script( 'cardknox-ifields' );
     
         wp_register_script(
             'wc-cardknox-blocks',
             $script_url,
             $deps,
-            $loaded['version'] ?? time(),
+            $loaded['version'],
             true
         );
     
-        wp_set_script_translations('wc-cardknox-blocks', 'woocommerce-gateway-cardknox');
+        wp_set_script_translations( 'wc-cardknox-blocks', 'woocommerce-gateway-cardknox' );
     
-        return array('wc-cardknox-blocks');
-    }    
+        return array( 'wc-cardknox-blocks' );
+    }       
      /*----End   PLGN-186----*/
 
     /**

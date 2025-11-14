@@ -69,8 +69,8 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
     /*----Start PLGN-186----*/
     public $bgcolor = '';
-    public $enable_3ds; 
-    public $threeds_env;
+    public $enable3Ds; 
+    public $threedsEnv;
     public $applicable_countries;
     public $specific_countries;
     public $apple_quickcheckout;
@@ -133,8 +133,8 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $this->logging                 = 'yes' === $this->get_option('logging');
         $this->authonly_status         = $this->get_option('auth_only_order_status');
         $this->bgcolor                 = $this->get_option('bgcolor');
-        $this->enable_3ds              = $this->get_option('enable-3ds');
-        $this->threeds_env             = $this->get_option('3ds-env');
+        $this->enable3Ds              = $this->get_option('enable-3ds');
+        $this->threedsEnv             = $this->get_option('3ds-env');
         $this->applicable_countries    = $this->get_option('applicable_countries');
         $this->specific_countries      = $this->get_option('specific_countries');
 
@@ -475,8 +475,8 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             'i18n_terms'           => __('Please accept the terms and conditions first', 'woocommerce-gateway-cardknox'),
             'i18n_required_fields' => __('Please fill in required checkout fields first', 'woocommerce-gateway-cardknox'),
             'bgcolor'              => $this->bgcolor,
-            'enable_3ds'           => $this->enable_3ds,
-            'threeds_env'          => $this->threeds_env,
+            'enable_3ds'           => $this->enable3Ds,
+            'threeds_env'          => $this->threedsEnv,
             'xVersion'             => '5.0.0',
             'xSoftwareVersion'     => WC()->version,
             'xSoftwareName'        => 'Wordpress_WooCommerce',
@@ -665,7 +665,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                 $paymentName = get_post_meta($orderId, '_payment_method', true);
 
                 // 3DS branch
-                if ($this->enable_3ds === 'yes') {
+                if ($this->enable3Ds === 'yes') {
 
                     if (is_wp_error($response)) {
                         $order->add_order_note($response->get_error_message());

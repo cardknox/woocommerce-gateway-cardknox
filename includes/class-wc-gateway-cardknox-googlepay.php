@@ -20,7 +20,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
 
     /*----Start PLGN-186----*/
     public $googlepayQuickCheckout;
-    public $googlepay_merchant_name;
+    public $googlepayMerchantName;
     public $googlepay_environment;
     public $googlepay_button_style;
     public $authonly_status;
@@ -64,7 +64,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         $this->googlepayQuickCheckout             = $this->get_option('googlepay_quickcheckout');
         $this->title                            = $this->get_option('googlepay_title');
         $this->description                      = __('Pay with your Google Pay.', 'woocommerce-gateway-cardknox');
-        $this->googlepay_merchant_name          = $this->get_option('googlepay_merchant_name');
+        $this->googlepayMerchantName          = $this->get_option('googlepay_merchant_name');
         $this->googlepay_environment            = $this->get_option('googlepay_environment');
         $this->googlepay_button_style           = $this->get_option('googlepay_button_style');
 
@@ -206,7 +206,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         $cardknoxGooglepaySettings = array(
             'enabled'                 => $this->enabled,
             'title'                   => $this->title,
-            'merchant_name'           => $this->googlepay_merchant_name,
+            'merchant_name'           => $this->googlepayMerchantName,
             'environment'             => $this->googlepay_environment,
             'button_style'            => $this->googlepay_button_style,
             'payment_action'          => $this->capture,

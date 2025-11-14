@@ -73,7 +73,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
     public $threedsEnv;
     public $applicableCountries;
     public $specificCountries;
-    public $apple_quickcheckout;
+    public $appleQuickcheckout;
     public $applePayGateway;
     public $googlePayGateway;
     /*----End   PLGN-186----*/

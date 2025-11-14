@@ -71,11 +71,11 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
     public $bgcolor = '';
     public $enable3Ds; 
     public $threedsEnv;
-    public $applicable_countries;
-    public $specific_countries;
+    public $applicableCountries;
+    public $specificCountries;
     public $apple_quickcheckout;
-    public $apple_pay_gateway;
-    public $google_pay_gateway;
+    public $applePayGateway;
+    public $googlePayGateway;
     /*----End   PLGN-186----*/
 
 
@@ -135,16 +135,16 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $this->bgcolor                 = $this->get_option('bgcolor');
         $this->enable3Ds              = $this->get_option('enable-3ds');
         $this->threedsEnv             = $this->get_option('3ds-env');
-        $this->applicable_countries    = $this->get_option('applicable_countries');
-        $this->specific_countries      = $this->get_option('specific_countries');
+        $this->applicableCountries    = $this->get_option('applicable_countries');
+        $this->specificCountries      = $this->get_option('specific_countries');
 
 
 
         WC_Cardknox_API::set_transaction_key($this->transaction_key);
 
         // Initialize the child gateways
-        $this->apple_pay_gateway = new WCCardknoxApplepay();
-        $this->google_pay_gateway = new WCCardknoxGooglepay();
+        $this->applePayGateway = new WCCardknoxApplepay();
+        $this->googlePayGateway = new WCCardknoxGooglepay();
 
         // Hooks.
         add_action('wp_enqueue_scripts', array($this, 'payment_scripts'));
@@ -1406,7 +1406,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                 </thead>
                 <tbody>
                     <?php
-                        $this->apple_pay_gateway->generate_settings_html();
+                        $this->applePayGateway->generate_settings_html();
                     ?>
                 </tbody>
             </table>
@@ -1421,7 +1421,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                 </thead>
                 <tbody>
                     <?php
-                    $this->google_pay_gateway->generate_settings_html();
+                    $this->googlePayGateway->generate_settings_html();
                     ?>
                 </tbody>
             </table>
@@ -1450,15 +1450,15 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             return $available_gateways;
         }
 
-        $applicable_countries = $this->applicable_countries;
-        $specific_countries    = $this->specific_countries;
+        $applicableCountries = $this->applicableCountries;
+        $specificCountries    = $this->specificCountries;
 
-        if (isset($applicable_countries) && $applicable_countries == 1) {
+        if (isset($applicableCountries) && $applicableCountries == 1) {
             // Get the customer's billing and shipping addresses
             $billing_country = WC()->customer->get_billing_country();
 
             // Define the country codes for which you want to allow the payment method
-            $enabled_countries = $specific_countries; // Add the country codes to this array
+            $enabled_countries = $specificCountries; // Add the country codes to this array
 
             // Check if the billing or shipping address country is in the allow countries array
             if (!in_array($billing_country, $enabled_countries)) {

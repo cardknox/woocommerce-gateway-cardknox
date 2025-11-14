@@ -21,8 +21,8 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
     /*----Start PLGN-186----*/
     public $googlepayQuickCheckout;
     public $googlepayMerchantName;
-    public $googlepay_environment;
-    public $googlepay_button_style;
+    public $googlepayEnvironment;
+    public $googlepayButtonStyle;
     public $authonly_status;
     public $googlepay_applicable_countries;
     public $googlepay_specific_countries;
@@ -65,8 +65,8 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         $this->title                            = $this->get_option('googlepay_title');
         $this->description                      = __('Pay with your Google Pay.', 'woocommerce-gateway-cardknox');
         $this->googlepayMerchantName          = $this->get_option('googlepay_merchant_name');
-        $this->googlepay_environment            = $this->get_option('googlepay_environment');
-        $this->googlepay_button_style           = $this->get_option('googlepay_button_style');
+        $this->googlepayEnvironment            = $this->get_option('googlepay_environment');
+        $this->googlepayButtonStyle           = $this->get_option('googlepay_button_style');
 
         /*----Start PLGN-186----*/
         $this->capture                          = 'yes' === $this->get_option( 'capture', 'no' );   // New Code
@@ -207,8 +207,8 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
             'enabled'                 => $this->enabled,
             'title'                   => $this->title,
             'merchant_name'           => $this->googlepayMerchantName,
-            'environment'             => $this->googlepay_environment,
-            'button_style'            => $this->googlepay_button_style,
+            'environment'             => $this->googlepayEnvironment,
+            'button_style'            => $this->googlepayButtonStyle,
             'payment_action'          => $this->capture,
             'applicable_countries'    => $this->googlepay_applicable_countries,
             'specific_countries'      => $this->googlepay_specific_countries,

@@ -80,11 +80,6 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         $this->applepay_environment             = $this->get_option('applepay_environment');
         $this->applepay_button_style            = $this->get_option('applepay_button_style');
         $this->applepay_button_type             = $this->get_option('applepay_button_type');
-        
-        /*$this->capture                        = 'yes' === $option['capture'];
-        $this->authonly_status                  = $option['auth_only_order_status'];
-        $this->applepay_applicable_countries    = $option['applicable_countries'];
-        $this->applepay_specific_countries      = $option['specific_countries'];*/
 
         /*----Start PLGN-186----*/
         $this->capture                       = 'yes' === $this->get_option( 'capture', 'no' );

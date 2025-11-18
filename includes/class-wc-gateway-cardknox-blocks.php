@@ -41,26 +41,18 @@ final class WC_Gateway_Cardknox_Blocks_Support extends AbstractPaymentMethodType
      *
      * @return array
      */
+    
+     
      public function get_payment_method_script_handles() {
-        $script_path = '/blocks/build/index.js';
-        $script_url  = WC_CARDKNOX_PLUGIN_URL . $script_path;
-        $asset_php   = WC_CARDKNOX_PLUGIN_PATH . '/blocks/build/index.asset.php';
-        $script_js   = WC_CARDKNOX_PLUGIN_PATH . $script_path;
+        $script_path       = '/blocks/build/index.js';
+        $script_url        = WC_CARDKNOX_PLUGIN_URL . $script_path;
+        $asset_php         = WC_CARDKNOX_PLUGIN_PATH . '/blocks/build/index.asset.php';
+        $script_js         = WC_CARDKNOX_PLUGIN_PATH . $script_path;
     
-        // ---- Load asset file safely (no include_once) ----
-        $loaded = false;
+        $loaded = file_exists($asset_php) ? include_once $asset_php : false; // NOSONAR: generated asset file, not a namespaced import.
     
-        if ( file_exists( $asset_php ) ) {
-            // index.asset.php returns an array with 'dependencies' and 'version'
-            $maybe_loaded = include $asset_php;
-    
-            if ( is_array( $maybe_loaded ) ) {
-                $loaded = $maybe_loaded;
-            }
-        }
-    
-        // If include returned non-array OR file missing, use fallbacks
-        if ( ! is_array( $loaded ) ) {
+        // If include_once returned TRUE (already included) or file missing, use fallbacks
+        if ( ! is_array($loaded) ) {
             $loaded = array(
                 'dependencies' => array(
                     'wc-blocks-registry',
@@ -69,20 +61,19 @@ final class WC_Gateway_Cardknox_Blocks_Support extends AbstractPaymentMethodType
                     'wp-html-entities',
                     'wp-i18n',
                 ),
-                'version' => file_exists( $script_js )
-                    ? filemtime( $script_js )
-                    : ( defined( 'WC_CARDKNOX_VERSION' ) ? WC_CARDKNOX_VERSION : time() ),
+                'version' => ( file_exists($script_js) ? filemtime($script_js) :
+                             ( defined('WC_CARDKNOX_VERSION') ? WC_CARDKNOX_VERSION : time() ) ),
             );
         }
     
-        $deps = is_array( $loaded['dependencies'] ?? null ) ? $loaded['dependencies'] : array();
-        if ( ! in_array( 'cardknox-ifields', $deps, true ) ) {
+        $deps = is_array($loaded['dependencies'] ?? null) ? $loaded['dependencies'] : array();
+        if ( ! in_array('cardknox-ifields', $deps, true) ) {
             $deps[] = 'cardknox-ifields';
         }
     
         // Register iFields first (header)
-        wp_register_script( 'cardknox-ifields', CARDKNOX_IFIELDS_URL, array(), '3.0.2503.2101', false );
-        wp_enqueue_script( 'cardknox-ifields' );
+        wp_register_script('cardknox-ifields', CARDKNOX_IFIELDS_URL, array(), '3.0.2503.2101', false);
+        wp_enqueue_script('cardknox-ifields');
     
         wp_register_script(
             'wc-cardknox-blocks',
@@ -92,9 +83,9 @@ final class WC_Gateway_Cardknox_Blocks_Support extends AbstractPaymentMethodType
             true
         );
     
-        wp_set_script_translations( 'wc-cardknox-blocks', 'woocommerce-gateway-cardknox' );
+        wp_set_script_translations('wc-cardknox-blocks', 'woocommerce-gateway-cardknox');
     
-        return array( 'wc-cardknox-blocks' );
+        return array('wc-cardknox-blocks');
     }
 
     /**

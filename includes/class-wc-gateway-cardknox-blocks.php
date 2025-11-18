@@ -72,7 +72,7 @@ final class WC_Gateway_Cardknox_Blocks_Support extends AbstractPaymentMethodType
                 ),
                 'version' => $version,
             );
-        }        
+        }
     
         $deps = is_array($loaded['dependencies'] ?? null) ? $loaded['dependencies'] : array();
         if ( ! in_array('cardknox-ifields', $deps, true) ) {

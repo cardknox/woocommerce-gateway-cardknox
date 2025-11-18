@@ -1,10 +1,10 @@
 <?php
 /*
 Plugin Name: WooCommerce Cardknox Gateway
-Description: Accept credit card payments on your store using the Cardknox gateway.
-Author: Cardknox Development Inc.
-Author URI: https://www.cardknox.com/
-Version: 1.2.73
+Description: Accept payments via credit card, Apple Pay, Google Pay, and manage transactions within WordPress.
+Author: Sola Payments.
+Author URI: https://solapayments.com/
+Version: 1.2.81
 Requires at least: 4.4
 Tested up to: 6.7.1
 WC requires at least: 2.5
@@ -12,6 +12,7 @@ WC tested up to: 8.4.0
 WooCommerce Subscriptions tested up to: 6.7.0
 Text Domain: woocommerce-gateway-cardknox
 Domain Path: /languages
+Requires Plugins: woocommerce
 
 Copyright © 2018 Cardknox Development Inc. All rights reserved.
 
@@ -36,12 +37,15 @@ if (!defined('ABSPATH')) {
 /**
  * Required minimums and constants
  */
-define('WC_CARDKNOX_VERSION', '1.2.73');
+define('WC_CARDKNOX_VERSION', '1.2.81');
 define('WC_CARDKNOX_MIN_PHP_VER', '5.6.0');
 define('WC_CARDKNOX_MIN_WC_VER', '2.5.0');
 define('WC_CARDKNOX_MAIN_FILE', __FILE__);
 define('WC_CARDKNOX_PLUGIN_URL', untrailingslashit(plugins_url(basename(plugin_dir_path(__FILE__)), basename(__FILE__))));
 define('WC_CARDKNOX_PLUGIN_PATH', untrailingslashit(plugin_dir_path(__FILE__)));
+
+define( 'CARDKNOX_IFIELDS_URL', 'https://cdn.cardknox.com/ifields/3.0.2503.2101/ifields.min.js' );
+
 
 
 /** 
@@ -53,7 +57,7 @@ if (version_compare(get_bloginfo('version'), '6.5', '<')) {
     add_action('admin_notices', function () {
         echo '<div class="error"><p>';
         esc_html_e(
-            'WooCommerce Cardknox Gateway requires WordPress version 6.5 or higher. Please update WordPress to use this plugin.',
+            'WooCommerce Sola Gateway requires WordPress version 6.5 or higher. Please update WordPress to use this plugin.',
             'woocommerce-gateway-cardknox'
         );
         echo '</p></div>';
@@ -67,6 +71,41 @@ if (version_compare(get_bloginfo('version'), '6.5', '<')) {
     // Stop further execution of the plugin
     return;
 }
+
+// Check and register Block Editor support early
+// add_action('init', function() {
+//     // Check if WooCommerce Blocks is available and register support
+//     if (class_exists('Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType')) {
+//         require_once dirname(__FILE__) . '/includes/class-wc-gateway-cardknox-blocks.php';
+        
+//         add_action(
+//             'woocommerce_blocks_payment_method_type_registration',
+//             function(Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry $payment_method_registry) {
+//                 $payment_method_registry->register(new WC_Gateway_Cardknox_Blocks_Support());
+//             }
+//         );
+//     }
+// }, 5); // Priority 5 to run early
+
+
+add_action('init', function() {
+    if (class_exists('Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType')) {
+        require_once __DIR__ . '/includes/class-wc-gateway-cardknox-blocks.php';              // card
+        require_once __DIR__ . '/includes/class-wc-cardknox-applepay-blocks-support.php';     // apple
+
+        add_action(
+            'woocommerce_blocks_payment_method_type_registration',
+            function(Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry $registry) {
+                $registry->register(new WC_Gateway_Cardknox_Blocks_Support());
+
+                $apple = new WC_Cardknox_ApplePay_Blocks_Support();
+                if ($apple->is_active()) {
+                    $registry->register($apple);
+                }
+            }
+        );
+    }
+}, 5);
 
 
 if (!class_exists('WC_Cardknox')) :
@@ -144,7 +183,9 @@ if (!class_exists('WC_Cardknox')) :
             add_action('admin_init', array($this, 'check_environment'));
             add_action('admin_notices', array($this, 'admin_notices'), 15);
             add_action('init', array($this, 'init_plugin'));
+            add_action('init', array($this, 'register_block_scripts'));
             add_action('wp_enqueue_scripts', array($this, 'quickChekoutPaymentScripts'));
+            add_action('wp_enqueue_scripts', array($this, 'enqueue_block_styles'));
 
             add_action('wp_ajax_update_cart_total', array($this, 'updateCartTotal'));
             add_action('wp_ajax_nopriv_update_cart_total', array($this, 'updateCartTotal'));
@@ -155,6 +196,84 @@ if (!class_exists('WC_Cardknox')) :
             add_action('wp_ajax_applepay_cardknox_create_order', array($this, 'applepayCardknoxCreateorder'));
             add_action('wp_ajax_nopriv_applepay_cardknox_create_order', array($this, 'applepayCardknoxCreateorder'));
         }
+
+        /**
+         * Register scripts for block editor support
+         */
+        public function register_block_scripts() {
+            if (!class_exists('Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType')) {
+                return;
+            }
+        
+            // Only handle assets specific to Blocks checkout here; the Blocks integration
+            // class is responsible for registering/enqueuing the JS handle.
+            $script_path = '/blocks/build/index.js';
+            if (!file_exists(WC_CARDKNOX_PLUGIN_PATH . $script_path)) {
+                return;
+            }
+            
+            // Register styles (enqueue only when Blocks checkout is active)
+            wp_register_style(
+                'wc-cardknox-blocks-style',
+                WC_CARDKNOX_PLUGIN_URL . '/blocks/src/style.css',
+                array(),
+                WC_CARDKNOX_VERSION . '.' . time()
+            );
+            if ( $this->isBlocksCheckoutActive() ) {
+                wp_enqueue_style('wc-cardknox-blocks-style');
+            }
+        
+            // Load iFields SDK
+            if ( $this->isBlocksCheckoutActive() ) {
+                wp_register_script(
+                    'cardknox-ifields',
+                    CARDKNOX_IFIELDS_URL,
+                    array(),
+                    '3.0.2503.2101',
+                    false
+                );
+                if (! wp_script_is('cardknox-ifields', 'enqueued')) {
+                    wp_enqueue_script('cardknox-ifields');
+                }
+            }
+        
+            // Pass data to the block scripts
+            wp_localize_script('wc-cardknox-blocks', 'wc_cardknox_blocks_params', array(
+                'ajax_url' => admin_url('admin-ajax.php'),
+                'ifields_cdn_url' => CARDKNOX_IFIELDS_URL,
+                'card_logos_url' => WC_CARDKNOX_PLUGIN_URL . '/images/card-logos.png',
+                'nonce' => wp_create_nonce('wc-cardknox-blocks'),
+            ));
+        }
+        
+        /**
+         * Enqueue block styles on checkout pages
+         */
+        public function enqueue_block_styles() {
+            if ( ! is_admin() && $this->isBlocksCheckoutActive() ) {
+                wp_enqueue_style(
+                    'wc-cardknox-blocks-style',
+                    WC_CARDKNOX_PLUGIN_URL . '/blocks/src/style.css',
+                    array(),
+                    WC_CARDKNOX_VERSION . '.' . time()
+                );
+            }
+        }
+
+        /**
+         * Detect whether the site is using the Checkout Block on the checkout page.
+         */
+        private function isBlocksCheckoutActive() {
+            if ( ! function_exists('has_block') ) {
+                return false;
+            }
+            $checkout_page_id = wc_get_page_id('checkout');
+            if ( $checkout_page_id && $checkout_page_id !== -1 ) {
+                return has_block('woocommerce/checkout', $checkout_page_id);
+            }
+            return false;
+        }
+        
         /*
          * Initialize the plugin functionality as per the standard
         */
@@ -227,7 +346,7 @@ if (!class_exists('WC_Cardknox')) :
 
             if (empty($secret) && !(isset($_GET['page'], $_GET['section']) && 'wc-settings' === $_GET['page'] && 'cardknox' === $_GET['section'])) {
                 $setting_link = $this->get_setting_link();
-                $this->add_admin_notice('prompt_connect', 'notice notice-warning', sprintf(__('Cardknox is almost ready. To get started, <a href="%s">set your Cardknox account keys</a>.', 'woocommerce-gateway-cardknox'), $setting_link));
+                $this->add_admin_notice('prompt_connect', 'notice notice-warning', sprintf(__('Sola is almost ready. To get started, <a href="%s">set your Sola account keys</a>.', 'woocommerce-gateway-cardknox'), $setting_link));
             }
         }
 
@@ -268,23 +387,23 @@ if (!class_exists('WC_Cardknox')) :
         public static function get_environment_warning()
         {
             if (version_compare(phpversion(), WC_CARDKNOX_MIN_PHP_VER, '<')) {
-                $message = __('WooCommerce Cardknox - The minimum PHP version required for this plugin is %1$s. You are running %2$s.', 'woocommerce-gateway-cardknox');
+                $message = __('WooCommerce Sola - The minimum PHP version required for this plugin is %1$s. You are running %2$s.', 'woocommerce-gateway-cardknox');
 
                 return sprintf($message, WC_CARDKNOX_MIN_PHP_VER, phpversion());
             }
 
             if (!defined('WC_VERSION')) {
-                return __('WooCommerce Cardknox requires WooCommerce to be activated to work.', 'woocommerce-gateway-cardknox');
+                return __('WooCommerce Sola requires WooCommerce to be activated to work.', 'woocommerce-gateway-cardknox');
             }
 
             if (version_compare(WC_VERSION, WC_CARDKNOX_MIN_WC_VER, '<')) {
-                $message = __('WooCommerce Cardknox - The minimum WooCommerce version required for this plugin is %1$s. You are running %2$s.', 'woocommerce-gateway-cardknox');
+                $message = __('WooCommerce Sola - The minimum WooCommerce version required for this plugin is %1$s. You are running %2$s.', 'woocommerce-gateway-cardknox');
 
                 return sprintf($message, WC_CARDKNOX_MIN_WC_VER, WC_VERSION);
             }
 
             if (!function_exists('curl_init')) {
-                return __('WooCommerce Cardknox - cURL is not installed.', 'woocommerce-gateway-cardknox');
+                return __('WooCommerce Sola - cURL is not installed.', 'woocommerce-gateway-cardknox');
             }
 
             return false;
@@ -463,11 +582,11 @@ if (!class_exists('WC_Cardknox')) :
                     if (is_wp_error($result)) {
                         $order->add_order_note(__('Unable to capture transaction!', 'woocommerce-gateway-cardknox') . ' ' . $result->get_error_message());
                     } else {
-                        $order->add_order_note(sprintf(__('Cardknox transaction captured (Charge ID: %s)', 'woocommerce-gateway-cardknox'), $result['xRefNum']));
+                        $order->add_order_note(sprintf(__('Sola transaction captured (Charge ID: %s)', 'woocommerce-gateway-cardknox'), $result['xRefNum']));
                         update_post_meta($order_id, '_cardknox_transaction_captured', 'yes');
 
                         // Store other data such as fees
-                        update_post_meta($order_id, 'Cardknox Payment ID', $result['xRefNum']);
+                        update_post_meta($order_id, 'Sola Payment ID', $result['xRefNum']);
                         update_post_meta($order_id, '_transaction_id', $result['xRefNum']);
                         $order->payment_complete($result['xRefNum']);
                     }
@@ -497,7 +616,7 @@ if (!class_exists('WC_Cardknox')) :
                     if (is_wp_error($result)) {
                         $order->add_order_note(__('Unable to refund transaction!', 'woocommerce-gateway-cardknox') . ' ' . $result->get_error_message());
                     } else {
-                        $order->add_order_note(sprintf(__('Cardknox transaction refunded (RefNum: %s)', 'woocommerce-gateway-cardknox'), $result['xRefNum']));
+                        $order->add_order_note(sprintf(__('Sola transaction refunded (RefNum: %s)', 'woocommerce-gateway-cardknox'), $result['xRefNum']));
                         delete_post_meta($order_id, '_cardknox_transaction_captured');
                         delete_post_meta($order_id, '_cardknox_xrefnum');
                     }
@@ -560,7 +679,7 @@ if (!class_exists('WC_Cardknox')) :
             $applePay_quickcheckout = isset($applePayoptions['applepay_quickcheckout']) ? $applePayoptions['applepay_quickcheckout'] : 'no';
 
             if (is_cart()) {
-                wp_enqueue_script('cardknox', 'https://cdn.cardknox.com/ifields/3.0.2503.2101/ifields.min.js', '', '1.0.0', false);
+                wp_enqueue_script('cardknox', CARDKNOX_IFIELDS_URL, '', '1.0.0', false);
             }
 
             if (is_cart() && $googlepay_quickcheckout == 'no') {
@@ -838,7 +957,7 @@ if (!class_exists('WC_Cardknox')) :
 
             // Set payment method and order status
             $order->set_payment_method('cardknox-googlepay');
-            $order->set_payment_method_title('Cardknox Google Pay');
+            $order->set_payment_method_title('Sola Google Pay');
             $order->calculate_totals();
             $order->update_status('pending', __('Order pending payment', 'woocommerce'));
 
@@ -920,7 +1039,7 @@ if (!class_exists('WC_Cardknox')) :
 
             // Set payment method and order status
             $order->set_payment_method('cardknox-applepay');
-            $order->set_payment_method_title('Cardknox Apple Pay');
+            $order->set_payment_method_title('Sola Apple Pay');
             $order->calculate_totals();
             $order->update_status('pending', __('Order pending payment', 'woocommerce'));
 

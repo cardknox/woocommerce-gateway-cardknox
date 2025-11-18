@@ -159,6 +159,19 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
             return;
         }
 
+        // If the gateway is disabled, do not enqueue any Google Pay assets
+        if ('yes' !== $this->enabled) {
+            return;
+        }
+
+        // Avoid loading Google Pay legacy assets on the Block Checkout to prevent
+        // duplicate event handlers and render loops in React Blocks.
+        if (class_exists('WC_Cardknox') && method_exists('WC_Cardknox', 'is_block_checkout')) {
+            if (WC_Cardknox::is_block_checkout()) {
+                return;
+            }
+        }
+        
         wp_enqueue_style(
             'woocommerce_cardknox_gpay',
             plugins_url(

@@ -20,7 +20,7 @@ jQuery(function ($) {
   /**
    * Object to handle Cardknox admin functions.
    */
-  var wc_cardknox_admin = {
+  const wc_cardknox_admin = {
     getSecretKey: function () {
       return $("#woocommerce_cardknox_transaction_key").val();
     },

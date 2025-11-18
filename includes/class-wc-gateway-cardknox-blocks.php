@@ -50,9 +50,18 @@ final class WC_Gateway_Cardknox_Blocks_Support extends AbstractPaymentMethodType
         $script_js         = WC_CARDKNOX_PLUGIN_PATH . $script_path;
     
         $loaded = file_exists($asset_php) ? include_once $asset_php : false; // NOSONAR: generated asset file, not a namespaced import.
-    
-        // If include_once returned TRUE (already included) or file missing, use fallbacks
-        if ( ! is_array($loaded) ) {
+
+        if ( ! is_array( $loaded ) ) {
+
+            // Decide version without nested ternary (Sonar-friendly)
+            if ( file_exists( $script_js ) ) {
+                $version = filemtime( $script_js );
+            } elseif ( defined( 'WC_CARDKNOX_VERSION' ) ) {
+                $version = WC_CARDKNOX_VERSION;
+            } else {
+                $version = time();
+            }
+        
             $loaded = array(
                 'dependencies' => array(
                     'wc-blocks-registry',
@@ -61,10 +70,9 @@ final class WC_Gateway_Cardknox_Blocks_Support extends AbstractPaymentMethodType
                     'wp-html-entities',
                     'wp-i18n',
                 ),
-                'version' => ( file_exists($script_js) ? filemtime($script_js) :
-                             ( defined('WC_CARDKNOX_VERSION') ? WC_CARDKNOX_VERSION : time() ) ),
+                'version' => $version,
             );
-        }
+        }        
     
         $deps = is_array($loaded['dependencies'] ?? null) ? $loaded['dependencies'] : array();
         if ( ! in_array('cardknox-ifields', $deps, true) ) {

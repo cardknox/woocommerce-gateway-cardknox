@@ -369,12 +369,6 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
             error_log('Fallback Sola Token from user meta: ' . print_r($cardknox_card_id, true));
         }
 
-        // If we couldn't find a Cardknox customer linked to the account, fallback to the order meta data.
-
-        //		if ( false !== $subscription->order ) {
-        //			$cardknox_card_id     = get_post_meta( ( $this->wc_pre_30 ? $subscription->order->id : $subscription->get_parent_id() ), '_cardknox_token', true );
-        //		}
-
         return $payment_method_to_display;
     }
 

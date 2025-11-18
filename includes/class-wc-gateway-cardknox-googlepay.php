@@ -17,6 +17,14 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
      * @var bool
      */
     public $capture;
+    public $googlepayQuickCheckout;
+    public $googlepayMerchantName;
+    public $googlepayEnvironment;
+    public $googlepayButtonStyle;
+    public $authonlyStatus;
+    public $googlepayApplicableCountries;
+    public $googlepaySpecificCountries;
+    public $wcVersion;
 
     public function __construct()
     {
@@ -50,18 +58,17 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         $option = get_option('woocommerce_cardknox_settings');
 
         $this->enabled                          = $this->get_option('googlepay_enabled');
-        $this->google_quickcheckout             = $this->get_option('googlepay_quickcheckout');
+        $this->googlepayQuickCheckout           = $this->get_option('googlepay_quickcheckout');
         $this->title                            = $this->get_option('googlepay_title');
         $this->description                      = __('Pay with your Google Pay.', 'woocommerce-gateway-cardknox');
-        $this->googlepay_merchant_name          = $this->get_option('googlepay_merchant_name');
-        $this->googlepay_environment            = $this->get_option('googlepay_environment');
-        $this->googlepay_button_style           = $this->get_option('googlepay_button_style');
+        $this->googlepayMerchantName            = $this->get_option('googlepay_merchant_name');
+        $this->googlepayEnvironment             = $this->get_option('googlepay_environment');
+        $this->googlepayButtonStyle             = $this->get_option('googlepay_button_style');
+        $this->capture                          = 'yes' === $this->get_option( 'capture', 'no' );   // New Code
+        $this->authonlyStatus                   = isset( $option['auth_only_order_status'] ) ? $option['auth_only_order_status'] : 'wc-on-hold';    // New Code
+        $this->googlepayApplicableCountries     = in_array((string)($option['applicable_countries'] ?? '0'), ['0','1'], true) ? (string)($option['applicable_countries'] ?? '0') : '0';   // New Code
+        $this->googlepaySpecificCountries       = isset( $option['specific_countries'] ) && is_array( $option['specific_countries'] ) ? $option['specific_countries'] : []; // New Code
         
-        $this->capture                          = 'yes' === $option['capture'];
-        $this->authonly_status                  = $option['auth_only_order_status'];
-
-        $this->googlepay_applicable_countries   = $option['applicable_countries'];
-        $this->googlepay_specific_countries     = $option['specific_countries'];
 
 
         $this->wcVersion = version_compare(WC_VERSION, '3.0.0', '<');
@@ -73,7 +80,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         add_action('woocommerce_review_order_after_submit', array($this, 'cardknox_gpay_order_after_submit'));
         add_filter('woocommerce_available_payment_gateways', array($this, 'cardknox_allow_gpay_method_by_country'));
 
-        if (is_cart() && $this->google_quickcheckout == 'no') {
+        if (is_cart() && $this->googlepayQuickCheckout == 'no') {
             add_action('woocommerce_proceed_to_checkout', array($this, 'cardknox_gpay_order_after_submit'), 20);
         }
     }
@@ -194,12 +201,12 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         $cardknoxGooglepaySettings = array(
             'enabled'                 => $this->enabled,
             'title'                   => $this->title,
-            'merchant_name'           => $this->googlepay_merchant_name,
-            'environment'             => $this->googlepay_environment,
-            'button_style'            => $this->googlepay_button_style,
+            'merchant_name'           => $this->googlepayMerchantName,
+            'environment'             => $this->googlepayEnvironment,
+            'button_style'            => $this->googlepayButtonStyle,
             'payment_action'          => $this->capture,
-            'applicable_countries'    => $this->googlepay_applicable_countries,
-            'specific_countries'      => $this->googlepay_specific_countries,
+            'applicable_countries'    => $this->googlepayApplicableCountries,
+            'specific_countries'      => $this->googlepaySpecificCountries,
             'total'                   => WC()->cart->total,
             'currencyCode'            => get_woocommerce_currency(),
         );
@@ -424,7 +431,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
             }
             $xRefNum =  $response['xRefNum'];
 
-            if ($this->authonly_status == "on-hold") {
+            if ($this->authonlyStatus == "on-hold") {
                 $order->update_status(
                     'on-hold',
                     sprintf(
@@ -597,8 +604,8 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
             return $available_gateways;
         }
 
-        $applicable_countries  = $this->googlepay_applicable_countries;
-        $specific_countries    = $this->googlepay_specific_countries;
+        $applicable_countries  = $this->googlepayApplicableCountries;
+        $specific_countries    = $this->googlepaySpecificCountries;
 
         if (isset($applicable_countries) && $applicable_countries == 1) {
             // Get the customer's billing and shipping addresses

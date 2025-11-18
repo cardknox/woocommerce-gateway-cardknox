@@ -67,6 +67,18 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
     public $authonly_status;
 
+    
+    public $bgcolor = '';
+    public $enable3Ds;
+    public $threedsEnv;
+    public $applicableCountries;
+    public $specificCountries;
+    public $appleQuickcheckout;
+    public $applePayGateway;
+    public $googlePayGateway;
+
+
+
     /**
      * Constructor
      */
@@ -120,18 +132,18 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $this->logging                 = 'yes' === $this->get_option('logging');
         $this->authonly_status         = $this->get_option('auth_only_order_status');
         $this->bgcolor                 = $this->get_option('bgcolor');
-        $this->enable_3ds              = $this->get_option('enable-3ds');
-        $this->threeds_env             = $this->get_option('3ds-env');
-        $this->applicable_countries    = $this->get_option('applicable_countries');
-        $this->specific_countries      = $this->get_option('specific_countries');
+        $this->enable3Ds              = $this->get_option('enable-3ds');
+        $this->threedsEnv             = $this->get_option('3ds-env');
+        $this->applicableCountries    = $this->get_option('applicable_countries');
+        $this->specificCountries      = $this->get_option('specific_countries');
 
 
 
         WC_Cardknox_API::set_transaction_key($this->transaction_key);
 
         // Initialize the child gateways
-        $this->apple_pay_gateway = new WCCardknoxApplepay();
-        $this->google_pay_gateway = new WCCardknoxGooglepay();
+        $this->applePayGateway = new WCCardknoxApplepay();
+        $this->googlePayGateway = new WCCardknoxGooglepay();
 
         // Hooks.
         add_action('wp_enqueue_scripts', array($this, 'payment_scripts'));
@@ -462,8 +474,8 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             'i18n_terms'           => __('Please accept the terms and conditions first', 'woocommerce-gateway-cardknox'),
             'i18n_required_fields' => __('Please fill in required checkout fields first', 'woocommerce-gateway-cardknox'),
             'bgcolor'              => $this->bgcolor,
-            'enable_3ds'           => $this->enable_3ds,
-            'threeds_env'          => $this->threeds_env,
+            'enable_3ds'           => $this->enable3Ds,
+            'threeds_env'          => $this->threedsEnv,
             'xVersion'             => '5.0.0',
             'xSoftwareVersion'     => WC()->version,
             'xSoftwareName'        => 'Wordpress_WooCommerce',
@@ -652,7 +664,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                 $paymentName = get_post_meta($orderId, '_payment_method', true);
 
                 // 3DS branch
-                if ($this->enable_3ds === 'yes') {
+                if ($this->enable3Ds === 'yes') {
 
                     if (is_wp_error($response)) {
                         $order->add_order_note($response->get_error_message());
@@ -1397,7 +1409,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                 </thead>
                 <tbody>
                     <?php
-                        $this->apple_pay_gateway->generate_settings_html();
+                        $this->applePayGateway->generate_settings_html();
                     ?>
                 </tbody>
             </table>
@@ -1412,7 +1424,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                 </thead>
                 <tbody>
                     <?php
-                    $this->google_pay_gateway->generate_settings_html();
+                    $this->googlePayGateway->generate_settings_html();
                     ?>
                 </tbody>
             </table>
@@ -1441,15 +1453,15 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             return $available_gateways;
         }
 
-        $applicable_countries = $this->applicable_countries;
-        $specific_countries    = $this->specific_countries;
+        $applicableCountries = $this->applicableCountries;
+        $specificCountries    = $this->specificCountries;
 
-        if (isset($applicable_countries) && $applicable_countries == 1) {
+        if (isset($applicableCountries) && $applicableCountries == 1) {
             // Get the customer's billing and shipping addresses
             $billing_country = WC()->customer->get_billing_country();
 
             // Define the country codes for which you want to allow the payment method
-            $enabled_countries = $specific_countries; // Add the country codes to this array
+            $enabled_countries = $specificCountries; // Add the country codes to this array
 
             // Check if the billing or shipping address country is in the allow countries array
             if (!in_array($billing_country, $enabled_countries)) {

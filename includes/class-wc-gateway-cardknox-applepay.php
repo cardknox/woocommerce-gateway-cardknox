@@ -26,10 +26,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     public $applepay_applicable_countries;
     public $applepay_specific_countries;
     public $wcVersion;
-
-    /*----Start PLGN-186----*/
     public $appleQuickCheckout;
-    /*----End   PLGN-186----*/
 
     public function __construct()
     {
@@ -73,20 +70,18 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         $this->init_settings();
         $option                                 = get_option('woocommerce_cardknox_settings');
         $this->enabled                          = $this->get_option('applepay_enabled');
-        $this->appleQuickCheckout              = $this->get_option('applepay_quickcheckout');
+        $this->appleQuickCheckout               = $this->get_option('applepay_quickcheckout');
         $this->title                            = $this->get_option('applepay_title');
         $this->description                      = __('Pay with your apple card.', 'woocommerce-gateway-cardknox');
         $this->applepaymerchantidentifier       = $this->get_option('applepay_merchant_identifier');
         $this->applepay_environment             = $this->get_option('applepay_environment');
         $this->applepay_button_style            = $this->get_option('applepay_button_style');
         $this->applepay_button_type             = $this->get_option('applepay_button_type');
-
-        /*----Start PLGN-186----*/
-        $this->capture                       = 'yes' === $this->get_option( 'capture', 'no' );
-        $this->authonly_status               = $this->get_option( 'auth_only_order_status', 'processing' );
-        $this->applepay_applicable_countries = $this->get_option( 'applicable_countries', 'all' );
-        $this->applepay_specific_countries   = (array) $this->get_option( 'specific_countries', array() );
-        /*----End   PLGN-186----*/
+        $this->capture                          = 'yes' === $this->get_option( 'capture', 'no' );
+        $this->authonly_status                  = $this->get_option( 'auth_only_order_status', 'processing' );
+        $this->applepay_applicable_countries    = $this->get_option( 'applicable_countries', 'all' );
+        $this->applepay_specific_countries      = (array) $this->get_option( 'specific_countries', array() );
+        
 
         $this->wcVersion = version_compare(WC_VERSION, '3.0.0', '<');
 

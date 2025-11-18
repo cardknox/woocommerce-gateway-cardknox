@@ -158,11 +158,10 @@ if (!class_exists('WC_Cardknox')) :
          * @var array
          */
         public $notices = array();
-
-        /*----Start PLGN-186----*/
+        /**
+         * settingPage variable
+         */
         public $settingPage;
-        /*----End PLGN-186----*/
-
 
         /**
          * Protected constructor to prevent creating a new instance of the
@@ -659,7 +658,6 @@ if (!class_exists('WC_Cardknox')) :
         /**
          * For cart page load gpay button.
          */
-        /*----------Start New Code PLGN-186----------*/
         public function quickChekoutPaymentScripts() {
 
             // ---- Read options safely (Google Pay) ----
@@ -853,8 +851,6 @@ if (!class_exists('WC_Cardknox')) :
                 $cardknoxApplepaySettings
             );
         }
-
-        /*----------End   New Code PLGN-186----------*/
 
 
         /**
@@ -1117,11 +1113,8 @@ if (!class_exists('WC_Cardknox')) :
                     
                     $this->log("Info: save_payment");
                     $paymentInfo->save_payment($forceCustomer, $parsedResponse);
-                    
-                    /*----Start PLGN-186----*/
                     $this->log("Info: save_payment forceCustomer=".$forceCustomer );
                     $this->log("Info: parsedResponse parsedResponse=".$parsedResponse );
-                    /*----End   PLGN-186----*/
 
                     $this->log("Info: process_response");
                     $paymentInfo->process_response($parsedResponse, $order);

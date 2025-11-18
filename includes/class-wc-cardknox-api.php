@@ -46,8 +46,6 @@ class WC_Cardknox_API
     {
         self::$transaction_key = $transaction_key;
     }
-
-    /*----Start PLGN-186----*/
     public static function getTransactionKey() {
         if ( ! self::$transaction_key ) {
             // use the right option key for your gateway!
@@ -63,7 +61,6 @@ class WC_Cardknox_API
     
         return self::$transaction_key;
     }
-    /*----End   PLGN-186----*/
 
     /**
      * Send the request to Cardknox's API

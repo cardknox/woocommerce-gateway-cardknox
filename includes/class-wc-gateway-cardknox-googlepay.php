@@ -17,8 +17,6 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
      * @var bool
      */
     public $capture;
-
-    /*----Start PLGN-186----*/
     public $googlepayQuickCheckout;
     public $googlepayMerchantName;
     public $googlepayEnvironment;
@@ -27,7 +25,6 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
     public $googlepayApplicableCountries;
     public $googlepaySpecificCountries;
     public $wcVersion;
-    /*----End   PLGN-186----*/
 
     public function __construct()
     {
@@ -61,19 +58,17 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         $option = get_option('woocommerce_cardknox_settings');
 
         $this->enabled                          = $this->get_option('googlepay_enabled');
-        $this->googlepayQuickCheckout             = $this->get_option('googlepay_quickcheckout');
+        $this->googlepayQuickCheckout           = $this->get_option('googlepay_quickcheckout');
         $this->title                            = $this->get_option('googlepay_title');
         $this->description                      = __('Pay with your Google Pay.', 'woocommerce-gateway-cardknox');
-        $this->googlepayMerchantName          = $this->get_option('googlepay_merchant_name');
-        $this->googlepayEnvironment            = $this->get_option('googlepay_environment');
-        $this->googlepayButtonStyle           = $this->get_option('googlepay_button_style');
-
-        /*----Start PLGN-186----*/
+        $this->googlepayMerchantName            = $this->get_option('googlepay_merchant_name');
+        $this->googlepayEnvironment             = $this->get_option('googlepay_environment');
+        $this->googlepayButtonStyle             = $this->get_option('googlepay_button_style');
         $this->capture                          = 'yes' === $this->get_option( 'capture', 'no' );   // New Code
-        $this->authonlyStatus                  = isset( $option['auth_only_order_status'] ) ? $option['auth_only_order_status'] : 'wc-on-hold';    // New Code
-        $this->googlepayApplicableCountries   = in_array((string)($option['applicable_countries'] ?? '0'), ['0','1'], true) ? (string)($option['applicable_countries'] ?? '0') : '0';   // New Code
-        $this->googlepaySpecificCountries     = isset( $option['specific_countries'] ) && is_array( $option['specific_countries'] ) ? $option['specific_countries'] : []; // New Code
-        /*----End   PLGN-186----*/
+        $this->authonlyStatus                   = isset( $option['auth_only_order_status'] ) ? $option['auth_only_order_status'] : 'wc-on-hold';    // New Code
+        $this->googlepayApplicableCountries     = in_array((string)($option['applicable_countries'] ?? '0'), ['0','1'], true) ? (string)($option['applicable_countries'] ?? '0') : '0';   // New Code
+        $this->googlepaySpecificCountries       = isset( $option['specific_countries'] ) && is_array( $option['specific_countries'] ) ? $option['specific_countries'] : []; // New Code
+        
 
 
         $this->wcVersion = version_compare(WC_VERSION, '3.0.0', '<');

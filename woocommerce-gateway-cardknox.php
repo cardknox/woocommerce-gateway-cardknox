@@ -713,17 +713,17 @@ if (!class_exists('WC_Cardknox')) :
         
             // Google Pay on cart
             if ( 'no' === $googlepay_quickcheckout ) {
-                $this->handle_googlepay_cart_quickcheckout( $options );
+                $this->handleGooglepayCartQuickcheckout( $options );
             }
         
             // Apple Pay on cart
             if ( 'no' === $applePay_quickcheckout ) {
-                $this->handle_applepay_cart_quickcheckout( $applePayoptions );
+                $this->handleApplepayCartQuickcheckout( $applePayoptions );
             }
         }
         
         
-        private function handle_googlepay_cart_quickcheckout( array $options ): void {
+        private function handleGooglepayCartQuickcheckout( array $options ): void {
 
             wp_enqueue_style(
                 'woocommerce_cardknox_gpay',
@@ -790,7 +790,7 @@ if (!class_exists('WC_Cardknox')) :
             );
         }
         
-        private function handle_applepay_cart_quickcheckout( array $applePayoptions ): void {
+        private function handleApplepayCartQuickcheckout( array $applePayoptions ): void {
 
             wp_enqueue_style(
                 'woocommerce_cardknox_applepay',

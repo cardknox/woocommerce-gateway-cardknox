@@ -80,7 +80,7 @@ final class WC_Gateway_Cardknox_Blocks_Support extends AbstractPaymentMethodType
         }
     
         // Register iFields first (header)
-        wp_register_script('cardknox-ifields', CARDKNOX_IFIELDS_URL, array(), '3.0.2503.2101', false);
+        wp_register_script('cardknox-ifields', CARDKNOX_IFIELDS_URL, array(), '3.1.2508.1401', false);
         wp_enqueue_script('cardknox-ifields');
     
         wp_register_script(

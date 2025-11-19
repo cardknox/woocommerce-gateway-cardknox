@@ -630,7 +630,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
         if ($total != $amount) {
             if ($captured === "no") {
-                return new WP_Error('Error', __( 'Partial Refund Not Allowed On Authorize Only Transactions', 'woocommerce-gateway-cardknox' ) );                
+                return new WP_Error('Error', __( 'Partial Refund Not Allowed On Authorize Only Transactions', 'woocommerce-gateway-cardknox' ) );
             } else {
                 return 'cc:refund';
             }

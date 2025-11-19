@@ -346,7 +346,9 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
                 if ( is_wp_error( $response ) ) {
                     $error_message = $response->get_error_message();
                 
-                    $order->add_order_note( $error_message );
+                    if ( $orderGooglePay instanceof WC_Order ) {
+                        $orderGooglePay->add_order_note( $error_message );
+                    }
                 
                     // Use dedicated WooCommerce exception instead of generic Exception.
                     throw new WC_Data_Exception(

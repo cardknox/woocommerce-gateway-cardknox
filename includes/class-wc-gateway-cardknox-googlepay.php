@@ -343,10 +343,16 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
                 // Make the request.
                 $response = WC_Cardknox_API::request($this->generate_payment_grequest($orderGooglePay));
 
-                if (is_wp_error($response)) {
-                    $orderGooglePay->add_order_note($response->get_error_message());
-                    throw new Exception(
-                        __( 'The transaction was declined please try again.', 'woocommerce-gateway-cardknox' )
+                if ( is_wp_error( $response ) ) {
+                    $error_message = $response->get_error_message();
+                
+                    // Add note on order for debugging / history.
+                    $orderGooglePay->add_order_note( $error_message );
+                
+                    // Throw a dedicated WooCommerce exception instead of generic Exception.
+                    throw new WC_Data_Exception(
+                        'cardknox_googlepay_declined', // unique error code
+                        __( 'The transaction was declined, please try again.', 'woocommerce-gateway-cardknox' )
                     );
                 }
 

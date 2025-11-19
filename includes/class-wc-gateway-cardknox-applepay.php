@@ -434,7 +434,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             if ($order->get_total() > 0) {
 
                 if ($order->get_total() < WC_Cardknox::get_minimum_amount() / 100) {
-                    throw new Exception(
+                    throw new WC_Data_Exception(
                         sprintf(
                             __(
                                 'Sorry, the minimum allowed order total is %1$s to use this payment method.',
@@ -454,7 +454,6 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
                     $order->add_order_note($response->get_error_message());
                     throw new WC_Data_Exception( __( 'The transaction was declined please try again.', 'woocommerce-gateway-cardknox' ) );
                 }
-
 
                 $this->log("Info: set_transaction_id");
                 $order->set_transaction_id($response['xRefNum']);

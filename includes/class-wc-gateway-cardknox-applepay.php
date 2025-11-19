@@ -26,6 +26,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     public $applepay_applicable_countries;
     public $applepay_specific_countries;
     public $wcVersion;
+    public $appleQuickCheckout;
 
     public function __construct()
     {
@@ -69,17 +70,18 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         $this->init_settings();
         $option                                 = get_option('woocommerce_cardknox_settings');
         $this->enabled                          = $this->get_option('applepay_enabled');
-        $this->apple_quickcheckout              = $this->get_option('applepay_quickcheckout');
+        $this->appleQuickCheckout               = $this->get_option('applepay_quickcheckout');
         $this->title                            = $this->get_option('applepay_title');
         $this->description                      = __('Pay with your apple card.', 'woocommerce-gateway-cardknox');
         $this->applepaymerchantidentifier       = $this->get_option('applepay_merchant_identifier');
         $this->applepay_environment             = $this->get_option('applepay_environment');
         $this->applepay_button_style            = $this->get_option('applepay_button_style');
         $this->applepay_button_type             = $this->get_option('applepay_button_type');
-        $this->capture                          = 'yes' === $option['capture'];
-        $this->authonly_status                  = $option['auth_only_order_status'];
-        $this->applepay_applicable_countries    = $option['applicable_countries'];
-        $this->applepay_specific_countries      = $option['specific_countries'];
+        $this->capture                          = 'yes' === $this->get_option( 'capture', 'no' );
+        $this->authonly_status                  = $this->get_option( 'auth_only_order_status', 'processing' );
+        $this->applepay_applicable_countries    = $this->get_option( 'applicable_countries', 'all' );
+        $this->applepay_specific_countries      = (array) $this->get_option( 'specific_countries', array() );
+        
 
         $this->wcVersion = version_compare(WC_VERSION, '3.0.0', '<');
 
@@ -90,7 +92,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         add_action('woocommerce_review_order_after_submit', array($this, 'cardknox_review_order_after_submit'));
         add_filter('woocommerce_available_payment_gateways', array($this, 'cardknox_allow_payment_method_by_country'));
 
-        if (is_cart() && $this->apple_quickcheckout == 'no') {
+        if (is_cart() && $this->appleQuickCheckout == 'no') {
             add_action('woocommerce_proceed_to_checkout', array($this, 'cardknox_review_order_after_submit'), 20);
         }
 

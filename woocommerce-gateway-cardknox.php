@@ -707,7 +707,7 @@ if (!class_exists('WC_Cardknox')) :
                 '3.1.2508.1401',
                 false
             );
-        
+            
             // Google Pay on cart
             if ( 'no' === $googlepay_quickcheckout ) {
                 $this->handleGooglepayCartQuickcheckout( $options );

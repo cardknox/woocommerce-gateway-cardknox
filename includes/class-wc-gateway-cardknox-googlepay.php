@@ -584,7 +584,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
                 <div class="message message-error error gpay-error" style="display: none;"></div>
             </div>
             <div id="divGpay" class="gp hidden">
-                <iframe id="igp" class="gp" data-ifields-id="igp" data-ifields-oninit="gpRequest.initGP" src="https://cdn.cardknox.com/ifields/3.0.2503.2101/igp.htm" allowpaymentrequest sandbox="allow-popups allow-modals allow-scripts allow-same-origin
+                <iframe id="igp" class="gp" data-ifields-id="igp" data-ifields-oninit="gpRequest.initGP" src="https://cdn.cardknox.com/ifields/3.1.2508.1401/igp.htm" allowpaymentrequest sandbox="allow-popups allow-modals allow-scripts allow-same-origin
                                  allow-forms allow-popups-to-escape-sandbox allow-top-navigation" title="GPay checkout page">
                 </iframe>
             </div>

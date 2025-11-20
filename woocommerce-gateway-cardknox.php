@@ -44,7 +44,7 @@ define('WC_CARDKNOX_MAIN_FILE', __FILE__);
 define('WC_CARDKNOX_PLUGIN_URL', untrailingslashit(plugins_url(basename(plugin_dir_path(__FILE__)), basename(__FILE__))));
 define('WC_CARDKNOX_PLUGIN_PATH', untrailingslashit(plugin_dir_path(__FILE__)));
 
-define( 'CARDKNOX_IFIELDS_URL', 'https://cdn.cardknox.com/ifields/3.0.2503.2101/ifields.min.js' );
+define( 'CARDKNOX_IFIELDS_URL', 'https://cdn.cardknox.com/ifields/3.1.2508.1401/ifields.min.js' );
 
 
 
@@ -218,7 +218,7 @@ if (!class_exists('WC_Cardknox')) :
                     'cardknox-ifields',
                     CARDKNOX_IFIELDS_URL,
                     array(),
-                    '3.0.2503.2101',
+                    '3.1.2508.1401',
                     false
                 );
                 if (! wp_script_is('cardknox-ifields', 'enqueued')) {
@@ -702,9 +702,9 @@ if (!class_exists('WC_Cardknox')) :
             // Common iFields script
             wp_enqueue_script(
                 'cardknox',
-                'https://cdn.cardknox.com/ifields/3.0.2503.2101/ifields.min.js',
+                'https://cdn.cardknox.com/ifields/3.1.2508.1401/ifields.min.js',
                 [],
-                '3.0.2503.2101',
+                '3.1.2508.1401',
                 false
             );
         

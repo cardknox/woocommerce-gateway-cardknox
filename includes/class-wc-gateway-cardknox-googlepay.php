@@ -325,7 +325,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
             if ($orderGooglePay->get_total() > 0) {
 
                 if ($orderGooglePay->get_total() < WC_Cardknox::get_minimum_amount() / 100) {
-                    throw new Exception(
+                    throw new WC_Data_Exception(
                         sprintf(
                             __(
                                 'Sorry, the minimum allowed order total is %1$s to use this payment method.',
@@ -345,7 +345,9 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
 
                 if (is_wp_error($response)) {
                     $orderGooglePay->add_order_note($response->get_error_message());
-                    throw new Exception("The transaction was declined please try again");
+                    throw new WC_Data_Exception(
+                        __( 'The transaction was declined. Please try again.', 'woocommerce-gateway-cardknox' )
+                    );
                 }
 
                 $this->glog("Info: set_transaction_id");
@@ -481,7 +483,8 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
 
             if (!is_null($amount) && $amount < 0.01) {
                 $this->glog('Error: Amount Required ' . $amount);
-                $result = new WP_Error('Error', 'Refund Amount Required ' . $amount);
+                $result = new WP_Error('Error', __( 'Refund Amount Required', 'woocommerce-gateway-cardknox') . $amount);
+                
             } else {
                 if (!is_null($amount)) {
                     $body['xAmount'] = $this->get_cardknox_gamount($amount);
@@ -507,7 +510,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
                         $this->glog('Success: ' . html_entity_decode(strip_tags((string) $refundMessage)));
                         $result = true;
                     } else {
-                        $result = new WP_Error("refund failed", 'woocommerce-gateway-cardknox');
+                        $result = new WP_Error('refund_failed', __( 'Refund failed', 'woocommerce-gateway-cardknox' ));
                     }
                 }
             }
@@ -522,7 +525,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
 
         if ($total != $amount) {
             if ($captured === "no") {
-                return new WP_Error('Error', 'Partial Refund Not Allowed On Authorize Only Transactions');
+                return new WP_Error('Error', __( 'Partial Refund Not Allowed On Authorize Only Transactions', 'woocommerce-gateway-cardknox' ) );
             } else {
                 return 'cc:refund';
             }

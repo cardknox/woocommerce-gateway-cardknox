@@ -595,10 +595,10 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         } else {
             // Check if we have card data in any format (classic checkout or block editor)
             if ($this->is_unset_or_empty($postData['xCardNum'])) {
-                throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: card number", 400);
+                throw new WC_Data_Exception('wc_gateway_cardknox_process_payment_error', __( 'Required: card number', 'woocommerce-gateway-cardknox' ), 400);
             }
             if ($this->is_unset_or_empty($postData['xCVV'])) {
-                throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: cvv", 400);
+                throw new WC_Data_Exception('wc_gateway_cardknox_process_payment_error', __( 'Required: CVV', 'woocommerce-gateway-cardknox' ), 400);
             }
         }
     }
@@ -694,13 +694,10 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                 } else {
 
                     if (is_wp_error($response)) {
-                        //					$localized_messages = $this->get_localized_messages();
-                        //
-                        //					$message = isset( $localized_messages[ $response->get_error_code() ] ) ? $localized_messages[ $response->get_error_code() ] : $response->get_error_message();
-                        //
-                        //					$order->add_order_note( $message );
                         $order->add_order_note($response->get_error_message());
-                        throw new Exception("The transaction was declined please try again");
+                        throw new WC_Data_Exception(
+                            __( 'The transaction was declined. Please try again.', 'woocommerce-gateway-cardknox' )
+                        );
                     }
 
                     $this->log("Info: set_transaction_id");
@@ -1062,7 +1059,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             } catch (\Throwable $th) {
                 // Handle general errors during card addition
                 $this->log('Error: ' . $th->getMessage());
-                wc_add_notice('An error occurred while Adding Payment Method', 'error');
+                wc_add_notice( __( 'An error occurred while Adding Payment Method.', 'woocommerce-gateway-cardknox' ), 'error');
             }
         } else {
             // No 'xToken' found in the API response, return a WP_Error
@@ -1098,7 +1095,14 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             //check if amount is set to 0
             if ($amount < .01) {
                 $this->log('Error: Amount Required ' . $amount);
-                return new WP_Error('Error', 'Refund Amount Required ' . $amount);
+                return new WP_Error(
+					'Error',
+					sprintf(
+						/* translators: %s = refund amount */
+						__( 'Refund Amount Required %s', 'woocommerce-gateway-cardknox' ),
+						$amount
+					)
+				);
             }
             $body['xAmount']    = $this->get_cardknox_amount($amount);
         }
@@ -1109,7 +1113,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         if ($total !=  $amount) {
             $command = 'cc:refund';
             if ($captured === "no") {
-                return new WP_Error('Error', 'Partial Refund Not Allowed On Authorize Only Transactions');
+                return new WP_Error( 'Error', __( 'Partial Refund Not Allowed On Authorize Only Transactions', 'woocommerce-gateway-cardknox' ) );
             }
         }
 

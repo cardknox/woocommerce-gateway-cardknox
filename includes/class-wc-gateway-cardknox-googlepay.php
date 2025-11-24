@@ -25,6 +25,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
     public $googlepayApplicableCountries;
     public $googlepaySpecificCountries;
     public $wcVersion;
+    public $logging;
 
     public function __construct()
     {
@@ -67,8 +68,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         $this->capture                          = 'yes' === $this->get_option( 'capture', 'no' );   // New Code
         $this->authonlyStatus                   = isset( $option['auth_only_order_status'] ) ? $option['auth_only_order_status'] : 'wc-on-hold';    // New Code
         $this->googlepayApplicableCountries     = in_array((string)($option['applicable_countries'] ?? '0'), ['0','1'], true) ? (string)($option['applicable_countries'] ?? '0') : '0';   // New Code
-        $this->googlepaySpecificCountries       = isset( $option['specific_countries'] ) && is_array( $option['specific_countries'] ) ? $option['specific_countries'] : []; // New Code
-        
+        $this->googlepaySpecificCountries       = isset( $option['specific_countries'] ) && is_array( $option['specific_countries'] ) ? $option['specific_countries'] : []; // New Code   
 
 
         $this->wcVersion = version_compare(WC_VERSION, '3.0.0', '<');

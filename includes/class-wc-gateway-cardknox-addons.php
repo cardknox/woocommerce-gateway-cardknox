@@ -126,7 +126,7 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
         }
 
 
-        $request['xAmount']     = $this->get_cardknox_amount($amount, $request['currency']);
+        $request['xAmount']     = $this->get_cardknox_amount( $amount, $currency );
         $request['xInvoice']    = $order_id;
         $request['xCustom02']   = 'recurring';
         $request['xToken']      = $my_token;

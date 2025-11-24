@@ -111,11 +111,25 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
 
         // Make the request
         $request = [];
-        $request              = $this->generate_payment_request_for_subscription($request, $order);
-        $request['xAmount']   = $this->get_cardknox_amount($amount, $request['currency']);
-        $request['xInvoice']  = $order_id;
-        $request['xCustom02'] = 'recurring';
-        $request['xToken']    = $my_token;
+        $request                = $this->generate_payment_request_for_subscription($request, $order);
+
+        // Safely determine currency
+        if ( ! empty( $request['currency'] ) ) {
+            $currency = $request['currency'];
+            $this->log("Info: Begin processing subscription payment for order {$order_id} for the amount {$amount} of Currency is {$currency}");
+        } elseif ( is_object( $order ) && method_exists( $order, 'get_currency' ) ) {
+            $currency = $order->get_currency();
+            $this->log("Info: Begin processing subscription payment for order {$order_id} for the amount {$amount} of Currency is: {$currency}");
+        } else {
+            $currency = get_woocommerce_currency();
+            $this->log("Info: Begin processing subscription payment for order {$order_id} for the amount {$amount} of Currency is:-> {$currency}");
+        }
+
+
+        $request['xAmount']     = $this->get_cardknox_amount($amount, $request['currency']);
+        $request['xInvoice']    = $order_id;
+        $request['xCustom02']   = 'recurring';
+        $request['xToken']      = $my_token;
 
         $response = WC_Cardknox_API::request($request);
 

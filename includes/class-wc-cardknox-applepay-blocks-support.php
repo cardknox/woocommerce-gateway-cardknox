@@ -23,23 +23,30 @@ final class WC_Cardknox_ApplePay_Blocks_Support extends AbstractPaymentMethodTyp
         $handle     = 'wc-cardknox-blocks';
         $base_dir   = plugin_dir_path(__FILE__) . '../blocks/build/';
         $asset_file = $base_dir . 'index.asset.php';
-        $script_url = plugins_url('../blocks/build/index.js', __FILE__);
-
-        $asset = file_exists($asset_file)
-            ? include $asset_file
-            : [
-                'dependencies' => [ 'wp-element', 'wc-blocks-registry', 'wc-blocks-checkout' ],
-                'version'      => file_exists($base_dir . 'index.js') ? filemtime($base_dir . 'index.js') : time(),
-            ];
-
+        $script_url = plugin_dir_url(__FILE__) . '../blocks/build/index.js';
+    
+        
+        $asset = [
+            'dependencies' => [ 'wp-element', 'wc-blocks-registry', 'wc-blocks-checkout' ],
+            'version'      => file_exists($base_dir.'index.js') ? filemtime($base_dir.'index.js') : time(),
+        ];
+    
+        if ( file_exists($asset_file) ) {
+            $loaded = include_once $asset_file;     // NOSONAR php:S2006
+            if ( is_array($loaded) ) {
+                if ( isset($loaded['dependencies']) ) { $asset['dependencies'] = $loaded['dependencies']; }
+                if ( isset($loaded['version']) ){ $asset['version'] = $loaded['version']; }
+            }
+        }
+    
         wp_register_script($handle, $script_url, $asset['dependencies'], $asset['version'], true);
-
-        // Provide settings to the Blocks JS (very lightweight)
+    
         $data = $this->get_payment_method_data();
         wp_add_inline_script($handle, 'window.WCCardknoxApplePayBlocks = ' . wp_json_encode($data) . ';', 'before');
-
+    
         return [ $handle ];
     }
+        
 
     public function get_payment_method_data() {
         $merchant_identifier = $this->settings['applepay_merchant_identifier'] ?? '';

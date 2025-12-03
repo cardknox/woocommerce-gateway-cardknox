@@ -17,6 +17,15 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
      * @var bool
      */
     public $capture;
+    public $googlepayQuickCheckout;
+    public $googlepayMerchantName;
+    public $googlepayEnvironment;
+    public $googlepayButtonStyle;
+    public $authonlyStatus;
+    public $googlepayApplicableCountries;
+    public $googlepaySpecificCountries;
+    public $wcVersion;
+    public $logging;
 
     public function __construct()
     {
@@ -50,18 +59,16 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         $option = get_option('woocommerce_cardknox_settings');
 
         $this->enabled                          = $this->get_option('googlepay_enabled');
-        $this->google_quickcheckout             = $this->get_option('googlepay_quickcheckout');
+        $this->googlepayQuickCheckout           = $this->get_option('googlepay_quickcheckout');
         $this->title                            = $this->get_option('googlepay_title');
         $this->description                      = __('Pay with your Google Pay.', 'woocommerce-gateway-cardknox');
-        $this->googlepay_merchant_name          = $this->get_option('googlepay_merchant_name');
-        $this->googlepay_environment            = $this->get_option('googlepay_environment');
-        $this->googlepay_button_style           = $this->get_option('googlepay_button_style');
-        
-        $this->capture                          = 'yes' === $option['capture'];
-        $this->authonly_status                  = $option['auth_only_order_status'];
-
-        $this->googlepay_applicable_countries   = $option['applicable_countries'];
-        $this->googlepay_specific_countries     = $option['specific_countries'];
+        $this->googlepayMerchantName            = $this->get_option('googlepay_merchant_name');
+        $this->googlepayEnvironment             = $this->get_option('googlepay_environment');
+        $this->googlepayButtonStyle             = $this->get_option('googlepay_button_style');
+        $this->capture                          = 'yes' === $this->get_option( 'capture', 'no' );   // New Code
+        $this->authonlyStatus                   = isset( $option['auth_only_order_status'] ) ? $option['auth_only_order_status'] : 'wc-on-hold';    // New Code
+        $this->googlepayApplicableCountries     = in_array((string)($option['applicable_countries'] ?? '0'), ['0','1'], true) ? (string)($option['applicable_countries'] ?? '0') : '0';   // New Code
+        $this->googlepaySpecificCountries       = isset( $option['specific_countries'] ) && is_array( $option['specific_countries'] ) ? $option['specific_countries'] : []; // New Code   
 
 
         $this->wcVersion = version_compare(WC_VERSION, '3.0.0', '<');
@@ -73,7 +80,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         add_action('woocommerce_review_order_after_submit', array($this, 'cardknox_gpay_order_after_submit'));
         add_filter('woocommerce_available_payment_gateways', array($this, 'cardknox_allow_gpay_method_by_country'));
 
-        if (is_cart() && $this->google_quickcheckout == 'no') {
+        if (is_cart() && $this->googlepayQuickCheckout == 'no') {
             add_action('woocommerce_proceed_to_checkout', array($this, 'cardknox_gpay_order_after_submit'), 20);
         }
     }
@@ -159,6 +166,19 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
             return;
         }
 
+        // If the gateway is disabled, do not enqueue any Google Pay assets
+        if ('yes' !== $this->enabled) {
+            return;
+        }
+
+        // Avoid loading Google Pay legacy assets on the Block Checkout to prevent
+        // duplicate event handlers and render loops in React Blocks.
+        if (class_exists('WC_Cardknox') && method_exists('WC_Cardknox', 'is_block_checkout')) {
+            if (WC_Cardknox::is_block_checkout()) {
+                return;
+            }
+        }
+        
         wp_enqueue_style(
             'woocommerce_cardknox_gpay',
             plugins_url(
@@ -181,12 +201,12 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         $cardknoxGooglepaySettings = array(
             'enabled'                 => $this->enabled,
             'title'                   => $this->title,
-            'merchant_name'           => $this->googlepay_merchant_name,
-            'environment'             => $this->googlepay_environment,
-            'button_style'            => $this->googlepay_button_style,
+            'merchant_name'           => $this->googlepayMerchantName,
+            'environment'             => $this->googlepayEnvironment,
+            'button_style'            => $this->googlepayButtonStyle,
             'payment_action'          => $this->capture,
-            'applicable_countries'    => $this->googlepay_applicable_countries,
-            'specific_countries'      => $this->googlepay_specific_countries,
+            'applicable_countries'    => $this->googlepayApplicableCountries,
+            'specific_countries'      => $this->googlepaySpecificCountries,
             'total'                   => WC()->cart->total,
             'currencyCode'            => get_woocommerce_currency(),
         );
@@ -305,7 +325,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
             if ($orderGooglePay->get_total() > 0) {
 
                 if ($orderGooglePay->get_total() < WC_Cardknox::get_minimum_amount() / 100) {
-                    throw new Exception(
+                    throw new WC_Data_Exception(
                         sprintf(
                             __(
                                 'Sorry, the minimum allowed order total is %1$s to use this payment method.',
@@ -325,7 +345,9 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
 
                 if (is_wp_error($response)) {
                     $orderGooglePay->add_order_note($response->get_error_message());
-                    throw new Exception("The transaction was declined please try again");
+                    throw new WC_Data_Exception(
+                        __( 'The transaction was declined. Please try again.', 'woocommerce-gateway-cardknox' )
+                    );
                 }
 
                 $this->glog("Info: set_transaction_id");
@@ -411,7 +433,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
             }
             $xRefNum =  $response['xRefNum'];
 
-            if ($this->authonly_status == "on-hold") {
+            if ($this->authonlyStatus == "on-hold") {
                 $order->update_status(
                     'on-hold',
                     sprintf(
@@ -461,7 +483,8 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
 
             if (!is_null($amount) && $amount < 0.01) {
                 $this->glog('Error: Amount Required ' . $amount);
-                $result = new WP_Error('Error', 'Refund Amount Required ' . $amount);
+                $result = new WP_Error('Error', __( 'Refund Amount Required', 'woocommerce-gateway-cardknox') . $amount);
+                
             } else {
                 if (!is_null($amount)) {
                     $body['xAmount'] = $this->get_cardknox_gamount($amount);
@@ -487,7 +510,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
                         $this->glog('Success: ' . html_entity_decode(strip_tags((string) $refundMessage)));
                         $result = true;
                     } else {
-                        $result = new WP_Error("refund failed", 'woocommerce-gateway-cardknox');
+                        $result = new WP_Error('refund_failed', __( 'Refund failed', 'woocommerce-gateway-cardknox' ));
                     }
                 }
             }
@@ -502,7 +525,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
 
         if ($total != $amount) {
             if ($captured === "no") {
-                return new WP_Error('Error', 'Partial Refund Not Allowed On Authorize Only Transactions');
+                return new WP_Error('Error', __( 'Partial Refund Not Allowed On Authorize Only Transactions', 'woocommerce-gateway-cardknox' ) );
             } else {
                 return 'cc:refund';
             }
@@ -564,7 +587,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
                 <div class="message message-error error gpay-error" style="display: none;"></div>
             </div>
             <div id="divGpay" class="gp hidden">
-                <iframe id="igp" class="gp" data-ifields-id="igp" data-ifields-oninit="gpRequest.initGP" src="https://cdn.cardknox.com/ifields/3.0.2503.2101/igp.htm" allowpaymentrequest sandbox="allow-popups allow-modals allow-scripts allow-same-origin
+                <iframe id="igp" class="gp" data-ifields-id="igp" data-ifields-oninit="gpRequest.initGP" src="https://cdn.cardknox.com/ifields/3.1.2508.1401/igp.htm" allowpaymentrequest sandbox="allow-popups allow-modals allow-scripts allow-same-origin
                                  allow-forms allow-popups-to-escape-sandbox allow-top-navigation" title="GPay checkout page">
                 </iframe>
             </div>
@@ -580,12 +603,12 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
     public function cardknox_allow_gpay_method_by_country($available_gateways)
     {
 
-        if (is_admin()) {
+        if ( is_admin() ||  !is_object(WC()->customer) || !method_exists(WC()->customer, 'get_billing_country') ) {
             return $available_gateways;
         }
 
-        $applicable_countries  = $this->googlepay_applicable_countries;
-        $specific_countries    = $this->googlepay_specific_countries;
+        $applicable_countries  = $this->googlepayApplicableCountries;
+        $specific_countries    = $this->googlepaySpecificCountries;
 
         if (isset($applicable_countries) && $applicable_countries == 1) {
             // Get the customer's billing and shipping addresses

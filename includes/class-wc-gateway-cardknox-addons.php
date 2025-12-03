@@ -111,11 +111,23 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
 
         // Make the request
         $request = [];
-        $request              = $this->generate_payment_request_for_subscription($request, $order);
-        $request['xAmount']   = $this->get_cardknox_amount($amount, $request['currency']);
-        $request['xInvoice']  = $order_id;
-        $request['xCustom02'] = 'recurring';
-        $request['xToken']    = $my_token;
+        $request                = $this->generate_payment_request_for_subscription($request, $order);
+
+        // Safely determine currency
+        if ( ! empty( $request['currency'] ) ) {
+            $currency = $request['currency'];
+        } elseif ( is_object( $order ) && method_exists( $order, 'get_currency' ) ) {
+            $currency = $order->get_currency();
+        } else {
+            $currency = get_woocommerce_currency();
+        }
+
+        $this->log("Info: Begin processing subscription payment for order {$order_id} for the amount of {$amount}. Currency is {$currency}");
+
+        $request['xAmount']     = $this->get_cardknox_amount( $amount, $currency );
+        $request['xInvoice']    = $order_id;
+        $request['xCustom02']   = 'recurring';
+        $request['xToken']      = $my_token;
 
         $response = WC_Cardknox_API::request($request);
 
@@ -244,7 +256,7 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
         $response = $this->process_subscription_payment($renewal_order, $amount_to_charge);
 
         if (is_wp_error($response)) {
-            $renewal_order->update_status('failed', sprintf(__('Cardknox Transaction Failed (%s)', 'woocommerce-gateway-cardknox'), $response->get_error_message()));
+            $renewal_order->update_status('failed', sprintf(__('Sola Transaction Failed (%s)', 'woocommerce-gateway-cardknox'), $response->get_error_message()));
         }
     }
 
@@ -292,15 +304,15 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
             'post_meta' => array(
                 '_cardknox_token' => array(
                     'value' => get_post_meta(($this->wc_pre_30 ? $subscription->id : $subscription->get_id()), '_cardknox_token', true),
-                    'label' => 'Cardknox Token',
+                    'label' => 'Sola Token',
                 ),
                 '_cardknox_MaskedCardNumber' => array(
                     'value' => get_post_meta(($this->wc_pre_30 ? $subscription->id : $subscription->get_id()), '_cardknox_masked_card', true),
-                    'label' => 'Cardknox Masked Card',
+                    'label' => 'Sola Masked Card',
                 ),
                 '_cardknox_cardtype' => array(
                     'value' => get_post_meta(($this->wc_pre_30 ? $subscription->id : $subscription->get_id()), '_cardknox_cardtype', true),
-                    'label' => 'Cardknox Card Type',
+                    'label' => 'Sola Card Type',
                 ),
             ),
         );
@@ -366,14 +378,8 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
             error_log('Card ID not found on subscription. Trying user meta. User ID: ' . $user_id);
 
             $cardknox_card_id     = get_user_meta($user_id, '_cardknox_token', true);
-            error_log('Fallback Cardknox Token from user meta: ' . print_r($cardknox_card_id, true));
+            error_log('Fallback Sola Token from user meta: ' . print_r($cardknox_card_id, true));
         }
-
-        // If we couldn't find a Cardknox customer linked to the account, fallback to the order meta data.
-
-        //		if ( false !== $subscription->order ) {
-        //			$cardknox_card_id     = get_post_meta( ( $this->wc_pre_30 ? $subscription->order->id : $subscription->get_parent_id() ), '_cardknox_token', true );
-        //		}
 
         return $payment_method_to_display;
     }

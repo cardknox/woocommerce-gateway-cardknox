@@ -1,0 +1,183 @@
+/* Cardknox Block Editor Styles */
+
+.wc-cardknox-payment-form {
+    width: 100%;
+    max-width: 100%;
+}
+
+.wc-cardknox-ifields {
+    width: 100%;
+    max-width: 100%;
+}
+
+.wc-cardknox-ifields .form-row {
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    margin-bottom: 15px;
+}
+
+.cardknox-iframe-container {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 5px;
+    background-color: #fff;
+    /* no outer border; iField draws its own */
+}
+
+.wc-cardknox-ifields label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.wc-cardknox-ifields .input-text {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Saved cards styling */
+.wc-cardknox-saved-cards {
+    margin-bottom: 20px;
+}
+
+.wc-cardknox-saved-card-option {
+    margin-bottom: 8px;
+}
+
+.wc-cardknox-saved-card-option label {
+    display: block;
+    margin-bottom: 0;
+}
+
+/* Ensure error messages are visible */
+.wc-block-components-validation-error {
+    color: #cc1818;
+    font-size: 14px;
+    margin-top: 5px;
+    display: block;
+}
+
+/* Flex layout for expiry and CVV */
+.cardknox-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.cardknox-row .form-row {
+    flex: 1;
+    min-width: 150px;
+}
+
+/* Ensure proper iframe styling; borders are inside iField */
+
+.cardknox-iframe-container { position: relative !important; overflow: hidden !important; }
+
+/* Ensure iField container has enough height and no visible border */
+.cardknox-iframe-container,
+.cardknox-iframe-container.cvv-container {
+    min-height: 48px;
+}
+
+/* Fix error message display */
+.cardknox-error-container {
+    margin-top: 5px;
+    display: block;
+    clear: both;
+    width: 100%;
+}
+
+
+/* Error messages after ifields */
+[data-ifields-id="card-number-error"],
+[data-ifields-id="cvv-error"] {
+    display: block;
+    clear: both;
+    width: 100%;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    color: #cc1818;
+    font-size: 14px;
+    line-height: 1.4;
+    min-height: 20px;
+}
+
+/* Hide empty error messages */
+[data-ifields-id="card-number-error"]:empty,
+[data-ifields-id="cvv-error"]:empty {
+    min-height: 0;
+    margin: 0;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .cardknox-row {
+        flex-direction: column;
+    }
+    
+    .cardknox-row .form-row {
+        width: 100%;
+    }
+}
+
+/* Save payment method checkbox styling */
+.wc-payment-gateway-cardknox__save-payment-method {
+    margin-top: 24px;
+}
+
+.wc-block-components-checkbox {
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+}
+
+.wc-block-components-checkbox__input {
+    appearance: none;
+    border: 2px solid #50575e;
+    border-radius: 2px;
+    height: 1.125em;
+    min-height: 18px;
+    min-width: 18px;
+    margin: 0 8px 0 0;
+    width: 1.125em;
+    position: relative;
+}
+
+.wc-block-components-checkbox__input:checked {
+    background: #1e1e1e;
+    border-color: #1e1e1e;
+}
+
+.wc-block-components-checkbox__mark {
+    display: none;
+    position: absolute;
+    left: 0.125em;
+    top: 0.125em;
+    width: 0.75em;
+    height: 0.75em;
+    fill: #fff;
+}
+
+.wc-block-components-checkbox__input:checked + .wc-block-components-checkbox__mark {
+    display: block;
+}
+
+.wc-block-components-checkbox__label {
+    font-size: 12px;
+    line-height: 1.4;
+    position: relative;
+    user-select: none;
+    display: inline-block;
+    color: #1e1e1e;
+}
+#radio-control-wc-payment-method-options-cardknox__content .wc-block-components-checkbox.wc-block-components-payment-methods__save-card-info{
+    display: none !important;
+}
+.cardknox-error-container [data-ifields-id="card-number-error"] ~ .wc-block-components-validation-error,
+[data-ifields-id="cvv-error"] ~ .wc-block-components-validation-error {
+    display: none;
+}
+.credit-row{
+    display: flex;
+    flex-direction: column;
+}

@@ -46,17 +46,19 @@ class WC_Cardknox_API
     {
         self::$transaction_key = $transaction_key;
     }
-
-    /**
-     * Get transaction key.
-     * @return string
-     */
-    public static function get_transaction_key()
-    {
-        if (!self::$transaction_key) {
-            $options = get_option('woocommerce_cardknox_settings');
-            self::set_transaction_key($options['transaction_key']);
+    public static function getTransactionKey() {
+        if ( ! self::$transaction_key ) {
+            // use the right option key for your gateway!
+            $options = get_option( 'woocommerce_cardknox_settings', [] );
+    
+            $tx = '';
+            if ( is_array( $options ) && ! empty( $options['transaction_key'] ) ) {
+                $tx = trim( (string) $options['transaction_key'] );
+            }
+    
+            self::set_transaction_key( $tx ); // safe even if empty
         }
+    
         return self::$transaction_key;
     }
 
@@ -69,7 +71,7 @@ class WC_Cardknox_API
      */
     public static function request($request, $method = 'POST')
     {
-        $request['xKey'] =  self::get_transaction_key();
+        $request['xKey'] =  self::getTransactionKey();
         $request['xVersion'] =  '5.0.0';
         $request['xSoftwareVersion'] =  WC()->version;
         $request['xSoftwareName'] =  'Wordpress_WooCommerce';

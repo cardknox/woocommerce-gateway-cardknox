@@ -17,16 +17,17 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
      * @var bool
      */
 
-    public $capture;
     public $applepaymerchantidentifier;
     public $applepay_environment;
     public $applepay_button_style;
-    public $applepay_button_type; 
+    public $applepay_button_type;
+    public $capture;
     public $authonly_status;
     public $applepay_applicable_countries;
     public $applepay_specific_countries;
     public $wcVersion;
-    
+    public $appleQuickCheckout;
+
     public function __construct()
     {
         $this->id                   = 'cardknox-applepay';
@@ -36,6 +37,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         $methodDescription = '<strong class="important-label" style="color: #e22626;">Important: </strong>';
         $methodDescription .= 'Please complete the Apple Pay Domain Registration ';
         $methodDescription .= '<a target="_blank" href="https://portal.solapayments.com/account-settings/payment-methods">';
+
         $methodDescription .= 'here</a> ';
         $methodDescription .= 'prior to enabling Cardknox Apple Pay.';
 
@@ -45,6 +47,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         );
         $this->has_fields           = true;
         $this->view_transaction_url = 'https://portal.solapayments.com/transactions?referenceNumber=%s';
+
         $this->supports             = array(
             'subscriptions',
             'products',
@@ -67,17 +70,18 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         $this->init_settings();
         $option                                 = get_option('woocommerce_cardknox_settings');
         $this->enabled                          = $this->get_option('applepay_enabled');
-        $this->apple_quickcheckout              = $this->get_option('applepay_quickcheckout');
+        $this->appleQuickCheckout               = $this->get_option('applepay_quickcheckout');
         $this->title                            = $this->get_option('applepay_title');
         $this->description                      = __('Pay with your apple card.', 'woocommerce-gateway-cardknox');
         $this->applepaymerchantidentifier       = $this->get_option('applepay_merchant_identifier');
         $this->applepay_environment             = $this->get_option('applepay_environment');
         $this->applepay_button_style            = $this->get_option('applepay_button_style');
         $this->applepay_button_type             = $this->get_option('applepay_button_type');
-        $this->capture                          = 'yes' === $option['capture'];
-        $this->authonly_status                  = $option['auth_only_order_status'];
-        $this->applepay_applicable_countries    = $option['applicable_countries'];
-        $this->applepay_specific_countries      = $option['specific_countries'];
+        $this->capture                          = 'yes' === $this->get_option( 'capture', 'no' );
+        $this->authonly_status                  = $this->get_option( 'auth_only_order_status', 'processing' );
+        $this->applepay_applicable_countries    = in_array((string)($option['applicable_countries'] ?? '0'), ['0','1'], true) ? (string)($option['applicable_countries'] ?? '0') : '0';   // New Code
+        $this->applepay_specific_countries      = isset( $option['specific_countries'] ) && is_array( $option['specific_countries'] ) ? $option['specific_countries'] : []; // New Code
+        
 
         $this->wcVersion = version_compare(WC_VERSION, '3.0.0', '<');
 
@@ -88,7 +92,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         add_action('woocommerce_review_order_after_submit', array($this, 'cardknox_review_order_after_submit'));
         add_filter('woocommerce_available_payment_gateways', array($this, 'cardknox_allow_payment_method_by_country'));
 
-        if (is_cart() && $this->apple_quickcheckout == 'no') {
+        if (is_cart() && $this->appleQuickCheckout == 'no') {
             add_action('woocommerce_proceed_to_checkout', array($this, 'cardknox_review_order_after_submit'), 20);
         }
 
@@ -430,7 +434,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             if ($order->get_total() > 0) {
 
                 if ($order->get_total() < WC_Cardknox::get_minimum_amount() / 100) {
-                    throw new Exception(
+                    throw new WC_Data_Exception(
                         sprintf(
                             __(
                                 'Sorry, the minimum allowed order total is %1$s to use this payment method.',
@@ -448,7 +452,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
                 if (is_wp_error($response)) {
                     $order->add_order_note($response->get_error_message());
-                    throw new Exception("The transaction was declined please try again");
+                    throw new WC_Data_Exception( __( 'The transaction was declined please try again.', 'woocommerce-gateway-cardknox' ) );
                 }
 
                 $this->log("Info: set_transaction_id");
@@ -585,7 +589,8 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             if (!is_null($amount)) {
                 if ($amount < .01) {
                     $this->log('Error: Amount Required ' . $amount);
-                    return new WP_Error('Error', 'Refund Amount Required ' . $amount);
+                    $error_message = __( 'Refund Amount Required.', 'woocommerce-gateway-cardknox' );
+                    return new WP_Error('Error', $error_message . $amount);
                 } else {
                     $body['xAmount'] = $this->get_cardknox_amount($amount);
                 }
@@ -611,7 +616,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
                     $this->log('Success: ' . html_entity_decode(strip_tags((string) $refundMessage)));
                     $result = true;
                 } else {
-                    $result = new WP_Error("refund failed", 'woocommerce-gateway-cardknox');
+                    $result = new WP_Error('refund_failed', __( 'Refund failed', 'woocommerce-gateway-cardknox' ));
                 }
             }
         }
@@ -625,7 +630,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
         if ($total != $amount) {
             if ($captured === "no") {
-                return new WP_Error('Error', 'Partial Refund Not Allowed On Authorize Only Transactions');
+                return new WP_Error('Error', __( 'Partial Refund Not Allowed On Authorize Only Transactions', 'woocommerce-gateway-cardknox' ) );
             } else {
                 return 'cc:refund';
             }
@@ -698,8 +703,9 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
      */
     public function cardknox_allow_payment_method_by_country($available_gateways)
     {
-
-        if (is_admin()) return $available_gateways;
+        if ( is_admin() ||  !is_object(WC()->customer) || !method_exists(WC()->customer, 'get_billing_country') ) {
+            return $available_gateways;
+        }
 
         $applicable_countries = $this->applepay_applicable_countries;
         $specific_countries    = $this->applepay_specific_countries;

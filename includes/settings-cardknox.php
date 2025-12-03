@@ -15,6 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -26,7 +27,7 @@ $countries   = $countries_obj->__get('countries');
 $wc_cardknox_settings = array(
     'enabled' => array(
         'title'       => __('Enable/Disable', 'woocommerce-gateway-cardknox'),
-        'label'       => __('Enable Cardknox', 'woocommerce-gateway-cardknox'),
+        'label'       => __('Enable Sola Payments', 'woocommerce-gateway-cardknox'),
         'type'        => 'checkbox',
         'description' => '',
         'default'     => 'no',
@@ -45,17 +46,17 @@ $wc_cardknox_settings = array(
         'default'     => __('Pay with your credit card.', 'woocommerce-gateway-cardknox'),
         'desc_tip'    => true,
     ),
-    'token_key' => array(
-        'title'       => __('Cardknox Token Key', 'woocommerce-gateway-cardknox'),
+    'transaction_key' => array(
+        'title'       => __('Sola API Key (Transaction Key)', 'woocommerce-gateway-cardknox'),
         'type'        => 'text',
-        'description' => __('Get your iFields key from your Cardknox account.', 'woocommerce-gateway-cardknox'),
+        'description' => __('Get your API keys from The Sola Portal.', 'woocommerce-gateway-cardknox'),
         'default'     => '',
         'desc_tip'    => true,
     ),
-    'transaction_key' => array(
-        'title'       => __('Cardknox Transaction Key', 'woocommerce-gateway-cardknox'),
+    'token_key' => array(
+        'title'       => __('Sola iFields Key (Token Key)', 'woocommerce-gateway-cardknox'),
         'type'        => 'text',
-        'description' => __('Get your API keys from your cardknox account.', 'woocommerce-gateway-cardknox'),
+        'description' => __('Get your iFields key from The Sola Portal.', 'woocommerce-gateway-cardknox'),
         'default'     => '',
         'desc_tip'    => true,
     ),
@@ -85,7 +86,7 @@ $wc_cardknox_settings = array(
         'title'       => __('Saved Cards', 'woocommerce-gateway-cardknox'),
         'label'       => __('Enable Payment via Saved Cards', 'woocommerce-gateway-cardknox'),
         'type'        => 'checkbox',
-        'description' => __('If enabled, users will be able to pay with a saved card during checkout. Card details are saved on Cardknox servers, not on your store.', 'woocommerce-gateway-cardknox'),
+        'description' => __('If enabled, users will be able to pay with a saved card during checkout. Card details are saved on Sola servers, not on your store.', 'woocommerce-gateway-cardknox'),
         'default'     => 'no',
         'desc_tip'    => true,
     ),

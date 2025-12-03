@@ -67,14 +67,26 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
     public $authonly_status;
 
+    
+    public $bgcolor = '';
+    public $enable3Ds;
+    public $threedsEnv;
+    public $applicableCountries;
+    public $specificCountries;
+    public $appleQuickcheckout;
+    public $applePayGateway;
+    public $googlePayGateway;
+
+
+
     /**
      * Constructor
      */
     public function __construct()
     {
         $this->id                   = 'cardknox';
-        $this->method_title         = __('Cardknox', 'woocommerce-gateway-cardknox');
-        $this->method_description   = sprintf(__('Cardknox works by adding credit card fields on the checkout and then sending the details to Cardknox for verification. <a href="%1$s" target="_blank">Sign up</a> for a Cardknox account.', 'woocommerce-gateway-cardknox'), 'https://www.cardknox.com');
+        $this->method_title         = __('Sola', 'woocommerce-gateway-cardknox');
+        $this->method_description   = sprintf(__('Sola works by adding credit card fields on the checkout and then sending the details to Sola for verification. <a href="%1$s" target="_blank">Sign up</a> for a Sola account.', 'woocommerce-gateway-cardknox'), 'https://www.cardknox.com');
         $this->has_fields           = true;
       
         if (class_exists('WC_Subscriptions_Order')) {
@@ -120,18 +132,18 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $this->logging                 = 'yes' === $this->get_option('logging');
         $this->authonly_status         = $this->get_option('auth_only_order_status');
         $this->bgcolor                 = $this->get_option('bgcolor');
-        $this->enable_3ds              = $this->get_option('enable-3ds');
-        $this->threeds_env             = $this->get_option('3ds-env');
-        $this->applicable_countries    = $this->get_option('applicable_countries');
-        $this->specific_countries      = $this->get_option('specific_countries');
+        $this->enable3Ds              = $this->get_option('enable-3ds');
+        $this->threedsEnv             = $this->get_option('3ds-env');
+        $this->applicableCountries    = $this->get_option('applicable_countries');
+        $this->specificCountries      = $this->get_option('specific_countries');
 
 
 
         WC_Cardknox_API::set_transaction_key($this->transaction_key);
 
         // Initialize the child gateways
-        $this->apple_pay_gateway = new WCCardknoxApplepay();
-        $this->google_pay_gateway = new WCCardknoxGooglepay();
+        $this->applePayGateway = new WCCardknoxApplepay();
+        $this->googlePayGateway = new WCCardknoxGooglepay();
 
         // Hooks.
         add_action('wp_enqueue_scripts', array($this, 'payment_scripts'));
@@ -141,6 +153,8 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         add_action('woocommerce_admin_order_data_after_order_details', array($this, 'cardknox_order_meta_general'));
         add_filter('woocommerce_gateway_icon', array($this, 'cardknox_gateway_icon'), 10, 2);
         add_filter('woocommerce_available_payment_gateways', array($this, 'cardknox_allow_payment_method_by_country'));
+        // Improve saved token display to include Cardknox masked number when available
+        add_filter('woocommerce_payment_token_get_display_name', array($this, 'filter_token_display_name'), 10, 2);
     }
 
 
@@ -154,9 +168,9 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $timestamp  = filemtime(get_stylesheet_directory());
         $fields = array();
         $cvc_field = '<p class="form-row form-row-last">
-			<label for="' . esc_attr($this->id) . '-card-cvc">' . esc_html__('Card Code', 'woocommerce') . ' <span class="required">*</span></label>
+			<label style="margin:0px;" for="' . esc_attr($this->id) . '-card-cvc">' . esc_html__('Card Code', 'woocommerce') . ' <span class="required">*</span></label>
 			<iframe data-ifields-id="cvv" data-ifields-placeholder="CVV"
-                        src="https://cdn.cardknox.com/ifields/3.0.2503.2101/ifield.htm?" + "' . esc_attr($timestamp) . '" frameBorder="0" width="100%"
+                        src="https://cdn.cardknox.com/ifields/3.1.2508.1401/ifield.htm?" + "' . esc_attr($timestamp) . '" frameBorder="0" width="100%"
                         height="55" id="cvv-frame"></iframe>
             <label data-ifields-id="card-data-error" style="color: red;"></label>
 		</p><input data-ifields-id="cvv-token" name="xCVV" id="cardknox-card-cvc" type="hidden"/>';
@@ -167,7 +181,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 				<label style="margin:0px !important; line-height: inherit;" for="' . esc_attr($this->id) . '-card-number">' . esc_html__('Card Number', 'woocommerce') . ' <span class="required">*</span></label>
 
 				<iframe data-ifields-id="card-number" data-ifields-placeholder="Card Number"
-                        src="https://cdn.cardknox.com/ifields/3.0.2503.2101/ifield.htm?" + "' . esc_attr($timestamp) . '" frameBorder="0" width="100%"
+                        src="https://cdn.cardknox.com/ifields/3.1.2508.1401/ifield.htm?" + "' . esc_attr($timestamp) . '" frameBorder="0" width="100%"
                         height="55"></iframe>
 			</p> <input data-ifields-id="card-number-token" name="xCardNum" id="cardknox-card-number" type="hidden"/>',
             'card-expiry-field' => '<p class="form-row form-row-first" style=" margin: 0 !important;">
@@ -253,7 +267,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
         // Show message if enabled and FORCE SSL is disabled and WordpressHTTPS plugin is not detected.
         if ((function_exists('wc_site_is_https') && !wc_site_is_https()) && ('no' === get_option('woocommerce_force_ssl_checkout') && !class_exists('WordPressHTTPS'))) {
-            echo '<div class="error cardknox-ssl-message"><p>' . sprintf(__('Cardknox is enabled, but the <a href="%1$s">force SSL option</a> is disabled; your checkout may not be secure! Please enable SSL and ensure your server has a valid <a href="%2$s" target="_blank">SSL certificate</a> - Cardknox will only work in test mode.', 'woocommerce-gateway-cardknox'), admin_url('admin.php?page=wc-settings&tab=checkout'), 'https://en.wikipedia.org/wiki/Transport_Layer_Security') . '</p></div>';
+            echo '<div class="error cardknox-ssl-message"><p>' . sprintf(__('Sola is enabled, but the <a href="%1$s">force SSL option</a> is disabled; your checkout may not be secure! Please enable SSL and ensure your server has a valid <a href="%2$s" target="_blank">SSL certificate</a> - Sola will only work in test mode.', 'woocommerce-gateway-cardknox'), admin_url('admin.php?page=wc-settings&tab=checkout'), 'https://en.wikipedia.org/wiki/Transport_Layer_Security') . '</p></div>';
         }
     }
 
@@ -393,6 +407,8 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
         $suffix = defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? '' : '.min';
 
+        wp_enqueue_style('woocommerce_cardknox_admin_style', plugins_url('/assets/css/cardknox-admin-style.css',WC_CARDKNOX_MAIN_FILE), false, WC_CARDKNOX_VERSION,'all' );
+
         wp_enqueue_script('woocommerce_cardknox_admin', plugins_url('assets/js/cardknox-admin' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE), array(), WC_CARDKNOX_VERSION, true);
 
         $cardknox_admin_params = array(
@@ -431,8 +447,25 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         );
 
         $suffix = defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? '' : '.min';
-        wp_enqueue_script('cardknox', 'https://cdn.cardknox.com/ifields/3.0.2503.2101/ifields.min.js', '', '1.0.0', false);
-        wp_enqueue_script('woocommerce_cardknox', plugins_url('assets/js/cardknox' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE), array('jquery-payment'), filemtime(plugin_dir_path(dirname(__FILE__)) . 'assets/js/cardknox' . $suffix . '.js'), true);
+
+        $blocks_scripts_registered = wp_script_is('wc-cardknox-blocks', 'registered') || wp_script_is('wc-cardknox-blocks', 'enqueued');
+        $ifields_already_registered = wp_script_is('cardknox-ifields', 'registered') || wp_script_is('cardknox-ifields', 'enqueued') || wp_script_is('cardknox', 'enqueued');
+
+        // Avoid loading iFields twice (classic + blocks) which causes global redeclaration errors
+        if (! $ifields_already_registered) {
+            wp_enqueue_script('cardknox', CARDKNOX_IFIELDS_URL, '', '1.0.0', false);
+        }
+
+        // Do not enqueue the classic checkout controller when using the Blocks checkout
+        if (! $blocks_scripts_registered) {
+            wp_enqueue_script(
+                'woocommerce_cardknox',
+                plugins_url('assets/js/cardknox' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE),
+                array('jquery-payment'),
+                filemtime(plugin_dir_path(dirname(__FILE__)) . 'assets/js/cardknox' . $suffix . '.js'),
+                true
+            );
+        }
         
 
         $token_key = $this->token_key;
@@ -441,8 +474,8 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             'i18n_terms'           => __('Please accept the terms and conditions first', 'woocommerce-gateway-cardknox'),
             'i18n_required_fields' => __('Please fill in required checkout fields first', 'woocommerce-gateway-cardknox'),
             'bgcolor'              => $this->bgcolor,
-            'enable_3ds'           => $this->enable_3ds,
-            'threeds_env'          => $this->threeds_env,
+            'enable_3ds'           => $this->enable3Ds,
+            'threeds_env'          => $this->threedsEnv,
             'xVersion'             => '5.0.0',
             'xSoftwareVersion'     => WC()->version,
             'xSoftwareName'        => 'Wordpress_WooCommerce',
@@ -500,16 +533,55 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
     }
     public function get_payment_data($postData)
     {
-        if (isset($_POST['wc-cardknox-payment-token']) && 'new' !== $_POST['wc-cardknox-payment-token']) {
-            $token_id = wc_clean($_POST['wc-cardknox-payment-token']);
+        // Extract payment data from multiple sources (classic form, request vars, Store API JSON)
+        $req = $this->build_request_map();
+
+        // Check for block editor payment data (Store API)
+        if (!empty($req['cardknox_card_token']) && !empty($req['cardknox_cvv_token'])) {
+            $card_token = $req['cardknox_card_token'];
+            $cvv_token  = $req['cardknox_cvv_token'];
+
+            // tokens present from Blocks Store API
+
+            $postData['xCardNum'] = $card_token;
+            $postData['xCVV']     = $cvv_token;
+
+            // Format expiration date properly - use 2 digits for year instead of 4
+            $month      = isset($req['cardknox_exp_month']) ? $req['cardknox_exp_month'] : '';
+            $year       = isset($req['cardknox_exp_year']) ? $req['cardknox_exp_year'] : '';
+            $year_short = substr((string) $year, -2);
+            if ($month !== '' && $year_short !== '') {
+                $postData['xExp'] = sprintf('%02d%s', (int) $month, $year_short);
+            }
+
+            // Don't call validate_payment_data for block editor as tokens are already validated
+            return $postData;
+        }
+        
+        // Original code for classic checkout and Blocks saved token support
+        // Support classic field name
+        if (!empty($req['wc-cardknox-payment-token']) && 'new' !== $req['wc-cardknox-payment-token']) {
+            $token_id = $req['wc-cardknox-payment-token'];
             $token = WC_Payment_Tokens::get($token_id);
             $postData['xToken'] = $token->get_token();
-        } elseif (isset($_POST['xToken'])) {
+        // Support WooCommerce Blocks saved token param name
+        } elseif (!empty($req['wc_token']) && 'new' !== $req['wc_token']) {
+            $token_id = $req['wc_token'];
+            $token = WC_Payment_Tokens::get($token_id);
+            if ($token && $token->get_id()) {
+                $postData['xToken'] = $token->get_token();
+            }
+        } elseif (!empty($req['xToken'])) {
             //token came in (recurring charge)
         } else {
-            $postData['xCardNum'] = wc_clean($_POST['xCardNum']);
-            $postData['xCVV'] = wc_clean($_POST['xCVV']);
-            $postData['xExp'] = str_replace(' ', '', wc_clean($_POST['xExp']));
+            $card_num = isset($req['xCardNum']) ? $req['xCardNum'] : '';
+            $cvv      = isset($req['xCVV']) ? $req['xCVV'] : '';
+            
+            // tokens present from classic checkout
+            
+            $postData['xCardNum'] = $card_num;
+            $postData['xCVV'] = $cvv;
+            $postData['xExp'] = isset($req['xExp']) ? str_replace(' ', '', $req['xExp']) : '';
         }
 
         $this->validate_payment_data($postData);
@@ -521,11 +593,12 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         if (isset($postData['xToken'])) {
             return true;
         } else {
+            // Check if we have card data in any format (classic checkout or block editor)
             if ($this->is_unset_or_empty($postData['xCardNum'])) {
-                throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: card number", 400);
+                throw new WC_Data_Exception('wc_gateway_cardknox_process_payment_error', __( 'Required: card number', 'woocommerce-gateway-cardknox' ), 400);
             }
             if ($this->is_unset_or_empty($postData['xCVV'])) {
-                throw new WC_Data_Exception("wc_gateway_cardknox_process_payment_error", "Required: cvv", 400);
+                throw new WC_Data_Exception('wc_gateway_cardknox_process_payment_error', __( 'Required: CVV', 'woocommerce-gateway-cardknox' ), 400);
             }
         }
     }
@@ -590,28 +663,27 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                 $response = WC_Cardknox_API::request($this->generate_payment_request($order));
                 $paymentName = get_post_meta($orderId, '_payment_method', true);
 
-                if ($this->enable_3ds === 'yes') {
+                // 3DS branch
+                if ($this->enable3Ds === 'yes') {
 
                     if (is_wp_error($response)) {
                         $order->add_order_note($response->get_error_message());
                         throw new Exception($response->get_error_message());
-                    } 
-                    elseif( $response['xResult'] === 'A' ){
-                        if($forceCustomer&&wcs_is_subscription($orderId)){
-                            $postData = array();
-                            $postData['xCommand'] = self::COMMAND_SAVE;
-                            $postData = self::get_order_data($postData,$order);
-                            $postData = self::get_billing_shiping_info($postData,$order);
-                            $postData = self::get_payment_data($postData);
-                            $response = WC_Cardknox_API::request($postData);
-                            $this->save_payment($forceCustomer,$response);
-                            update_post_meta($orderId,'_cardknox_token',$response['xToken']);
-                            update_post_meta($orderId,'_cardknox_masked_card',$response['xMaskedCardNumber']);
-                            update_post_meta($orderId,'_cardknox_cardtype',$response['xCardType']);
+                    } elseif ($response['xResult'] === 'A') {
+                        // Treat approved result same as non-3DS path: set transaction, save card if requested, then process response
+                        $this->log("Info: set_transaction_id");
+                        $order->set_transaction_id($response['xRefNum']);
+
+                        $this->log("Info: save_payment");
+                        $this->save_payment($forceCustomer, $response);
+
+                        if ($forceCustomer) {
+                            $this->save_payment_for_subscription($orderId, $response);
                         }
-                        $order->payment_complete();
-                    }
-                    else {
+
+                        $this->log("Info: process_response");
+                        $this->process_response($response, $order);
+                    } else {
                         if ($response['xResult'] === 'V' && $paymentName === 'cardknox') {
                             return array(
                                 'result'   => 'success',
@@ -622,13 +694,10 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                 } else {
 
                     if (is_wp_error($response)) {
-                        //					$localized_messages = $this->get_localized_messages();
-                        //
-                        //					$message = isset( $localized_messages[ $response->get_error_code() ] ) ? $localized_messages[ $response->get_error_code() ] : $response->get_error_message();
-                        //
-                        //					$order->add_order_note( $message );
                         $order->add_order_note($response->get_error_message());
-                        throw new Exception("The transaction was declined please try again");
+                        throw new WC_Data_Exception(
+                            __( 'The transaction was declined. Please try again.', 'woocommerce-gateway-cardknox' )
+                        );
                     }
 
                     $this->log("Info: set_transaction_id");
@@ -702,15 +771,177 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
     public function save_payment($forceCustomer, $response)
     {
         $my_force_customer  = apply_filters('wc_cardknox_force_customer_creation', $forceCustomer, get_current_user_id());
-        $maybe_saved_card = isset($_POST['wc-cardknox-new-payment-method']) && !empty($_POST['wc-cardknox-new-payment-method']);
+        // Check both classic checkout and block editor save card fields
+        $req = $this->build_request_map();
+        $maybe_saved_card = (
+            (isset($req['wc-cardknox-new-payment-method']) && !empty($req['wc-cardknox-new-payment-method'])) ||
+            (isset($req['cardknox_save_card']) && ($req['cardknox_save_card'] === 'yes' || $req['cardknox_save_card'] === '1')) ||
+            $this->is_flag_enabled_in_store_payment_data('wc-cardknox-new-payment-method') ||
+            $this->is_flag_enabled_in_store_payment_data('cardknox_save_card')
+        );
+        // Log whether a save will be attempted
+        $this->log('Save payment requested=' . ($maybe_saved_card ? 'yes' : 'no'));
         // This is true if the user wants to store the card to their account.
         if ((get_current_user_id() && $this->saved_cards && $maybe_saved_card) || $my_force_customer) {
             try {
+                // If sale/auth response does not include xToken, fall back to an explicit cc:save using current tokens
+                if ((!isset($response['xToken']) || empty($response['xToken'])) && (isset($req['xCardNum']) || isset($req['cardknox_card_token']))) {
+                    $saveReq = array(
+                        'xCommand' => self::COMMAND_SAVE,
+                    );
+                    // Reuse parsed payment data
+                    if (!empty($req['xCardNum'])) {
+                        $saveReq['xCardNum'] = $req['xCardNum'];
+                    } elseif (!empty($req['cardknox_card_token'])) {
+                        $saveReq['xCardNum'] = $req['cardknox_card_token'];
+                    }
+                    if (!empty($req['xCVV'])) {
+                        $saveReq['xCVV'] = $req['xCVV'];
+                    } elseif (!empty($req['cardknox_cvv_token'])) {
+                        $saveReq['xCVV'] = $req['cardknox_cvv_token'];
+                    }
+                    if (!empty($req['xExp'])) {
+                        $saveReq['xExp'] = $req['xExp'];
+                    } else {
+                        $month = isset($req['cardknox_exp_month']) ? $req['cardknox_exp_month'] : '';
+                        $year  = isset($req['cardknox_exp_year']) ? $req['cardknox_exp_year'] : '';
+                        if ($month !== '' && $year !== '') {
+                            $saveReq['xExp'] = sprintf('%02d%s', (int) $month, substr((string) $year, -2));
+                        }
+                    }
+
+                $this->log('Attempting cc:save (fallback)');
+                    $saveResp = WC_Cardknox_API::request($saveReq);
+                    if (is_wp_error($saveResp)) {
+                        $this->log('cc:save failed: ' . $saveResp->get_error_message());
+                    } elseif (!empty($saveResp['xToken'])) {
+                        $this->log('cc:save succeeded');
+                        $response = $saveResp;
+                    } else {
+                        $this->log('cc:save returned without token');
+                    }
+                }
                 $this->add_card($response);
             } catch (\Throwable $th) {
                 $this->log('Error: ' . $th->getMessage());
             }
         }
+    }
+
+    /**
+     * Build a unified request map from classic POST/REQUEST vars and Store API JSON payment_data.
+     *
+     * @return array<string, mixed>
+     */
+    private function build_request_map()
+    {
+        static $cache = null;
+        if ($cache !== null) {
+            return $cache;
+        }
+
+        $map = array();
+        // Start with POST/REQUEST
+        foreach (array_merge($_REQUEST ?? array(), $_POST ?? array()) as $k => $v) {
+            if (is_string($k)) {
+                $map[$k] = is_string($v) ? wc_clean($v) : $v;
+            }
+        }
+
+        // Try to enrich from Store API payment_data
+        $entries = $this->get_store_api_payment_data_entries();
+        if (!empty($entries)) {
+            foreach ($entries as $entry) {
+                if (!isset($entry['key'])) {
+                    continue;
+                }
+                $key = (string) $entry['key'];
+                $val = isset($entry['value']) ? $entry['value'] : '';
+                // Prefer a truthy value if duplicates exist
+                if (!isset($map[$key]) || empty($map[$key])) {
+                    $map[$key] = is_string($val) ? wc_clean($val) : $val;
+                } elseif (!$this->is_truthy($map[$key]) && $this->is_truthy($val)) {
+                    $map[$key] = $val;
+                }
+            }
+        }
+
+        $cache = $map;
+        return $cache;
+    }
+
+    /**
+     * Return Store API payment_data entries if the request was made via the Blocks checkout (JSON body).
+     *
+     * @return array<int, array{key:mixed, value:mixed}>
+     */
+    private function get_store_api_payment_data_entries()
+    {
+        static $entries = null;
+        if ($entries !== null) {
+            return $entries;
+        }
+        $entries = array();
+
+        // Some environments forward payment_data through $_POST
+        if (isset($_POST['payment_data'])) {
+            $pd = $_POST['payment_data'];
+            if (is_array($pd)) {
+                $entries = $pd;
+            } elseif (is_string($pd)) {
+                // Try to decode JSON-encoded string
+                $decoded = json_decode($pd, true);
+                if (is_array($decoded)) {
+                    $entries = $decoded;
+                }
+            }
+        }
+
+        // Fallback: decode raw JSON body from Store API
+        if (empty($entries)) {
+            $raw = file_get_contents('php://input');
+            if (is_string($raw) && $raw !== '') {
+                $json = json_decode($raw, true);
+                if (is_array($json) && isset($json['payment_data']) && is_array($json['payment_data'])) {
+                    $entries = $json['payment_data'];
+                }
+            }
+        }
+
+        return $entries;
+    }
+
+    /**
+     * Check if a given key appears with a truthy value in Store API payment_data.
+     */
+    private function is_flag_enabled_in_store_payment_data($key)
+    {
+        $entries = $this->get_store_api_payment_data_entries();
+        foreach ($entries as $entry) {
+            if (!isset($entry['key']) || (string) $entry['key'] !== $key) {
+                continue;
+            }
+            $val = isset($entry['value']) ? $entry['value'] : null;
+            if ($this->is_truthy($val)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function is_truthy($val)
+    {
+        if (is_bool($val)) {
+            return $val;
+        }
+        if (is_numeric($val)) {
+            return (int) $val === 1;
+        }
+        if (is_string($val)) {
+            $val = strtolower(trim($val));
+            return in_array($val, array('1', 'yes', 'true', 'on'), true);
+        }
+        return !empty($val);
     }
 
     public function save_payment_for_subscription($orderId, $response)
@@ -749,7 +980,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             update_post_meta($orderId, '_cardknox_masked_card', $response['xMaskedCardNumber']);
             $order->payment_complete($response['xRefNum']);
 
-            $message = sprintf(__('Cardknox transaction captured (capture RefNum: %s)', 'woocommerce-gateway-cardknox'), $response['xRefNum']);
+            $message = sprintf(__('Sola transaction captured (capture RefNum: %s)', 'woocommerce-gateway-cardknox'), $response['xRefNum']);
             $order->add_order_note($message);
             $this->log('Success: ' . $message);
         } else {
@@ -761,9 +992,9 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             $xRefNum =  $response['xRefNum'];
 
             if ($this->authonly_status == "on-hold") {
-                $order->update_status('on-hold', sprintf(__('Cardknox charge authorized (Charge ID: %s). Process order to take payment, or cancel to remove the pre-authorization.', 'woocommerce-gateway-cardknox'), $response['xRefNum']));
+                $order->update_status('on-hold', sprintf(__('Sola charge authorized (Charge ID: %s). Process order to take payment, or cancel to remove the pre-authorization.', 'woocommerce-gateway-cardknox'), $response['xRefNum']));
             } else {
-                $order->update_status('processing', sprintf(__('Cardknox charge authorized (Charge ID: %s). Complete order to take payment, or cancel to remove the pre-authorization.', 'woocommerce-gateway-cardknox'), $response['xRefNum']));
+                $order->update_status('processing', sprintf(__('Sola charge authorized (Charge ID: %s). Complete order to take payment, or cancel to remove the pre-authorization.', 'woocommerce-gateway-cardknox'), $response['xRefNum']));
             }
 
             $this->log("Successful auth: $xRefNum");
@@ -828,7 +1059,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             } catch (\Throwable $th) {
                 // Handle general errors during card addition
                 $this->log('Error: ' . $th->getMessage());
-                wc_add_notice('An error occurred while Adding Payment Method', 'error');
+                wc_add_notice( __( 'An error occurred while Adding Payment Method.', 'woocommerce-gateway-cardknox' ), 'error');
             }
         } else {
             // No 'xToken' found in the API response, return a WP_Error
@@ -864,7 +1095,14 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             //check if amount is set to 0
             if ($amount < .01) {
                 $this->log('Error: Amount Required ' . $amount);
-                return new WP_Error('Error', 'Refund Amount Required ' . $amount);
+                return new WP_Error(
+					'Error',
+					sprintf(
+						/* translators: %s = refund amount */
+						__( 'Refund Amount Required %s', 'woocommerce-gateway-cardknox' ),
+						$amount
+					)
+				);
             }
             $body['xAmount']    = $this->get_cardknox_amount($amount);
         }
@@ -875,7 +1113,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         if ($total !=  $amount) {
             $command = 'cc:refund';
             if ($captured === "no") {
-                return new WP_Error('Error', 'Partial Refund Not Allowed On Authorize Only Transactions');
+                return new WP_Error( 'Error', __( 'Partial Refund Not Allowed On Authorize Only Transactions', 'woocommerce-gateway-cardknox' ) );
             }
         }
 
@@ -927,27 +1165,154 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
     public function add_card($response)
     {
         // Add token to WooCommerce
-        if (get_current_user_id() && class_exists('WC_Payment_Token_CC')) {
+        if (!get_current_user_id()) {
+            $this->log('add_card skipped: no logged-in user');
+            return "";
+        }
+
+        if (empty($response['xToken'])) {
+            $this->log('add_card aborted: missing xToken in response');
+            return "";
+        }
+
+        if (class_exists('WC_Payment_Token_CC')) {
             $myExp = '';
             if ($response['xExp']) {
                 $myExp = str_replace(' ', '', $response['xExp']);
             } elseif (wc_clean($_POST['xExp']) != '') {
                 $myExp = str_replace(' ', '', wc_clean($_POST['xExp']));
+            } else {
+                // Fallback for Blocks: combine posted month/year into MMYY if available
+                $month = isset($_POST['cardknox_exp_month']) ? wc_clean($_POST['cardknox_exp_month']) : '';
+                $year = isset($_POST['cardknox_exp_year']) ? wc_clean($_POST['cardknox_exp_year']) : '';
+                if ($month !== '' && $year !== '') {
+                    $year_short = substr((string) $year, -2);
+                    $myExp = sprintf('%02d%s', (int) $month, $year_short);
+                }
             }
             if ($myExp) {
                 $token = new WC_Payment_Token_CC();
                 $token->set_token($response['xToken']);
                 $token->set_gateway_id('cardknox');
-                $token->set_card_type(strtolower($response['xCardType']));
-                $token->set_last4($response['xMaskedCardNumber']);
+                $token->set_card_type($this->normalizeCardType(isset($response['xCardType']) ? (string) $response['xCardType'] : ''));
+                // Ensure only last 4 digits are stored
+                $last4 = isset($response['xMaskedCardNumber']) ? $response['xMaskedCardNumber'] : '';
+                $last4 = preg_replace('/\D+/', '', (string) $last4);
+                $last4 = $last4 ? substr($last4, -4) : '';
+                if ($last4 !== '') {
+                    $token->set_last4($last4);
+                }
                 $token->set_expiry_month(substr($myExp, 0, 2));
                 $token->set_expiry_year('20' . substr($myExp, 2, 2));
                 $token->set_user_id(get_current_user_id());
-                $response = $token->save();
-                do_action('woocommerce_cardknox_add_card', get_current_user_id(), $response);
+                $saved_id = $token->save();
+                // Persist masked number for display purposes (classic + blocks)
+                if (!empty($response['xMaskedCardNumber'])) {
+                    $token->update_meta_data('cardknox_masked', (string) $response['xMaskedCardNumber']);
+                    $token->save();
+                }
+                $this->log('add_card saved WC token id=' . $saved_id . ' type=' . $token->get_card_type() . ' last4=' . $token->get_last4() . ' exp=' . $token->get_expiry_month() . '/' . $token->get_expiry_year());
+                do_action('woocommerce_cardknox_add_card', get_current_user_id(), $saved_id);
             }
         }
         return "";
+    }
+
+    /**
+     * Customize saved token display to use Cardknox masked number when available
+     *
+     * @param string               $display
+     * @param WC_Payment_Token_CC  $token
+     * @return string
+     */
+    public function filter_token_display_name($display, $token)
+    {
+        if (! $token instanceof WC_Payment_Token_CC) {
+            return $display;
+        }
+        if ($token->get_gateway_id() !== 'cardknox') {
+            return $display;
+        }
+        $masked = $token->get_meta('cardknox_masked', true);
+        if (!$masked) {
+            // Derive a Cardknox-like masked number from brand + last4 and persist for future
+            $masked = $this->derive_masked_from_brand_and_last4($token->get_card_type(), $token->get_last4());
+            if ($masked) {
+                $token->update_meta_data('cardknox_masked', $masked);
+                $token->save();
+            }
+        }
+
+        if ($masked) {
+            $brand = strtoupper($token->get_card_type());
+            $exp   = sprintf('%02d/%02d', (int) $token->get_expiry_month(), (int) substr((string) $token->get_expiry_year(), -2));
+            // Match requested format: VISA •••• 4xxxxxxxxxxx1111 (MM/YY)
+            return sprintf('%s •••• %s (%s)', $brand, $masked, $exp);
+        }
+        return $display;
+    }
+
+    /**
+     * Derive Cardknox-style masked number like 4xxxxxxxxxxx1111 from brand + last4.
+     */
+    private function derive_masked_from_brand_and_last4($brand, $last4)
+    {
+        $brand = strtolower(trim((string) $brand));
+        $last4 = preg_replace('/\D+/', '', (string) $last4);
+        if (strlen($last4) !== 4) {
+            return '';
+        }
+
+        // Card length by brand (approx.)
+        $lenByBrand = array(
+            'amex' => 15,
+            'american express' => 15,
+            'visa' => 16,
+            'mastercard' => 16,
+            'discover' => 16,
+            'diners' => 16,
+            'diners club' => 16,
+            'jcb' => 16,
+        );
+        $firstDigitByBrand = array(
+            'amex' => '3',
+            'american express' => '3',
+            'visa' => '4',
+            'mastercard' => '5',
+            'discover' => '6',
+            'diners' => '3',
+            'diners club' => '3',
+            'jcb' => '3',
+        );
+
+        $length = isset($lenByBrand[$brand]) ? $lenByBrand[$brand] : 16;
+        $first  = isset($firstDigitByBrand[$brand]) ? $firstDigitByBrand[$brand] : '4';
+
+        // 1 leading digit + N x's + 4 last digits must equal length
+        $numXs = max(0, $length - 1 - 4);
+        return $first . str_repeat('x', $numXs) . $last4;
+    }
+
+    private function normalizeCardType($type)
+    {
+        $t = strtolower(trim($type));
+        $map = array(
+            'american express' => 'amex',
+            'americanexpress' => 'amex',
+            'amex' => 'amex',
+            'visa' => 'visa',
+            'mastercard' => 'mastercard',
+            'master card' => 'mastercard',
+            'mc' => 'mastercard',
+            'discover' => 'discover',
+            'diners club' => 'diners',
+            'diners' => 'diners',
+            'jcb' => 'jcb',
+        );
+        if (isset($map[$t])) {
+            return $map[$t];
+        }
+        return $t;
     }
 
     /**
@@ -1019,7 +1384,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                             <?php esc_html_e( 'Open Link', 'woocommerce-gateway-cardknox' ); ?>
                         </a>
                     </li>
-                    <li><?php esc_html_e( 'Please use this option:', 'woocommerce-gateway-cardknox' ); ?> <strong><?php esc_html_e( 'Register for Apple Pay with Cardknox Certificate', 'woocommerce-gateway-cardknox' ); ?></strong></li>
+                    <li><?php esc_html_e( 'Please use this option:', 'woocommerce-gateway-cardknox' ); ?> <strong><?php esc_html_e( 'Register for Apple Pay with Sola Certificate', 'woocommerce-gateway-cardknox' ); ?></strong></li>
                     <li><?php esc_html_e( 'Click on', 'woocommerce-gateway-cardknox' ); ?> <strong><?php esc_html_e( 'Register', 'woocommerce-gateway-cardknox' ); ?></strong> <?php esc_html_e( 'button', 'woocommerce-gateway-cardknox' ); ?></li>
                     <li><?php esc_html_e( 'Download the Apple developer association certificate file', 'woocommerce-gateway-cardknox' ); ?></li>
                     <li><?php printf(esc_html__( 'Upload Applepay Certificate by click on below %s button', 'woocommerce-gateway-cardknox' ),'<strong>' . esc_html__( '"Choose Certificate"', 'woocommerce-gateway-cardknox' ) . '</strong>');?></li>
@@ -1044,7 +1409,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                 </thead>
                 <tbody>
                     <?php
-                        $this->apple_pay_gateway->generate_settings_html();
+                        $this->applePayGateway->generate_settings_html();
                     ?>
                 </tbody>
             </table>
@@ -1059,7 +1424,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                 </thead>
                 <tbody>
                     <?php
-                    $this->google_pay_gateway->generate_settings_html();
+                    $this->googlePayGateway->generate_settings_html();
                     ?>
                 </tbody>
             </table>
@@ -1084,17 +1449,19 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
     public function cardknox_allow_payment_method_by_country($available_gateways)
     {
 
-        if (is_admin()) return $available_gateways;
+        if ( is_admin() ||  !is_object(WC()->customer) || !method_exists(WC()->customer, 'get_billing_country') ) {
+            return $available_gateways;
+        }
 
-        $applicable_countries = $this->applicable_countries;
-        $specific_countries    = $this->specific_countries;
+        $applicableCountries = $this->applicableCountries;
+        $specificCountries    = $this->specificCountries;
 
-        if (isset($applicable_countries) && $applicable_countries == 1) {
+        if (isset($applicableCountries) && $applicableCountries == 1) {
             // Get the customer's billing and shipping addresses
             $billing_country = WC()->customer->get_billing_country();
 
             // Define the country codes for which you want to allow the payment method
-            $enabled_countries = $specific_countries; // Add the country codes to this array
+            $enabled_countries = $specificCountries; // Add the country codes to this array
 
             // Check if the billing or shipping address country is in the allow countries array
             if (!in_array($billing_country, $enabled_countries)) {

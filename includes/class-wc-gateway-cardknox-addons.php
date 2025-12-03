@@ -116,13 +116,13 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
         // Safely determine currency
         if ( ! empty( $request['currency'] ) ) {
             $currency = $request['currency'];
-            $this->log("Info: Begin processing subscription payment for order {$order_id} for the amount {$amount} of Currency is {$currency}");
+            $this->log("Info: Begin processing subscription payment for order {$order_id} for the amount of {$amount}. Currency is {$currency}");
         } elseif ( is_object( $order ) && method_exists( $order, 'get_currency' ) ) {
             $currency = $order->get_currency();
-            $this->log("Info: Begin processing subscription payment for order {$order_id} for the amount {$amount} of Currency is: {$currency}");
+            $this->log("Info: Begin processing subscription payment for order {$order_id} for the amount of {$amount}. Currency is {$currency}");
         } else {
             $currency = get_woocommerce_currency();
-            $this->log("Info: Begin processing subscription payment for order {$order_id} for the amount {$amount} of Currency is:-> {$currency}");
+            $this->log("Info: Begin processing subscription payment for order {$order_id} for the amount of {$amount}. Currency is {$currency}");
         }
 
 

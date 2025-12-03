@@ -2,6 +2,7 @@
 
 ## changelog for version Version: 1.2.82
 
+- Updated iFields to version 3.1.2508.1401
 - Fixed deprecated warnings, standardized gateway settings, improved quick checkout behavior and script loading for smoother performance.
 - Standardized error messages for full translation readiness and consistent formatting.
 

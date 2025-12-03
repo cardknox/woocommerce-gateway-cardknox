@@ -44,7 +44,7 @@ define('WC_CARDKNOX_MAIN_FILE', __FILE__);
 define('WC_CARDKNOX_PLUGIN_URL', untrailingslashit(plugins_url(basename(plugin_dir_path(__FILE__)), basename(__FILE__))));
 define('WC_CARDKNOX_PLUGIN_PATH', untrailingslashit(plugin_dir_path(__FILE__)));
 
-define( 'CARDKNOX_IFIELDS_URL', 'https://cdn.cardknox.com/ifields/3.0.2503.2101/ifields.min.js' );
+define( 'CARDKNOX_IFIELDS_URL', 'https://cdn.cardknox.com/ifields/3.1.2508.1401/ifields.min.js' );
 
 
 
@@ -76,17 +76,11 @@ if (version_compare(get_bloginfo('version'), '6.5', '<')) {
 add_action('init', function() {
     if (class_exists('Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType')) {
         require_once __DIR__ . '/includes/class-wc-gateway-cardknox-blocks.php';              // card
-        require_once __DIR__ . '/includes/class-wc-cardknox-applepay-blocks-support.php';     // apple
 
         add_action(
             'woocommerce_blocks_payment_method_type_registration',
             function(Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry $registry) {
                 $registry->register(new WC_Gateway_Cardknox_Blocks_Support());
-
-                $apple = new WC_Cardknox_ApplePay_Blocks_Support();
-                if ($apple->is_active()) {
-                    $registry->register($apple);
-                }
             }
         );
     }
@@ -218,7 +212,7 @@ if (!class_exists('WC_Cardknox')) :
                     'cardknox-ifields',
                     CARDKNOX_IFIELDS_URL,
                     array(),
-                    '3.0.2503.2101',
+                    '3.1.2508.1401',
                     false
                 );
                 if (! wp_script_is('cardknox-ifields', 'enqueued')) {
@@ -702,9 +696,9 @@ if (!class_exists('WC_Cardknox')) :
             // Common iFields script
             wp_enqueue_script(
                 'cardknox',
-                'https://cdn.cardknox.com/ifields/3.0.2503.2101/ifields.min.js',
+                'https://cdn.cardknox.com/ifields/3.1.2508.1401/ifields.min.js',
                 [],
-                '3.0.2503.2101',
+                '3.1.2508.1401',
                 false
             );
         

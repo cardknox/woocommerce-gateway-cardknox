@@ -1,5 +1,10 @@
 # Changelog
 
+## changelog for version Version: 1.2.82
+
+- Fixed deprecated warnings, standardized gateway settings, improved quick checkout behavior and script loading for smoother performance.
+- Standardized error messages for full translation readiness and consistent formatting.
+
 ## changelog for version Version: 1.2.81
 
 - Added compatibility with WooCommerce Block Editor Checkout.

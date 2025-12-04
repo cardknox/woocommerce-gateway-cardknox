@@ -250,6 +250,18 @@ if (!class_exists('WC_Cardknox')) :
             if ( ! function_exists('has_block') ) {
                 return false;
             }
+
+            /*
+                If WooCommerce has not loaded yet, or if it is deactivated, then return false.
+                * WooCommerce is updating
+                * WooCommerce is temporarily unavailable
+                * WooCommerce plugin is disabled
+            */
+            
+            if ( ! function_exists( 'wc_get_page_id' ) ) {
+                return false;
+            }
+
             $checkout_page_id = wc_get_page_id('checkout');
             if ( $checkout_page_id && $checkout_page_id !== -1 ) {
                 return has_block('woocommerce/checkout', $checkout_page_id);

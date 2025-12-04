@@ -233,6 +233,21 @@ if (!class_exists('WC_Cardknox')) :
          * Enqueue block styles on checkout pages
          */
         public function enqueue_block_styles() {
+
+            $handle = 'wc-cardknox-ifields'; // your actual script handle
+            
+            // Build dynamic logo URL
+            $card_logo_url = WC_CARDKNOX_PLUGIN_URL . '/images/card-logos.png';
+
+            // Pass data to JS
+            wp_localize_script(
+                $handle,
+                'wcCardknoxData',
+                array(
+                    'cardLogoUrl' => $card_logo_url,
+                )
+            );
+
             if ( ! is_admin() && $this->isBlocksCheckoutActive() ) {
                 wp_enqueue_style(
                     'wc-cardknox-blocks-style',

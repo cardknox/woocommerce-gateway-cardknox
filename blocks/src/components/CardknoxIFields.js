@@ -4,7 +4,7 @@
 import { __ } from '@wordpress/i18n';
 import { useEffect } from '@wordpress/element';
 
-const cardLogoUrl = 'https://plugin.cardknox.net/demo/wpdemo/wp-content/plugins/woocommerce-gateway-cardknox/images/card-logos.png';
+const cardLogoUrl = wcCardknoxData?.cardLogoUrl || '';
 
 const CardknoxIFields = ({ errors, onExpiryChange, ValidationInputError, cardData }) => {
     

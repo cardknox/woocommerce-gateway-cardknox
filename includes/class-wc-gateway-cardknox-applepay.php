@@ -590,7 +590,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
                 if ($amount < .01) {
                     $this->log('Error: Amount Required ' . $amount);
                     $error_message = __( 'Refund Amount Required.', 'woocommerce-gateway-cardknox' );
-                    return new WP_Error('Error', $error_message . $amount);
+                    return new WP_Error('Error', $error_message . ' ' . $amount);
                 } else {
                     $body['xAmount'] = $this->get_cardknox_amount($amount);
                 }

@@ -241,7 +241,7 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
 
     public function delete_renewal_meta($renewal_order)
     {
-        delete_post_meta(($this->wc_pre_30 ? $renewal_order->id : $renewal_order->get_id()), 'Cardknox Payment ID');
+        delete_post_meta(($this->wc_pre_30 ? $renewal_order->id : $renewal_order->get_id()), __( 'Sola Payment ID', 'woocommerce-gateway-cardknox' ) );
         return $renewal_order;
     }
 
@@ -367,9 +367,9 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
             return $payment_method_to_display;
         }
 
-        $cardknox_card_id     = get_post_meta(($this->wc_pre_30 ? $subscription->id : $subscription->get_id()), '_cardknox_token', true);
-        $cardknox_masked_card        = get_post_meta(($this->wc_pre_30 ? $subscription->id : $subscription->get_id()), '_cardknox_masked_card', true);
-        $cardknox_cardtype =      get_post_meta(($this->wc_pre_30 ? $subscription->id : $subscription->get_id()), '_cardknox_cardtype', true);
+        $cardknox_card_id       = get_post_meta(($this->wc_pre_30 ? $subscription->id : $subscription->get_id()), '_cardknox_token', true);
+        $cardknox_masked_card   = get_post_meta(($this->wc_pre_30 ? $subscription->id : $subscription->get_id()), '_cardknox_masked_card', true);
+        $cardknox_cardtype      = get_post_meta(($this->wc_pre_30 ? $subscription->id : $subscription->get_id()), '_cardknox_cardtype', true);
 
         $payment_method_to_display = sprintf(__('Via %1$s card %2$s', 'woocommerce-gateway-cardknox'), $cardknox_cardtype, $cardknox_masked_card);
 

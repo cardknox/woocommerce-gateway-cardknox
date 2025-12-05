@@ -25,7 +25,7 @@ const getSettings = () => {
 
 const settings = getSettings();
 
-const defaultLabel = __('Credit Card (Cardknox)', 'woocommerce-gateway-cardknox');
+const defaultLabel = __('Credit Card (Sola)', 'woocommerce-gateway-cardknox');
 const label = decodeEntities(settings.title) || defaultLabel;
 
 /**

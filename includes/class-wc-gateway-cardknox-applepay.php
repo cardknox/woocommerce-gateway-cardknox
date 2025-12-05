@@ -31,15 +31,15 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     public function __construct()
     {
         $this->id                   = 'cardknox-applepay';
-        $this->method_title         = __('Cardknox', 'woocommerce-gateway-cardknox');
-        $this->title                = __('Cardknox', 'woocommerce-other-payment-gateway');
+        $this->method_title         = __('Sola', 'woocommerce-gateway-cardknox');
+        $this->title                = __('Sola', 'woocommerce-other-payment-gateway');
 
         $methodDescription = '<strong class="important-label" style="color: #e22626;">Important: </strong>';
         $methodDescription .= 'Please complete the Apple Pay Domain Registration ';
         $methodDescription .= '<a target="_blank" href="https://portal.solapayments.com/account-settings/payment-methods">';
 
         $methodDescription .= 'here</a> ';
-        $methodDescription .= 'prior to enabling Cardknox Apple Pay.';
+        $methodDescription .= 'prior to enabling Sola Apple Pay.';
 
         $this->method_description = sprintf(
             __($methodDescription, 'woocommerce-gateway-cardknox'),
@@ -519,7 +519,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
             $message = sprintf(
                 __(
-                    'Cardknox transaction captured (capture RefNum: %s)',
+                    'Sola transaction captured (capture RefNum: %s)',
                     'woocommerce-gateway-cardknox'
                 ),
                 $response['xRefNum']
@@ -543,7 +543,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
                     'on-hold',
                     sprintf(
                         __(
-                            'Cardknox charge authorized (Charge ID: %s).
+                            'Sola charge authorized (Charge ID: %s).
                     Process order to take payment, or cancel to remove the pre-authorization.',
                             'woocommerce-gateway-cardknox'
                         ),
@@ -553,7 +553,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             } else {
                 $order->update_status('processing', sprintf(
                     __(
-                        'Cardknox charge authorized (Charge ID: %s).
+                        'Sola charge authorized (Charge ID: %s).
                     Complete order to take payment, or cancel to remove the pre-authorization.',
                         'woocommerce-gateway-cardknox'
                     ),

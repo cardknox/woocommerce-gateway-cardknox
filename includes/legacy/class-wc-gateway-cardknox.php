@@ -57,6 +57,8 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 
 	public $authonly_status;
 
+	const SETTINGS_BASE_URL = 'admin.php?page=wc-settings&tab=checkout&section=wc_gateway_cardknox';
+
     /**
 	 * Constructor
 	 */
@@ -148,28 +150,47 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 		if ( $this->enabled == 'no' ) {
 			return;
 		}
-
+	
 		$addons = ( class_exists( 'WC_Subscriptions_Order' ) || class_exists( 'WC_Pre_Orders_Order' ) ) ? '_addons' : '';
-
+	
+		// Build settings URL once
+		$settings_url = self::SETTINGS_BASE_URL . $addons;
+	
 		// Check required fields
 		if ( ! $this->transaction_key ) {
-			echo '<div class="error"><p>' . sprintf( __( 'Sola error: Please enter your transaction key <a href="%s">here</a>', 'woocommerce-gateway-cardknox' ), admin_url( 'admin.php?page=wc-settings&tab=checkout&section=wc_gateway_cardknox' . $addons ) ) . '</p></div>';
+			echo '<div class="error"><p>' . sprintf(
+				__( 'Sola error: Please enter your transaction key <a href="%s">here</a>', 'woocommerce-gateway-cardknox' ),
+				admin_url( $settings_url )
+			) . '</p></div>';
 			return;
-
+	
 		} elseif ( ! $this->token_key ) {
-			echo '<div class="error"><p>' . sprintf( __( 'Sola error: Please enter your token key <a href="%s">here</a>', 'woocommerce-gateway-cardknox' ), admin_url( 'admin.php?page=wc-settings&tab=checkout&section=wc_gateway_cardknox' . $addons ) ) . '</p></div>';
+			echo '<div class="error"><p>' . sprintf(
+				__( 'Sola error: Please enter your token key <a href="%s">here</a>', 'woocommerce-gateway-cardknox' ),
+				admin_url( $settings_url )
+			) . '</p></div>';
 			return;
 		}
-
+	
 		// Simple check for duplicate keys
 		if ( $this->transaction_key == $this->token_key ) {
-			echo '<div class="error"><p>' . sprintf( __( 'Sola error: Your transaction and token keys match. Please check and re-enter.', 'woocommerce-gateway-cardknox' ), admin_url( 'admin.php?page=wc-settings&tab=checkout&section=wc_gateway_cardknox' . $addons ) ) . '</p></div>';
+			echo '<div class="error"><p>' . sprintf(
+				__( 'Sola error: Your transaction and token keys match. Please check and re-enter.', 'woocommerce-gateway-cardknox' ),
+				admin_url( $settings_url )
+			) . '</p></div>';
 			return;
 		}
-
-		// Show message if enabled and FORCE SSL is disabled and WordpressHTTPS plugin is not detected
-		if ( ( function_exists( 'wc_site_is_https' ) && ! wc_site_is_https() ) && ( 'no' === get_option( 'woocommerce_force_ssl_checkout' ) && ! class_exists( 'WordPressHTTPS' ) ) ) {
-			echo '<div class="error"><p>' . sprintf( __( 'Sola is enabled, but the <a href="%1$s">force SSL option</a> is disabled; your checkout may not be secure! Please enable SSL and ensure your server has a valid <a href="%2$s" target="_blank">SSL certificate</a> - Cardknox will only work in test mode.', 'woocommerce-gateway-cardknox' ), admin_url( 'admin.php?page=wc-settings&tab=checkout' ), 'https://en.wikipedia.org/wiki/Transport_Layer_Security' ) . '</p></div>';
+	
+		// Show message if enabled and FORCE SSL is disabled
+		if ( ( function_exists( 'wc_site_is_https' ) && ! wc_site_is_https() )
+			&& ( 'no' === get_option( 'woocommerce_force_ssl_checkout' ) && ! class_exists( 'WordPressHTTPS' ) )
+		) {
+			echo '<div class="error"><p>' . sprintf(
+				__( 'Sola is enabled, but the <a href="%1$s">force SSL option</a> is disabled; your checkout may not be secure! Please enable SSL and ensure your server has a valid <a href="%2$s" target="_blank">SSL certificate</a> - Cardknox will only work in test mode.', 
+				'woocommerce-gateway-cardknox' ),
+				admin_url( 'admin.php?page=wc-settings&tab=checkout' ),
+				'https://en.wikipedia.org/wiki/Transport_Layer_Security'
+			) . '</p></div>';
 		}
 	}
 

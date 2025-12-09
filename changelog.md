@@ -2,7 +2,7 @@
 
 ## changelog for version Version: 1.2.82
 
-- Updated iFields to version 3.1.2508.1401
+- Updated iFields to version 3.1.2508.1401.
 - Fixed deprecated warnings, standardized gateway settings, improved quick checkout behavior and script loading for smoother performance.
 - Standardized error messages for full translation readiness and consistent formatting.
 
@@ -11,7 +11,7 @@
 - Added compatibility with WooCommerce Block Editor Checkout.
 - Updated all Cardknox references to Sola.
 - Added compatibility with WooCommerce High-Performance Order Storage (HPOS).
-- Fixed critical get_billing_country error .
+- Fixed critical get_billing_country error.
 - Limited expiration year input to two digits on checkout.
 
 ## changelog for version Version: 1.2.73

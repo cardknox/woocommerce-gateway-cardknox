@@ -171,7 +171,6 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 			return;
 		}
 
-
 		// Simple check for duplicate keys
 		if ( $this->transaction_key == $this->token_key ) {
 			echo '<div class="error"><p>' . sprintf(

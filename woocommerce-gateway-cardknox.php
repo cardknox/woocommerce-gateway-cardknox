@@ -237,7 +237,7 @@ if (!class_exists('WC_Cardknox')) :
             $handle = 'wc-cardknox-ifields'; // your actual script handle
             
             // Build dynamic logo URL
-            $card_logo_url = WC_CARDKNOX_PLUGIN_URL . '/images/card-logos.png';
+            $card_logo_url = esc_url( WC_CARDKNOX_PLUGIN_URL . '/images/card-logos.png' );
 
             // Pass data to JS
             wp_localize_script(

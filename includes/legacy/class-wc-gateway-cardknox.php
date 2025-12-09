@@ -150,7 +150,6 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 		if ( $this->enabled == 'no' ) {
 			return;
 		}
-	
 		$addons = ( class_exists( 'WC_Subscriptions_Order' ) || class_exists( 'WC_Pre_Orders_Order' ) ) ? '_addons' : '';
 	
 		// Build settings URL once

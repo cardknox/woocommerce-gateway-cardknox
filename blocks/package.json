@@ -17,6 +17,6 @@
   "author": "Cardknox",
   "license": "GPL-3.0",
   "devDependencies": {
-    "@wordpress/scripts": "^26.19.0"
+    "@wordpress/scripts": "^31.1.0"
   }
 }

@@ -103,7 +103,7 @@ add_action(
 
             // Class load only once, safely.
             if ( ! class_exists( 'WC_Gateway_Cardknox_Blocks_Support' ) ) {
-                require_once __DIR__ . '/includes/class-wc-gateway-cardknox-blocks.php';
+                include_once plugin_dir_path( __FILE__ ) . 'includes/class-wc-gateway-cardknox-blocks.php';
             }
 
             add_action(

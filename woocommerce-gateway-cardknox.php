@@ -37,14 +37,38 @@ if (!defined('ABSPATH')) {
 /**
  * Required minimums and constants
  */
-define('WC_CARDKNOX_VERSION', '1.2.82');
-define('WC_CARDKNOX_MIN_PHP_VER', '5.6.0');
-define('WC_CARDKNOX_MIN_WC_VER', '2.5.0');
-define('WC_CARDKNOX_MAIN_FILE', __FILE__);
-define('WC_CARDKNOX_PLUGIN_URL', untrailingslashit(plugins_url(basename(plugin_dir_path(__FILE__)), basename(__FILE__))));
-define('WC_CARDKNOX_PLUGIN_PATH', untrailingslashit(plugin_dir_path(__FILE__)));
+if ( ! defined( 'WC_CARDKNOX_VERSION' ) ) {
+    define( 'WC_CARDKNOX_VERSION', '1.2.82' );
+}
 
-define( 'CARDKNOX_IFIELDS_URL', 'https://cdn.cardknox.com/ifields/3.1.2508.1401/ifields.min.js' );
+if ( ! defined( 'WC_CARDKNOX_MIN_PHP_VER' ) ) {
+    define( 'WC_CARDKNOX_MIN_PHP_VER', '5.6.0' );
+}
+
+if ( ! defined( 'WC_CARDKNOX_MIN_WC_VER' ) ) {
+    define( 'WC_CARDKNOX_MIN_WC_VER', '2.5.0' );
+}
+
+if ( ! defined( 'WC_CARDKNOX_MAIN_FILE' ) ) {
+    define( 'WC_CARDKNOX_MAIN_FILE', __FILE__ );
+}
+
+if ( ! defined( 'WC_CARDKNOX_PLUGIN_URL' ) ) {
+    define(
+        'WC_CARDKNOX_PLUGIN_URL',
+        untrailingslashit(
+            plugins_url( basename( plugin_dir_path( __FILE__ ) ), basename( __FILE__ ) )
+        )
+    );
+}
+
+if ( ! defined( 'WC_CARDKNOX_PLUGIN_PATH' ) ) {
+    define( 'WC_CARDKNOX_PLUGIN_PATH', untrailingslashit( plugin_dir_path( __FILE__ ) ) );
+}
+
+if ( ! defined( 'CARDKNOX_IFIELDS_URL' ) ) {
+    define( 'CARDKNOX_IFIELDS_URL', 'https://cdn.cardknox.com/ifields/3.1.2508.1401/ifields.min.js' );
+}
 
 
 

@@ -96,24 +96,6 @@ if (version_compare(get_bloginfo('version'), '6.5', '<')) {
     return;
 }
 
-add_action(
-    'woocommerce_blocks_payment_method_type_registration',
-    function( Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry $registry ) {
-
-        // Do NOT register twice
-        if ( method_exists( $registry, 'is_registered' ) ) {
-            if ( $registry->is_registered( 'cardknox' ) ) {
-                return;
-            }
-        }
-
-        if ( ! class_exists( 'WC_Gateway_Cardknox_Blocks_Support' ) ) {
-            include_once plugin_dir_path( __FILE__ ) . 'includes/class-wc-gateway-cardknox-blocks.php';
-        }
-
-        $registry->register( new WC_Gateway_Cardknox_Blocks_Support() );
-    }
-);
 
 
 if (!class_exists('WC_Cardknox')) :

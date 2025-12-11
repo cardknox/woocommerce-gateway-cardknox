@@ -103,7 +103,7 @@ add_action(
 
             // Load Blocks class file when needed (WordPress does not use an autoloader here). //NOSONAR
             if ( ! class_exists( 'WC_Gateway_Cardknox_Blocks_Support' ) ) {
-                include_once plugin_dir_path( __FILE__ ) . 'includes/class-wc-gateway-cardknox-blocks.php';
+                include_once plugin_dir_path( __FILE__ ) . 'includes/class-wc-gateway-cardknox-blocks.php'; //NOSONAR
             }
 
             add_action(

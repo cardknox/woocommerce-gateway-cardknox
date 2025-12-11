@@ -11,7 +11,7 @@ use Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodTyp
 /**
  * Cardknox payment method integration for WooCommerce Blocks
  */
-if ( ! class_exists( 'WC_Gateway_Cardknox_Blocks_Support' ) ) {
+// if ( ! class_exists( 'WC_Gateway_Cardknox_Blocks_Support' ) ) {
     final class WC_Gateway_Cardknox_Blocks_Support extends AbstractPaymentMethodType {
         /**
          * Payment method name
@@ -209,4 +209,4 @@ if ( ! class_exists( 'WC_Gateway_Cardknox_Blocks_Support' ) ) {
             return $first . str_repeat( 'x', $num_xs ) . $last4;
         }
     }
-}
+// }

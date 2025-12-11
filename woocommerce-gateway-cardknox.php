@@ -101,7 +101,7 @@ add_action(
     function () {
         if ( class_exists( 'Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType' ) ) {
 
-            // Class load only once, safely.
+            // Load Blocks class file when needed (WordPress does not use an autoloader here). // NOSONAR
             if ( ! class_exists( 'WC_Gateway_Cardknox_Blocks_Support' ) ) {
                 include_once plugin_dir_path( __FILE__ ) . 'includes/class-wc-gateway-cardknox-blocks.php';
             }

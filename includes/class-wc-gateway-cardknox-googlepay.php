@@ -345,9 +345,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
 
                 if (is_wp_error($response)) {
                     $orderGooglePay->add_order_note($response->get_error_message());
-                    throw new WC_Data_Exception(
-                        __( 'The transaction was declined. Please try again.', 'woocommerce-gateway-cardknox' )
-                    );
+                    throw new WC_Data_Exception( __( 'The transaction was declined. Please try again.', 'woocommerce-gateway-cardknox' ), 400 );
                 }
 
                 $this->glog("Info: set_transaction_id");

@@ -452,7 +452,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
                 if (is_wp_error($response)) {
                     $order->add_order_note($response->get_error_message());
-                    throw new WC_Data_Exception( __( 'The transaction was declined please try again.', 'woocommerce-gateway-cardknox' ) );
+                    throw new WC_Data_Exception( __( 'The transaction was declined please try again.', 'woocommerce-gateway-cardknox' ), 400 );
                 }
 
                 $this->log("Info: set_transaction_id");

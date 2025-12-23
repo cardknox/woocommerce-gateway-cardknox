@@ -1119,9 +1119,7 @@ if (!class_exists('WC_Cardknox')) :
 
                     if (is_wp_error($parsedResponse)) {
                         $order->add_order_note($parsedResponse->get_error_message());
-                        throw new WC_Data_Exception(
-                            __( 'The transaction was declined. Please try again.', 'woocommerce-gateway-cardknox' )
-                        );
+                        throw new WC_Data_Exception( __( 'The transaction was declined. Please try again.', 'woocommerce-gateway-cardknox' ), 400 );
                     }
 
                     $this->log("Info: set_transaction_id");

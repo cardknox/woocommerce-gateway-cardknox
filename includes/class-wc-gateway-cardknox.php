@@ -695,9 +695,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
                     if (is_wp_error($response)) {
                         $order->add_order_note($response->get_error_message());
-                        throw new WC_Data_Exception(
-                            __( 'The transaction was declined. Please try again.', 'woocommerce-gateway-cardknox' )
-                        );
+                        throw new WC_Data_Exception( 'cardknox_declined', __( 'The transaction was declined, please try again.', 'woocommerce-gateway-cardknox' ) );
                     }
 
                     $this->log("Info: set_transaction_id");

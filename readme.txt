@@ -2,7 +2,7 @@
 Contributors: dlehren
 Tags: credit card, gateway, sola, cardknox, woocommerce
 Requires at least: 6.5
-Tested up to: 6.7.1
+Tested up to: 6.9
 Requires PHP: 5.6.0
 Stable tag: trunk
 License: GNU GPL 3.0

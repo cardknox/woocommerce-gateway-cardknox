@@ -72,18 +72,18 @@ Visit solapayments.com to learn more.
 
 - Added 3D Secure integration to the checkout for added security
 - Added the card brand logos to the Credit Card tender
-- Added Digital Wallet (Apple Pay & google Pay) quick checkout option to cart page
+- Added Digital Wallet (Apple Pay & Google Pay) quick checkout option to cart page
 - Added tabs for Apple Pay and Google Pay on Admin Settings
 - Fixed issues with Woo Subscription
-- Updated tax to be send to the Gateway
+- Updated tax to be sent to the Gateway
 - Fixed issue with white space on Expiry
 - Updated iFields latest version 2.15.2405.1601
-- Add Tax parametrer to Gateway request
+- Add Tax parameter to Gateway request
 
 = 1.0.16 =
 
 - Add support for GooglePay
-- Add support for ApplePay
+- Add support for Apple Pay
 - Security updates
 - Fix for expiration field issue
 - Updated iFields version

@@ -29,7 +29,7 @@ Key Features
 Whether you're selling one-time products or subscriptions, Sola’s configurable gateway helps reduce declines, optimize costs, and elevate your checkout experience—without the complexity.
 
 Experience payments that scale with your business.
-Visit solapayments.com to learn more.
+Visit [Sola](https://solapayments.com) to learn more.
 
 == Changelog ==
 

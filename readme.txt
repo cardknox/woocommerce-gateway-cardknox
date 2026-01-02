@@ -33,6 +33,10 @@ Visit [Sola](https://solapayments.com) to learn more.
 
 == Changelog ==
 
+= 1.2.83 =
+
+- Package updates
+
 = 1.2.82 =
 
 - Updated iFields to version 3.1.2508.1401.

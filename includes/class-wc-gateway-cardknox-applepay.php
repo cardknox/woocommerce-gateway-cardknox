@@ -127,41 +127,44 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     /**
      * Applepay Certificate Upload functionality.
      */
-    public function process_admin_options() {
+    public function process_admin_options()
+    {
 
         parent::process_admin_options();
-    
+
         if (!$this->hasCertificateUpload()) {
             return;
         }
-    
+
         $file = $_FILES['woocommerce_cardknox-applepay_applepay_certificate'];
-    
+
         if (!$this->isUploadValid($file)) {
             return;
         }
-    
+
         if (!$this->isCertificateValid($file)) {
             return;
         }
-    
+
         $target_path = $this->prepareWellKnownDirectory($file['name']);
         if (!$target_path) {
             return;
         }
-    
+
         if (!$this->moveCertificateFile($file['tmp_name'], $target_path)) {
             return;
         }
-    
+
         $this->verifyApplepayDomain();
     }
 
-    private function hasCertificateUpload(): bool {
+    private function hasCertificateUpload(): bool
+    {
         return !empty($_FILES['woocommerce_cardknox-applepay_applepay_certificate']['tmp_name']);
     }
 
-    private function isUploadValid(array $file): bool {
+    private function isUploadValid(array $file): bool
+    {
 
         if ($file['error'] !== UPLOAD_ERR_OK) {
             $this->addUniqueSettingsError(
@@ -170,14 +173,15 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             );
             return false;
         }
-    
+
         return true;
     }
 
-    private function isCertificateValid(array $file): bool {
+    private function isCertificateValid(array $file): bool
+    {
 
         $filename = sanitize_file_name($file['name']);
-    
+
         if ($filename !== 'apple-developer-merchantid-domain-association') {
             $this->addUniqueSettingsError(
                 'invalid_filename',
@@ -185,7 +189,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             );
             return false;
         }
-    
+
         if (pathinfo($filename, PATHINFO_EXTENSION)) {
             $this->addUniqueSettingsError(
                 'invalid_extension',
@@ -193,37 +197,40 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             );
             return false;
         }
-    
+
         return true;
     }
 
-    private function prepareWellKnownDirectory(string $filename) {
+    private const WELL_KNOWN_DIR_PERMISSIONS = 0755;
 
-        $base_path = rtrim(dirname(dirname(ABSPATH)), '/');
-        $dir = $base_path . '/.well-known/';
-    
-        if (!file_exists($dir)) {
-            if (!wp_mkdir_p($dir)) {
-                $this->addUniqueSettingsError(
-                    'directory_failed',
-                    __('Failed to create .well-known directory. Please create it manually with 755 permissions.', 'woocommerce-gateway-cardknox')
-                );
-                return false;
-            }
+    private const WELL_KNOWN_FILE_PERMISSIONS = 0644;
+
+    private function prepareWellKnownDirectory(string $filename)
+    {
+
+        $basePath = rtrim(dirname(dirname(ABSPATH)), '/');
+        $dir = $basePath . '/.well-known/';
+
+        if (!file_exists($dir) && !wp_mkdir_p($dir)) {
+            $this->addUniqueSettingsError(
+                'directory_failed',
+                __('Failed to create .well-known directory. Please create it manually with 755 permissions.', 'woocommerce-gateway-cardknox')
+            );
+            return false;
         }
-    
-        // Fix permissions ONLY if needed (Sonar-safe)
+
         $perms = fileperms($dir) & 0777;
-        if ($perms !== 0755) {
-            chmod($dir, 0755);
+        if ($perms !== self::WELL_KNOWN_DIR_PERMISSIONS) {
+            // Apple Pay requires public read access
+            chmod($dir, self::WELL_KNOWN_DIR_PERMISSIONS);
         }
-    
+
         return $dir . $filename;
     }
-    
 
-    private function moveCertificateFile(string $tmp, string $target): bool {
 
+    private function moveCertificateFile(string $tmp, string $target): bool
+    {
         if (!move_uploaded_file($tmp, $target)) {
             $this->addUniqueSettingsError(
                 'move_failed',
@@ -231,20 +238,26 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             );
             return false;
         }
-    
-        chmod($target, 0644);
+
+        $perms = fileperms($target) & 0777;
+        if ($perms !== self::WELL_KNOWN_FILE_PERMISSIONS) {
+            // Apple Pay requires public read access for verification file
+            chmod($target, self::WELL_KNOWN_FILE_PERMISSIONS);
+        }
+
         return true;
     }
 
-    private function verifyApplepayDomain(): void {
+    private function verifyApplepayDomain(): void
+    {
 
         $url = home_url('/.well-known/apple-developer-merchantid-domain-association');
-    
+
         $response = wp_remote_get($url, [
             'timeout'     => 10,
             'redirection' => 0,
         ]);
-    
+
         if (is_wp_error($response)) {
             $this->addUniqueSettingsError(
                 'domain_error',
@@ -252,18 +265,17 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             );
             return;
         }
-    
+
         if (wp_remote_retrieve_response_code($response) === 200) {
-    
+
             add_settings_error(
                 'woocommerce_cardknox_applepay',
                 'domain_verified',
                 __('Apple Pay domain is Accessible (200 OK).', 'woocommerce-gateway-cardknox'),
                 'updated'
             );
-    
         } else {
-    
+
             $this->addUniqueSettingsError(
                 'domain_inaccessible',
                 __('Apple Pay domain is Inaccessible.', 'woocommerce-gateway-cardknox')

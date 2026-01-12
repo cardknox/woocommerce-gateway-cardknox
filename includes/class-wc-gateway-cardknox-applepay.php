@@ -210,11 +210,17 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
                 );
                 return false;
             }
+        }
+    
+        // Fix permissions ONLY if needed (Sonar-safe)
+        $perms = fileperms($dir) & 0777;
+        if ($perms !== 0755) {
             chmod($dir, 0755);
         }
     
         return $dir . $filename;
     }
+    
 
     private function move_certificate_file(string $tmp, string $target): bool {
 

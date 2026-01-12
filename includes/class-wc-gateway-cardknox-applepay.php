@@ -131,21 +131,21 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
         parent::process_admin_options();
     
-        if (!$this->has_certificate_upload()) {
+        if (!$this->hasCertificateUpload()) {
             return;
         }
     
         $file = $_FILES['woocommerce_cardknox-applepay_applepay_certificate'];
     
-        if (!$this->is_upload_valid($file)) {
+        if (!$this->isUploadValid($file)) {
             return;
         }
     
-        if (!$this->is_certificate_valid($file)) {
+        if (!$this->isCertificateValid($file)) {
             return;
         }
     
-        $target_path = $this->prepare_well_known_directory($file['name']);
+        $target_path = $this->prepareWellKnownDirectory($file['name']);
         if (!$target_path) {
             return;
         }
@@ -157,11 +157,11 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         $this->verify_applepay_domain();
     }
 
-    private function has_certificate_upload(): bool {
+    private function hasCertificateUpload(): bool {
         return !empty($_FILES['woocommerce_cardknox-applepay_applepay_certificate']['tmp_name']);
     }
 
-    private function is_upload_valid(array $file): bool {
+    private function isUploadValid(array $file): bool {
 
         if ($file['error'] !== UPLOAD_ERR_OK) {
             $this->add_unique_settings_error(
@@ -174,7 +174,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         return true;
     }
 
-    private function is_certificate_valid(array $file): bool {
+    private function isCertificateValid(array $file): bool {
 
         $filename = sanitize_file_name($file['name']);
     
@@ -197,7 +197,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         return true;
     }
 
-    private function prepare_well_known_directory(string $filename) {
+    private function prepareWellKnownDirectory(string $filename) {
 
         $base_path = rtrim(dirname(dirname(ABSPATH)), '/');
         $dir = $base_path . '/.well-known/';

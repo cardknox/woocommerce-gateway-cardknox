@@ -179,7 +179,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     
         // Apple verification file must have NO extension.
         if ( ! empty( $file_ext ) ) {
-            $this->add_unique_settings_error(
+            $this->addUniqueSettingsError(
                 'invalid_extension',
                 __( 'Invalid file extension. Only files without extensions are allowed.', 'woocommerce-gateway-cardknox' )
             );
@@ -187,7 +187,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         }
     
         if ( 'apple-developer-merchantid-domain-association' !== $target_filename ) {
-            $this->add_unique_settings_error(
+            $this->addUniqueSettingsError(
                 'invalid_filename',
                 __( 'Invalid filename. Only apple-developer-merchantid-domain-association is allowed.', 'woocommerce-gateway-cardknox' )
             );
@@ -196,7 +196,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     
         $finfo = finfo_open( FILEINFO_MIME_TYPE );
         if ( ! $finfo ) {
-            $this->add_unique_settings_error(
+            $this->addUniqueSettingsError(
                 'fileinfo_error',
                 __( 'Server error: Unable to open file info.', 'woocommerce-gateway-cardknox' )
             );
@@ -207,7 +207,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         finfo_close( $finfo );
     
         if ( 'text/plain' !== $mime_type ) {
-            $this->add_unique_settings_error(
+            $this->addUniqueSettingsError(
                 'invalid_mime_type',
                 __( 'Invalid file type. Only plain text files are allowed.', 'woocommerce-gateway-cardknox' )
             );
@@ -225,7 +225,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     
         // If directory still doesn't exist, fail.
         if ( ! is_dir( $target_dir ) ) {
-            $this->add_unique_settings_error(
+            $this->addUniqueSettingsError(
                 'well_known_create_failed',
                 __( 'Unable to create the .well-known directory.', 'woocommerce-gateway-cardknox' )
             );
@@ -256,7 +256,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     
         // Move uploaded file into .well-known folder.
         if ( ! move_uploaded_file( $tmp_path, $target_path ) ) {
-            $this->add_unique_settings_error(
+            $this->addUniqueSettingsError(
                 'move_failed',
                 __( 'Failed to move uploaded Apple Pay verification file.', 'woocommerce-gateway-cardknox' )
             );
@@ -265,7 +265,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     
         // Extra: make sure file exists & readable (helps debugging).
         if ( ! file_exists( $target_path ) || ! is_readable( $target_path ) ) {
-            $this->add_unique_settings_error(
+            $this->addUniqueSettingsError(
                 'applepay_file_not_readable',
                 __( 'Apple Pay verification file was uploaded but is not readable on the server.', 'woocommerce-gateway-cardknox' )
             );
@@ -278,7 +278,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         $host       = isset( $parsed_url['host'] ) ? $parsed_url['host'] : '';
     
         if ( empty( $host ) ) {
-            $this->add_unique_settings_error(
+            $this->addUniqueSettingsError(
                 'invalid_home_url',
                 __( 'Unable to determine site host for verification URL.', 'woocommerce-gateway-cardknox' )
             );
@@ -298,7 +298,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         $response = wp_remote_get( $verification_url, $args );
     
         if ( is_wp_error( $response ) ) {
-            $this->add_unique_settings_error(
+            $this->addUniqueSettingsError(
                 'applepay_domain_inaccessible',
                 sprintf(
                     /* translators: %s: error message */
@@ -317,7 +317,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
                     'updated'
                 );
             } else {
-                $this->add_unique_settings_error(
+                $this->addUniqueSettingsError(
                     'applepay_domain_inaccessible',
                     sprintf(
                         /* translators: %d: HTTP status code */
@@ -858,7 +858,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     /*
      * Single Time Validation Message Display
     */
-    private function add_unique_settings_error($code, $message)
+    private function addUniqueSettingsError($code, $message)
     {
         global $wp_settings_errors;
 

@@ -125,138 +125,221 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
     /**
      * Applepay Certificate Upload functionality.
-     */
+    */
+
     public function process_admin_options() {
 
-        parent::process_admin_options(); // Save settings normally
-
-        if (!empty($_FILES['woocommerce_cardknox-applepay_applepay_certificate']['tmp_name']) &&
-            $_FILES['woocommerce_cardknox-applepay_applepay_certificate']['error'] === UPLOAD_ERR_OK) {
-
-            $uploaded_file = $_FILES['woocommerce_cardknox-applepay_applepay_certificate'];
-
-            if ($uploaded_file['error'] !== UPLOAD_ERR_OK) {
-                $upload_errors = array(
-                    UPLOAD_ERR_INI_SIZE   => __('The uploaded file exceeds the upload_max_filesize directive in php.ini.', 'woocommerce-gateway-cardknox'),
-                    UPLOAD_ERR_FORM_SIZE  => __('The uploaded file exceeds the MAX_FILE_SIZE directive specified in the HTML form.', 'woocommerce-gateway-cardknox'),
-                    UPLOAD_ERR_PARTIAL    => __('The uploaded file was only partially uploaded.', 'woocommerce-gateway-cardknox'),
-                    UPLOAD_ERR_NO_FILE    => __('No file was uploaded.', 'woocommerce-gateway-cardknox'),
-                    UPLOAD_ERR_NO_TMP_DIR => __('Missing a temporary folder.', 'woocommerce-gateway-cardknox'),
-                    UPLOAD_ERR_CANT_WRITE => __('Failed to write file to disk.', 'woocommerce-gateway-cardknox'),
-                    UPLOAD_ERR_EXTENSION  => __('A PHP extension stopped the file upload.', 'woocommerce-gateway-cardknox'),
-                );
-
-                $error_message = isset($upload_errors[$uploaded_file['error']])
-                    ? $upload_errors[$uploaded_file['error']]
-                    : __('An unknown error occurred during file upload.', 'woocommerce-gateway-cardknox');
-
-                wc_add_notice($error_message, 'error');
-                return;
-            }
-
-            $tmp_path = $uploaded_file['tmp_name'];
-
-            if (!function_exists('add_settings_error')) {
-                require_once ABSPATH . 'wp-admin/includes/template.php';
-            }
-
-            if (!file_exists($tmp_path)) {
-                return;
-            }
-
-            $target_filename = sanitize_file_name($uploaded_file['name']);
-            $file_ext = strtolower(pathinfo($target_filename, PATHINFO_EXTENSION));
-
-            if (!empty($file_ext)) {
-                $this->add_unique_settings_error('invalid_extension', __('Invalid file extension. Only files without extensions are allowed.', 'woocommerce-gateway-cardknox'));
-                return;
-            }
-
-            if ($target_filename !== 'apple-developer-merchantid-domain-association') {
-                $this->add_unique_settings_error('invalid_filename', __('Invalid filename. Only apple-developer-merchantid-domain-association is allowed.', 'woocommerce-gateway-cardknox'));
-                return;
-            }
-
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            if (!$finfo) {
-                $this->add_unique_settings_error('fileinfo_error', __('Server error: Unable to open file info.', 'woocommerce-gateway-cardknox'));
-                return;
-            }
-
-            $mime_type = finfo_file($finfo, $tmp_path);
-            finfo_close($finfo);
-
-            if ($mime_type !== 'text/plain') {
-                $this->add_unique_settings_error('invalid_mime_type', __('Invalid file type. Only plain text files are allowed.', 'woocommerce-gateway-cardknox'));
-                return;
-            }
-
-            $target_dir = rtrim(dirname(dirname(ABSPATH)), '/') . '/.well-known/';
-            if (!file_exists($target_dir)) {
-                wp_mkdir_p($target_dir);
-                chmod($target_dir,0755);
-            }
-
-            $target_path = $target_dir . $target_filename;
-
-                // Move the uploaded file into the .well-known folder
-                if (move_uploaded_file($tmp_path, $target_path)) {
-
-                    // Construct the proper verification URL pointing to the root domain
-                    $parsed_url = wp_parse_url(home_url());
-                    $verification_url =
-                        $parsed_url['scheme'] . '://' .
-                        $parsed_url['host'] .
-                        '/.well-known/' . $target_filename;
+        parent::process_admin_options(); // Save settings normally.
     
-                    // ---- cURL GET request ----
-                    $ch = curl_init();
-                    curl_setopt_array($ch, array(
-                        CURLOPT_URL            => $verification_url,
-                        CURLOPT_RETURNTRANSFER => true,
-                        CURLOPT_HEADER         => true,
-                        CURLOPT_NOBODY         => false,
-                        CURLOPT_TIMEOUT        => 15,
-                        CURLOPT_FOLLOWLOCATION => true,
-                        CURLOPT_SSL_VERIFYPEER => true,
-                        CURLOPT_USERAGENT      => 'ApplePayDomainVerification'
-                    ));
+        $field_key = 'woocommerce_cardknox-applepay_applepay_certificate';
     
-                    $response = curl_exec($ch);
-                    $status_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                    $curl_error  = curl_error($ch);
-                    curl_close($ch);
-    
-                    // ---- Result handling ----
-                    if ($status_code === 200) {
-                        add_settings_error(
-                            'woocommerce_cardknox_applepay',
-                            'applepay_domain_accessible',
-                            __('Apple Pay domain is Accessible (200 OK).', 'woocommerce-gateway-cardknox'),
-                            'updated'
-                        );
-                    } else {
-                        $error_message = $curl_error ? $curl_error : 'HTTP Status Code: ' . $status_code;
-                        $this->add_unique_settings_error(
-                            'applepay_domain_inaccessible',
-                            __('Apple Pay domain is Inaccessible. ' . $error_message, 'woocommerce-gateway-cardknox')
-                        );
-                    }
-    
-                    // Save the verification URL in options
-                    $this->update_option(
-                        'applepay_certificate',
-                        esc_url_raw($verification_url)
-                    );
-                } else {
-                    $this->add_unique_settings_error(
-                        'move_failed',
-                        __('Failed to move uploaded Apple Pay verification file.', 'woocommerce-gateway-cardknox')
-                    );
-                }
-                // End
+        if (
+            empty( $_FILES[ $field_key ]['tmp_name'] ) ||
+            ! isset( $_FILES[ $field_key ]['error'] ) ||
+            UPLOAD_ERR_OK !== (int) $_FILES[ $field_key ]['error']
+        ) {
+            return;
         }
-    }
+    
+        $uploaded_file = $_FILES[ $field_key ];
+    
+        // Extra upload error mapping (in case error is not OK).
+        if ( UPLOAD_ERR_OK !== (int) $uploaded_file['error'] ) {
+            $upload_errors = array(
+                UPLOAD_ERR_INI_SIZE   => __( 'The uploaded file exceeds the upload_max_filesize directive in php.ini.', 'woocommerce-gateway-cardknox' ),
+                UPLOAD_ERR_FORM_SIZE  => __( 'The uploaded file exceeds the MAX_FILE_SIZE directive specified in the HTML form.', 'woocommerce-gateway-cardknox' ),
+                UPLOAD_ERR_PARTIAL    => __( 'The uploaded file was only partially uploaded.', 'woocommerce-gateway-cardknox' ),
+                UPLOAD_ERR_NO_FILE    => __( 'No file was uploaded.', 'woocommerce-gateway-cardknox' ),
+                UPLOAD_ERR_NO_TMP_DIR => __( 'Missing a temporary folder.', 'woocommerce-gateway-cardknox' ),
+                UPLOAD_ERR_CANT_WRITE => __( 'Failed to write file to disk.', 'woocommerce-gateway-cardknox' ),
+                UPLOAD_ERR_EXTENSION  => __( 'A PHP extension stopped the file upload.', 'woocommerce-gateway-cardknox' ),
+            );
+    
+            $error_message = isset( $upload_errors[ $uploaded_file['error'] ] )
+                ? $upload_errors[ $uploaded_file['error'] ]
+                : __( 'An unknown error occurred during file upload.', 'woocommerce-gateway-cardknox' );
+    
+            wc_add_notice( $error_message, 'error' );
+            return;
+        }
+    
+        $tmp_path = $uploaded_file['tmp_name'];
+    
+        if ( ! function_exists( 'add_settings_error' ) ) {
+            require_once ABSPATH . 'wp-admin/includes/template.php';
+        }
+    
+        if ( ! file_exists( $tmp_path ) ) {
+            return;
+        }
+    
+        $target_filename = sanitize_file_name( $uploaded_file['name'] );
+        $file_ext        = strtolower( pathinfo( $target_filename, PATHINFO_EXTENSION ) );
+    
+        // Apple verification file must have NO extension.
+        if ( ! empty( $file_ext ) ) {
+            $this->add_unique_settings_error(
+                'invalid_extension',
+                __( 'Invalid file extension. Only files without extensions are allowed.', 'woocommerce-gateway-cardknox' )
+            );
+            return;
+        }
+    
+        if ( 'apple-developer-merchantid-domain-association' !== $target_filename ) {
+            $this->add_unique_settings_error(
+                'invalid_filename',
+                __( 'Invalid filename. Only apple-developer-merchantid-domain-association is allowed.', 'woocommerce-gateway-cardknox' )
+            );
+            return;
+        }
+    
+        $finfo = finfo_open( FILEINFO_MIME_TYPE );
+        if ( ! $finfo ) {
+            $this->add_unique_settings_error(
+                'fileinfo_error',
+                __( 'Server error: Unable to open file info.', 'woocommerce-gateway-cardknox' )
+            );
+            return;
+        }
+    
+        $mime_type = finfo_file( $finfo, $tmp_path );
+        finfo_close( $finfo );
+    
+        if ( 'text/plain' !== $mime_type ) {
+            $this->add_unique_settings_error(
+                'invalid_mime_type',
+                __( 'Invalid file type. Only plain text files are allowed.', 'woocommerce-gateway-cardknox' )
+            );
+            return;
+        }
+    
+        // Root of WP install: ABSPATH -> /public_html/site/
+        // dirname(dirname(ABSPATH)) -> /public_html/
+        $target_dir = untrailingslashit( dirname( dirname( ABSPATH ) ) ) . '/.well-known';
+    
+        // Create directory if missing.
+        if ( ! file_exists( $target_dir ) ) {
+            wp_mkdir_p( $target_dir );
+        }
+    
+        // If directory still doesn't exist, fail.
+        if ( ! is_dir( $target_dir ) ) {
+            $this->add_unique_settings_error(
+                'well_known_create_failed',
+                __( 'Unable to create the .well-known directory.', 'woocommerce-gateway-cardknox' )
+            );
+            return;
+        }
+    
+        /**
+         * Permissions: avoid hardcoding 0755 (SonarCloud warning).
+         * Use WP's filesystem constants.
+         */
+        if ( ! defined( 'FS_CHMOD_DIR' ) ) {
+            require_once ABSPATH . 'wp-admin/includes/file.php';
+        }
+    
+        $desired_dir_perms = defined( 'FS_CHMOD_DIR' ) ? FS_CHMOD_DIR : 0755;
+        $current_dir_perms = fileperms( $target_dir ) & 0777;
+    
+        // Only attempt change if different.
+        if ( $current_dir_perms !== $desired_dir_perms ) {
+    
+            // Prefer WP_Filesystem.
+            if ( ! function_exists( 'WP_Filesystem' ) ) {
+                require_once ABSPATH . 'wp-admin/includes/file.php';
+            }
+    
+            $fs_ready = WP_Filesystem(); // This may fail depending on server creds.
+    
+            global $wp_filesystem;
+    
+            if ( $fs_ready && $wp_filesystem && is_object( $wp_filesystem ) ) {
+                // WP_Filesystem uses octal in string/int; both are ok here.
+                $wp_filesystem->chmod( $target_dir, $desired_dir_perms );
+            } else {
+                // Fallback to native chmod (no @).
+                chmod( $target_dir, $desired_dir_perms );
+            }
+        }
+    
+        $target_path = trailingslashit( $target_dir ) . $target_filename;
+    
+        // Move uploaded file into .well-known folder.
+        if ( ! move_uploaded_file( $tmp_path, $target_path ) ) {
+            $this->add_unique_settings_error(
+                'move_failed',
+                __( 'Failed to move uploaded Apple Pay verification file.', 'woocommerce-gateway-cardknox' )
+            );
+            return;
+        }
+    
+        // Construct verification URL pointing to the root domain.
+        $parsed_url = wp_parse_url( home_url() );
+        $scheme     = isset( $parsed_url['scheme'] ) ? $parsed_url['scheme'] : 'https';
+        $host       = isset( $parsed_url['host'] ) ? $parsed_url['host'] : '';
+    
+        if ( empty( $host ) ) {
+            $this->add_unique_settings_error(
+                'invalid_home_url',
+                __( 'Unable to determine site host for verification URL.', 'woocommerce-gateway-cardknox' )
+            );
+            return;
+        }
+    
+        $verification_url = $scheme . '://' . $host . '/.well-known/' . $target_filename;
+    
+        // ---- cURL GET request ----
+        $ch = curl_init();
+    
+        curl_setopt_array(
+            $ch,
+            array(
+                CURLOPT_URL            => $verification_url,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HEADER         => true,
+                CURLOPT_NOBODY         => false,
+                CURLOPT_TIMEOUT        => 15,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_SSL_VERIFYPEER => true,
+                CURLOPT_USERAGENT      => 'ApplePayDomainVerification',
+            )
+        );
+    
+        $response    = curl_exec( $ch );
+        $status_code = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+        $curl_error  = curl_error( $ch );
+    
+        curl_close( $ch );
+    
+        // ---- Result handling ----
+        if ( 200 === (int) $status_code ) {
+            add_settings_error(
+                'woocommerce_cardknox_applepay',
+                'applepay_domain_accessible',
+                __( 'Apple Pay domain is Accessible (200 OK).', 'woocommerce-gateway-cardknox' ),
+                'updated'
+            );
+        } else {
+            $error_message = ! empty( $curl_error ) ? $curl_error : 'HTTP Status Code: ' . (int) $status_code;
+    
+            $this->add_unique_settings_error(
+                'applepay_domain_inaccessible',
+                sprintf(
+                    /* translators: %s: error message */
+                    __( 'Apple Pay domain is Inaccessible. %s', 'woocommerce-gateway-cardknox' ),
+                    $error_message
+                )
+            );
+        }
+    
+        // Save the verification URL in options.
+        $this->update_option(
+            'applepay_certificate',
+            esc_url_raw( $verification_url )
+        );
+    }    
+    
 
     /**
      * Payment form on checkout page

@@ -77,11 +77,11 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         $this->applepay_environment             = $this->get_option('applepay_environment');
         $this->applepay_button_style            = $this->get_option('applepay_button_style');
         $this->applepay_button_type             = $this->get_option('applepay_button_type');
-        $this->capture                          = 'yes' === $this->get_option( 'capture', 'no' );
-        $this->authonly_status                  = $this->get_option( 'auth_only_order_status', 'processing' );
-        $this->applepay_applicable_countries    = in_array((string)($option['applicable_countries'] ?? '0'), ['0','1'], true) ? (string)($option['applicable_countries'] ?? '0') : '0';   // New Code
-        $this->applepay_specific_countries      = isset( $option['specific_countries'] ) && is_array( $option['specific_countries'] ) ? $option['specific_countries'] : []; // New Code
-        
+        $this->capture                          = 'yes' === $this->get_option('capture', 'no');
+        $this->authonly_status                  = $this->get_option('auth_only_order_status', 'processing');
+        $this->applepay_applicable_countries    = in_array((string)($option['applicable_countries'] ?? '0'), ['0', '1'], true) ? (string)($option['applicable_countries'] ?? '0') : '0';   // New Code
+        $this->applepay_specific_countries      = isset($option['specific_countries']) && is_array($option['specific_countries']) ? $option['specific_countries'] : []; // New Code
+
 
         $this->wcVersion = version_compare(WC_VERSION, '3.0.0', '<');
 
@@ -97,16 +97,17 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         }
 
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
-        add_action( 'admin_enqueue_scripts',  array($this, 'custom_admin_upload_btn_css') );
+        add_action('admin_enqueue_scripts',  array($this, 'custom_admin_upload_btn_css'));
     }
 
-    public function custom_admin_upload_btn_css( $hook ) {
+    public function custom_admin_upload_btn_css($hook)
+    {
         $screen = get_current_screen();
-        if ( strpos( $screen->id, 'woocommerce' ) === false ) {
+        if (strpos($screen->id, 'woocommerce') === false) {
             return;
         }
-        wp_register_style( 'custom-woo-admin-style', false );
-        wp_enqueue_style( 'custom-woo-admin-style' );
+        wp_register_style('custom-woo-admin-style', false);
+        wp_enqueue_style('custom-woo-admin-style');
 
         $custom_css = '
             .upload-btn-wrapper:after {
@@ -120,14 +121,14 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
                 left: 158px;
             }
         ';
-        wp_add_inline_style( 'custom-woo-admin-style', $custom_css );
+        wp_add_inline_style('custom-woo-admin-style', $custom_css);
     }
 
     /**
      * Applepay Certificate Upload functionality.
-    */
+     */
 
-    public function process_admin_options() {
+     public function process_admin_options() {
 
         parent::process_admin_options(); // Save settings normally.
     
@@ -233,32 +234,20 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     
         /**
          * Permissions: avoid hardcoding 0755 (SonarCloud warning).
-         * Use WP's filesystem constants.
+         * Use WP's filesystem constants when available.
          */
-        if ( ! defined( 'FS_CHMOD_DIR' ) ) {
-            require_once ABSPATH . 'wp-admin/includes/file.php';
-        }
-    
         $desired_dir_perms = defined( 'FS_CHMOD_DIR' ) ? FS_CHMOD_DIR : 0755;
         $current_dir_perms = fileperms( $target_dir ) & 0777;
     
         // Only attempt change if different.
         if ( $current_dir_perms !== $desired_dir_perms ) {
     
-            // Prefer WP_Filesystem.
-            if ( ! function_exists( 'WP_Filesystem' ) ) {
-                require_once ABSPATH . 'wp-admin/includes/file.php';
-            }
-    
-            $fs_ready = WP_Filesystem(); // This may fail depending on server creds.
-    
+            $fs_ready = function_exists( 'WP_Filesystem' ) ? WP_Filesystem() : false;
             global $wp_filesystem;
     
             if ( $fs_ready && $wp_filesystem && is_object( $wp_filesystem ) ) {
-                // WP_Filesystem uses octal in string/int; both are ok here.
                 $wp_filesystem->chmod( $target_dir, $desired_dir_perms );
             } else {
-                // Fallback to native chmod (no @).
                 chmod( $target_dir, $desired_dir_perms );
             }
         }
@@ -270,6 +259,15 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             $this->add_unique_settings_error(
                 'move_failed',
                 __( 'Failed to move uploaded Apple Pay verification file.', 'woocommerce-gateway-cardknox' )
+            );
+            return;
+        }
+    
+        // Extra: make sure file exists & readable (helps debugging).
+        if ( ! file_exists( $target_path ) || ! is_readable( $target_path ) ) {
+            $this->add_unique_settings_error(
+                'applepay_file_not_readable',
+                __( 'Apple Pay verification file was uploaded but is not readable on the server.', 'woocommerce-gateway-cardknox' )
             );
             return;
         }
@@ -289,48 +287,45 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     
         $verification_url = $scheme . '://' . $host . '/.well-known/' . $target_filename;
     
-        // ---- cURL GET request ----
-        $ch = curl_init();
-    
-        curl_setopt_array(
-            $ch,
-            array(
-                CURLOPT_URL            => $verification_url,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_HEADER         => true,
-                CURLOPT_NOBODY         => false,
-                CURLOPT_TIMEOUT        => 15,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_SSL_VERIFYPEER => true,
-                CURLOPT_USERAGENT      => 'ApplePayDomainVerification',
-            )
+        // ---- WordPress HTTP API request (replaces cURL) ----
+        $args = array(
+            'timeout'     => 15,
+            'redirection' => 5,
+            'sslverify'   => true,
+            'user-agent'  => 'ApplePayDomainVerification',
         );
     
-        $response    = curl_exec( $ch );
-        $status_code = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
-        $curl_error  = curl_error( $ch );
+        $response = wp_remote_get( $verification_url, $args );
     
-        curl_close( $ch );
-    
-        // ---- Result handling ----
-        if ( 200 === (int) $status_code ) {
-            add_settings_error(
-                'woocommerce_cardknox_applepay',
-                'applepay_domain_accessible',
-                __( 'Apple Pay domain is Accessible (200 OK).', 'woocommerce-gateway-cardknox' ),
-                'updated'
-            );
-        } else {
-            $error_message = ! empty( $curl_error ) ? $curl_error : 'HTTP Status Code: ' . (int) $status_code;
-    
+        if ( is_wp_error( $response ) ) {
             $this->add_unique_settings_error(
                 'applepay_domain_inaccessible',
                 sprintf(
                     /* translators: %s: error message */
                     __( 'Apple Pay domain is Inaccessible. %s', 'woocommerce-gateway-cardknox' ),
-                    $error_message
+                    $response->get_error_message()
                 )
             );
+        } else {
+            $status_code = wp_remote_retrieve_response_code( $response );
+    
+            if ( 200 === (int) $status_code ) {
+                add_settings_error(
+                    'woocommerce_cardknox_applepay',
+                    'applepay_domain_accessible',
+                    __( 'Apple Pay domain is Accessible (200 OK).', 'woocommerce-gateway-cardknox' ),
+                    'updated'
+                );
+            } else {
+                $this->add_unique_settings_error(
+                    'applepay_domain_inaccessible',
+                    sprintf(
+                        /* translators: %d: HTTP status code */
+                        __( 'Apple Pay domain is Inaccessible. HTTP Status Code: %d', 'woocommerce-gateway-cardknox' ),
+                        (int) $status_code
+                    )
+                );
+            }
         }
     
         // Save the verification URL in options.
@@ -338,8 +333,9 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             'applepay_certificate',
             esc_url_raw( $verification_url )
         );
-    }    
+    }
     
+
 
     /**
      * Payment form on checkout page
@@ -367,7 +363,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             $currency = get_woocommerce_currency();
         }
         switch (strtoupper($currency)) {
-                // Zero decimal currencies.
+            // Zero decimal currencies.
             case 'BIF':
             case 'CLP':
             case 'DJF':
@@ -586,7 +582,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
                 if (is_wp_error($response)) {
                     $order->add_order_note($response->get_error_message());
-                    throw new WC_Data_Exception( 'cardknox_declined', __( 'The transaction was declined, please try again.', 'woocommerce-gateway-cardknox' ) );
+                    throw new WC_Data_Exception('cardknox_declined', __('The transaction was declined, please try again.', 'woocommerce-gateway-cardknox'));
                 }
 
                 $this->log("Info: set_transaction_id");
@@ -723,7 +719,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             if (!is_null($amount)) {
                 if ($amount < .01) {
                     $this->log('Error: Amount Required ' . $amount);
-                    $error_message = __( 'Refund Amount Required.', 'woocommerce-gateway-cardknox' );
+                    $error_message = __('Refund Amount Required.', 'woocommerce-gateway-cardknox');
                     return new WP_Error('Error', $error_message . ' ' . $amount);
                 } else {
                     $body['xAmount'] = $this->get_cardknox_amount($amount);
@@ -750,7 +746,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
                     $this->log('Success: ' . html_entity_decode(strip_tags((string) $refundMessage)));
                     $result = true;
                 } else {
-                    $result = new WP_Error('refund_failed', __( 'Refund failed', 'woocommerce-gateway-cardknox' ));
+                    $result = new WP_Error('refund_failed', __('Refund failed', 'woocommerce-gateway-cardknox'));
                 }
             }
         }
@@ -764,7 +760,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
         if ($total != $amount) {
             if ($captured === "no") {
-                return new WP_Error('Error', __( 'Partial Refund Not Allowed On Authorize Only Transactions', 'woocommerce-gateway-cardknox' ) );
+                return new WP_Error('Error', __('Partial Refund Not Allowed On Authorize Only Transactions', 'woocommerce-gateway-cardknox'));
             } else {
                 return 'cc:refund';
             }
@@ -837,7 +833,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
      */
     public function cardknox_allow_payment_method_by_country($available_gateways)
     {
-        if ( is_admin() ||  !is_object(WC()->customer) || !method_exists(WC()->customer, 'get_billing_country') ) {
+        if (is_admin() ||  !is_object(WC()->customer) || !method_exists(WC()->customer, 'get_billing_country')) {
             return $available_gateways;
         }
 
@@ -862,7 +858,8 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     /*
      * Single Time Validation Message Display
     */
-    private function add_unique_settings_error($code, $message) {
+    private function add_unique_settings_error($code, $message)
+    {
         global $wp_settings_errors;
 
         $already_set = false;

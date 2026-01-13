@@ -194,16 +194,67 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             $target_dir = rtrim(dirname(dirname(ABSPATH)), '/') . '/.well-known/';
             if (!file_exists($target_dir)) {
                 wp_mkdir_p($target_dir);
+                chmod($target_dir,0755);
             }
 
             $target_path = $target_dir . $target_filename;
 
-            if (move_uploaded_file($tmp_path, $target_path)) {
-                $new_url = site_url('/.well-known/' . $target_filename);
-                $this->update_option('applepay_certificate', esc_url_raw($new_url));
-            } else {
-                $this->add_unique_settings_error('move_failed', __('Failed to move uploaded file.', 'woocommerce-gateway-cardknox'));
-            }
+                // Move the uploaded file into the .well-known folder
+                if (move_uploaded_file($tmp_path, $target_path)) {
+
+                    // Construct the proper verification URL pointing to the root domain
+                    $parsed_url = wp_parse_url(home_url());
+                    $verification_url =
+                        $parsed_url['scheme'] . '://' .
+                        $parsed_url['host'] .
+                        '/.well-known/' . $target_filename;
+    
+                    // ---- cURL GET request ----
+                    $ch = curl_init();
+                    curl_setopt_array($ch, array(
+                        CURLOPT_URL            => $verification_url,
+                        CURLOPT_RETURNTRANSFER => true,
+                        CURLOPT_HEADER         => true,
+                        CURLOPT_NOBODY         => false,
+                        CURLOPT_TIMEOUT        => 15,
+                        CURLOPT_FOLLOWLOCATION => true,
+                        CURLOPT_SSL_VERIFYPEER => true,
+                        CURLOPT_USERAGENT      => 'ApplePayDomainVerification'
+                    ));
+    
+                    $response = curl_exec($ch);
+                    $status_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    $curl_error  = curl_error($ch);
+                    curl_close($ch);
+    
+                    // ---- Result handling ----
+                    if ($status_code === 200) {
+                        add_settings_error(
+                            'woocommerce_cardknox_applepay',
+                            'applepay_domain_accessible',
+                            __('Apple Pay domain is Accessible (200 OK).', 'woocommerce-gateway-cardknox'),
+                            'updated'
+                        );
+                    } else {
+                        $error_message = $curl_error ? $curl_error : 'HTTP Status Code: ' . $status_code;
+                        $this->add_unique_settings_error(
+                            'applepay_domain_inaccessible',
+                            __('Apple Pay domain is Inaccessible. ' . $error_message, 'woocommerce-gateway-cardknox')
+                        );
+                    }
+    
+                    // Save the verification URL in options
+                    $this->update_option(
+                        'applepay_certificate',
+                        esc_url_raw($verification_url)
+                    );
+                } else {
+                    $this->add_unique_settings_error(
+                        'move_failed',
+                        __('Failed to move uploaded Apple Pay verification file.', 'woocommerce-gateway-cardknox')
+                    );
+                }
+                // End
         }
     }
 

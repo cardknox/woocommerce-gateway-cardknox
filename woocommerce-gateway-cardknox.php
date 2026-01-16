@@ -6,7 +6,7 @@ Author: Sola Payments.
 Author URI: https://solapayments.com/
 Version: 1.2.83
 Requires at least: 4.4
-Tested up to: 6.7.1
+Tested up to: 6.9
 WC requires at least: 2.5
 WC tested up to: 8.4.0
 WooCommerce Subscriptions tested up to: 6.7.0

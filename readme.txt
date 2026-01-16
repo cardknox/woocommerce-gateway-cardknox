@@ -1,6 +1,6 @@
 === Sola Payment Gateway for WooCommerce ===
 Contributors: dlehren
-Tags: credit card, gateway, sola, cardknox, woocommerce
+Tags: credit card, gateway, sola, cardknox, woocommerce, payment gateway, credit card, apple pay, google pay
 Requires at least: 6.5
 Tested up to: 6.9
 Requires PHP: 5.6.0

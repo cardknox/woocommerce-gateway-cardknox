@@ -35,7 +35,7 @@ Visit [Sola](https://solapayments.com) to learn more.
 
 = 1.2.83 =
 
-- Package updates.
+- Package updates
 
 = 1.2.82 =
 

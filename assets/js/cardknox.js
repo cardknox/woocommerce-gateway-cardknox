@@ -235,7 +235,7 @@ jQuery(function ($) {
     onCardknoxResponse: function () {
         
         var element = document.querySelector('body');
-        if (element.classList.contains('woocommerce-checkout')) 
+        if (element.matches('.woocommerce-checkout:not(.woocommerce-order-pay)'))
         {
           console.log('Class woocommerce-cart exists!');
           var xExp = document.getElementById("cardknox-card-expiry").value.replace(/\s|\//g, "");

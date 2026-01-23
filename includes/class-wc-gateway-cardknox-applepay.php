@@ -31,8 +31,8 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     public function __construct()
     {
         $this->id                   = 'cardknox-applepay';
-        $this->method_title         = __('Sola', 'woocommerce-gateway-cardknox');
-        $this->title                = __('Sola', 'woocommerce-other-payment-gateway');
+        $this->method_title         = __('Sola Apple Pay', 'woocommerce-gateway-cardknox');
+        $this->title                = __('Sola Apple Pay', 'woocommerce-other-payment-gateway');
 
         $methodDescription = '<strong class="important-label" style="color: #e22626;">Important: </strong>';
         $methodDescription .= 'Please complete the Apple Pay Domain Registration ';

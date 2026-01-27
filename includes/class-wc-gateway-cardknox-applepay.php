@@ -34,12 +34,19 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         $this->method_title         = __('Sola Apple Pay', 'woocommerce-gateway-cardknox');
         $this->title                = __('Sola Apple Pay', 'woocommerce-other-payment-gateway');
 
-        $methodDescription = '<strong class="important-label" style="color: #e22626;">Important: </strong>';
-        $methodDescription .= 'Please complete the Apple Pay Domain Registration ';
-        $methodDescription .= '<a target="_blank" href="https://portal.solapayments.com/account-settings/payment-methods">';
-
-        $methodDescription .= 'here</a> ';
-        $methodDescription .= 'prior to enabling Sola Apple Pay.';
+        $methodDescription  = '<div id="apple-pay-settings" class="panel">';
+        $methodDescription .= '<div style="margin-top: 30px;">';
+        $methodDescription .= '<h3 style="margin-bottom: 10px;">' . esc_html__( 'Apple Pay Registration Instructions', 'woocommerce-gateway-cardknox' ) . '</h3>';
+        $methodDescription .= '<ol class="apple-pay-instructions">';
+        $methodDescription .= '<li>' . esc_html__( 'Login to your', 'woocommerce-gateway-cardknox' ) . ' <strong>' . esc_html__( 'Sola Portal', 'woocommerce-gateway-cardknox' ) . '</strong></li>';
+        $methodDescription .= '<li>' . esc_html__( 'Go to', 'woocommerce-gateway-cardknox' ) .' <strong>' . esc_html__( 'Settings > Gateway Settings > Payment Methods', 'woocommerce-gateway-cardknox' ) . '</strong> <a target="_blank" rel="noopener" href="https://portal.solapayments.com/settings/gateway-settings/payment-methods">'. esc_html__( 'Open Link', 'woocommerce-gateway-cardknox' ) . '</a></li>';
+        $methodDescription .= '<li>' . esc_html__( 'Please use this option:', 'woocommerce-gateway-cardknox' ) .' <strong>' . esc_html__( 'Register for Apple Pay with Sola Certificate', 'woocommerce-gateway-cardknox' ) . '</strong></li>';
+        $methodDescription .= '<li>' . esc_html__( 'Click on', 'woocommerce-gateway-cardknox' ) .' <strong>' . esc_html__( 'Register', 'woocommerce-gateway-cardknox' ) . '</strong> ' . esc_html__( 'button', 'woocommerce-gateway-cardknox' ) . '</li>';
+        $methodDescription .= '<li>' . esc_html__( 'Download the Apple developer association certificate file', 'woocommerce-gateway-cardknox' ) . '</li>';
+        $methodDescription .= '<li>' . sprintf(esc_html__( 'Upload Applepay Certificate by click on below %s button', 'woocommerce-gateway-cardknox' ),'<strong>' . esc_html__( '"Choose Certificate"', 'woocommerce-gateway-cardknox' ) . '</strong>') . '</li>';
+        $methodDescription .= '<li>' . esc_html__( 'Save', 'woocommerce-gateway-cardknox' ) . '</li>';
+        $methodDescription .= '<li>' . esc_html__( 'Register domain.', 'woocommerce-gateway-cardknox' ) . '</li>';
+        $methodDescription .= '</ol></div></div>';
 
         $this->method_description = sprintf(
             __($methodDescription, 'woocommerce-gateway-cardknox'),

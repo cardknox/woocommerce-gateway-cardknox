@@ -27,6 +27,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     public $applepay_specific_countries;
     public $wcVersion;
     public $appleQuickCheckout;
+    public $methodDescription;
 
     public function __construct()
     {

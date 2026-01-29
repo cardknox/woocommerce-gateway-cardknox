@@ -185,48 +185,55 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     //================================
     private function handleApplepayCertificateupload()
     {
+        $result = ''; // default: no file uploaded
+
         $file = $this->getApplepayUploadedFile();
-        
+
+        // If file fetch returns WP_Error
         if (is_wp_error($file)) {
-            return $file;
-        }
-        
-        if ($file === null) {
-            return '';
+            $result = $file;
+        } elseif ($file !== null) {
+
+            $tmp_check = $this->validateApplepayTmpPath($file['tmp_name']);
+            if (is_wp_error($tmp_check)) {
+                $result = $tmp_check;
+            } else {
+
+                $name_check = $this->validateApplepayFilename($file['name']);
+                if (is_wp_error($name_check)) {
+                    $result = $name_check;
+                } else {
+
+                    $dir = $this->getDotWellKnowndir();
+
+                    $dir_check = $this->ensureApplepayWellKnownDir($dir);
+                    if (is_wp_error($dir_check)) {
+                        $result = $dir_check;
+                    } else {
+
+                        $move_check = $this->moveApplepayCertificate($file['tmp_name'], $dir, $file['name']);
+                        if (is_wp_error($move_check)) {
+                            $result = $move_check;
+                        } else {
+
+                            $url = $this->getApplepayVerificationurl();
+                            if (empty($url)) {
+                                $result = new WP_Error(
+                                    'invalid_home_url',
+                                    __('Unable to determine site host for verification URL.', 'woocommerce-gateway-cardknox')
+                                );
+                            } else {
+                                $result = $url;
+                            }
+                        }
+                    }
+                }
+            }
         }
 
-        $tmp_check = $this->validateApplepayTmpPath($file['tmp_name']);
-        if (is_wp_error($tmp_check)) {
-            return $tmp_check;
-        }
-
-        $name_check = $this->validateApplepayFilename($file['name']);
-        if (is_wp_error($name_check)) {
-            return $name_check;
-        }
-
-        $dir = $this->getDotWellKnowndir();
-
-        $dir_check = $this->ensureApplepayWellKnownDir($dir);
-        if (is_wp_error($dir_check)) {
-            return $dir_check;
-        }
-
-        $move_check = $this->moveApplepayCertificate($file['tmp_name'], $dir, $file['name']);
-        if (is_wp_error($move_check)) {
-            return $move_check;
-        }
-
-        $url = $this->getApplepayVerificationurl();
-        if (empty($url)) {
-            return new WP_Error(
-                'invalid_home_url',
-                __('Unable to determine site host for verification URL.', 'woocommerce-gateway-cardknox')
-            );
-        }
-
-        return $url;
+        return $result;
     }
+
 
 
     /**

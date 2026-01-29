@@ -164,7 +164,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     {
         parent::process_admin_options();
 
-        $verification_url = $this->handle_applepay_certificate_upload();
+        $verification_url = $this->handleApplepayCertificateupload();
 
         if (is_wp_error($verification_url)) {
             $this->addUniqueSettingsError(
@@ -181,7 +181,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             );
         }
     }
-    private function handle_applepay_certificate_upload()
+    private function handleApplepayCertificateupload()
     {
         $result    = ''; // default: nothing to do
         $field_key = 'woocommerce_cardknox-applepay_applepay_certificate';

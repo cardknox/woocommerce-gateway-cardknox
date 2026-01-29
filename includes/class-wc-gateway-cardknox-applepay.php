@@ -203,9 +203,8 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         );
 
         foreach ($steps as $step) {
-            $step_result = call_user_func($step, $context);
+            $step_result = call_user_func_array($step, array(&$context));
 
-            // step returns: null (continue) | '' (stop: no file) | WP_Error (stop error)
             if ($step_result === '') {
                 $result = '';
                 break;
@@ -217,8 +216,8 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             }
         }
 
-        // success case: url set in context
-        if ($result === '' && !empty($context['url'])) {
+        // success: url created
+        if ($result === '' && ! empty($context['url'])) {
             $result = $context['url'];
         }
 
@@ -245,6 +244,13 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     {
         $file = $context['file'];
 
+        if (empty($file['tmp_name'])) {
+            return new WP_Error(
+                'tmp_missing',
+                __('Uploaded file is missing from temporary location.', 'woocommerce-gateway-cardknox')
+            );
+        }
+
         $check = $this->validateApplepayTmpPath($file['tmp_name']);
         if (is_wp_error($check)) {
             return $check;
@@ -252,6 +258,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
         return null;
     }
+
 
     private function stepValidateName(array &$context)
     {
@@ -1053,13 +1060,17 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     */
     private function addUniqueSettingsError($code, $message)
     {
+        if (! function_exists('add_settings_error')) {
+            require_once ABSPATH . 'wp-admin/includes/template.php';
+        }
+
         global $wp_settings_errors;
 
         $already_set = false;
 
         if (isset($wp_settings_errors) && is_array($wp_settings_errors)) {
             foreach ($wp_settings_errors as $error) {
-                if ($error['code'] === $code) {
+                if (!empty($error['code']) && $error['code'] === $code) {
                     $already_set = true;
                     break;
                 }

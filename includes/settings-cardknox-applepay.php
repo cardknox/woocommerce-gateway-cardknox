@@ -18,9 +18,10 @@ $fileType = 'file';
 $wc_cardknox_apple_pay_settings = array(
 
     $keyPrefix . '_certificate' => array(
-        'title'    => __('Apple Certificate', 'woocommerce-gateway-cardknox'),
+        'title'    => __('Apple Certificateee', 'woocommerce-gateway-cardknox'),
         'type'     => $fileType,
-        'css'      => 'position: absolute;z-index: 999;min-height: 44px;opacity: 1;padding-left: 160px;bottom: 9px; width: 700px;',
+        'class'    => 'apple-pay-certificate-fieldset',
+        'css'      => 'position: absolute;z-index: 999;min-height: 44px;opacity: 1;padding-left: 160px;top: 30px; width: 700px;',
         'custom_attributes' => array(
             'class' => 'custom-file-upload',
         ),

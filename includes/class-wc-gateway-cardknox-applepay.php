@@ -185,54 +185,127 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     //================================
     private function handleApplepayCertificateupload()
     {
-        $result = ''; // default: no file uploaded
+        $result = ''; // default: no file uploaded / nothing to do
 
-        $file = $this->getApplepayUploadedFile();
+        $steps = array(
+            array($this, 'stepGetUploadedFile'),
+            array($this, 'stepValidateTmp'),
+            array($this, 'stepValidateName'),
+            array($this, 'stepEnsureWellKnownDir'),
+            array($this, 'stepMoveFile'),
+            array($this, 'stepBuildUrl'),
+        );
 
-        // If file fetch returns WP_Error
-        if (is_wp_error($file)) {
-            $result = $file;
-        } elseif ($file !== null) {
+        $context = array(
+            'file' => null,
+            'dir'  => '',
+            'url'  => '',
+        );
 
-            $tmp_check = $this->validateApplepayTmpPath($file['tmp_name']);
-            if (is_wp_error($tmp_check)) {
-                $result = $tmp_check;
-            } else {
+        foreach ($steps as $step) {
+            $step_result = call_user_func($step, $context);
 
-                $name_check = $this->validateApplepayFilename($file['name']);
-                if (is_wp_error($name_check)) {
-                    $result = $name_check;
-                } else {
-
-                    $dir = $this->getDotWellKnowndir();
-
-                    $dir_check = $this->ensureApplepayWellKnownDir($dir);
-                    if (is_wp_error($dir_check)) {
-                        $result = $dir_check;
-                    } else {
-
-                        $move_check = $this->moveApplepayCertificate($file['tmp_name'], $dir, $file['name']);
-                        if (is_wp_error($move_check)) {
-                            $result = $move_check;
-                        } else {
-
-                            $url = $this->getApplepayVerificationurl();
-                            if (empty($url)) {
-                                $result = new WP_Error(
-                                    'invalid_home_url',
-                                    __('Unable to determine site host for verification URL.', 'woocommerce-gateway-cardknox')
-                                );
-                            } else {
-                                $result = $url;
-                            }
-                        }
-                    }
-                }
+            // step returns: null (continue) | '' (stop: no file) | WP_Error (stop error)
+            if ($step_result === '') {
+                $result = '';
+                break;
             }
+
+            if (is_wp_error($step_result)) {
+                $result = $step_result;
+                break;
+            }
+        }
+
+        // success case: url set in context
+        if ($result === '' && !empty($context['url'])) {
+            $result = $context['url'];
         }
 
         return $result;
     }
+
+    private function stepGetUploadedFile(array &$context)
+    {
+        $file = $this->getApplepayUploadedFile();
+
+        if (is_wp_error($file)) {
+            return $file;
+        }
+
+        if ($file === null) {
+            return ''; // stop: no upload
+        }
+
+        $context['file'] = $file;
+        return null;
+    }
+
+    private function stepValidateTmp(array &$context)
+    {
+        $file = $context['file'];
+
+        $check = $this->validateApplepayTmpPath($file['tmp_name']);
+        if (is_wp_error($check)) {
+            return $check;
+        }
+
+        return null;
+    }
+
+    private function stepValidateName(array &$context)
+    {
+        $file = $context['file'];
+
+        $check = $this->validateApplepayFilename($file['name']);
+        if (is_wp_error($check)) {
+            return $check;
+        }
+
+        return null;
+    }
+
+    private function stepEnsureWellKnownDir(array &$context)
+    {
+        $dir = $this->getDotWellKnowndir();
+
+        $check = $this->ensureApplepayWellKnownDir($dir);
+        if (is_wp_error($check)) {
+            return $check;
+        }
+
+        $context['dir'] = $dir;
+        return null;
+    }
+
+    private function stepMoveFile(array &$context)
+    {
+        $file = $context['file'];
+        $dir  = $context['dir'];
+
+        $check = $this->moveApplepayCertificate($file['tmp_name'], $dir, $file['name']);
+        if (is_wp_error($check)) {
+            return $check;
+        }
+
+        return null;
+    }
+
+    private function stepBuildUrl(array &$context)
+    {
+        $url = $this->getApplepayVerificationurl();
+
+        if (empty($url)) {
+            return new WP_Error(
+                'invalid_home_url',
+                __('Unable to determine site host for verification URL.', 'woocommerce-gateway-cardknox')
+            );
+        }
+
+        $context['url'] = $url;
+        return null;
+    }
+
 
 
 

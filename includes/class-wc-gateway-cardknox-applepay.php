@@ -280,7 +280,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         }
     
         return $result;
-    }    
+    }
 
     /**
      * Payment form on checkout page

@@ -181,106 +181,159 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             );
         }
     }
+
+    //================================
     private function handleApplepayCertificateupload()
     {
-        $result    = ''; // default: nothing to do
-        $field_key = 'woocommerce_cardknox-applepay_applepay_certificate';
-    
-        // Check file exists and uploaded OK
-        $has_file = (
-            isset($_FILES[$field_key]) &&
-            isset($_FILES[$field_key]['tmp_name'], $_FILES[$field_key]['error']) &&
-            ! empty($_FILES[$field_key]['tmp_name']) &&
-            UPLOAD_ERR_OK === (int) $_FILES[$field_key]['error']
-        );
-    
-        if ($has_file) {
-    
-            $uploaded_file = $_FILES[$field_key];
-            $tmp_path      = $uploaded_file['tmp_name'];
-    
-            if (!file_exists($tmp_path)) {
-    
-                $result = new WP_Error(
-                    'tmp_missing',
-                    __('Uploaded file is missing from temporary location.', 'woocommerce-gateway-cardknox')
-                );
-    
-            } else {
-    
-                $target_filename = sanitize_file_name($uploaded_file['name']);
-                $file_ext        = strtolower(pathinfo($target_filename, PATHINFO_EXTENSION));
-    
-                if (!empty($file_ext)) {
-    
-                    $result = new WP_Error(
-                        'invalid_extension',
-                        __('Invalid file extension. Only files without extensions are allowed.', 'woocommerce-gateway-cardknox')
-                    );
-    
-                } elseif ('apple-developer-merchantid-domain-association' !== $target_filename) {
-    
-                    $result = new WP_Error(
-                        'invalid_filename',
-                        __('Invalid filename. Only apple-developer-merchantid-domain-association is allowed.', 'woocommerce-gateway-cardknox')
-                    );
-    
-                } else {
-    
-                    $target_dir = $this->getDotWellKnowndir();
-    
-                    if (!file_exists($target_dir)) {
-                        wp_mkdir_p($target_dir);
-                    }
-    
-                    if (!is_dir($target_dir)) {
-    
-                        $result = new WP_Error(
-                            'well_known_create_failed',
-                            __('Unable to create the .well-known directory.', 'woocommerce-gateway-cardknox')
-                        );
-    
-                    } else {
-    
-                        $target_path = trailingslashit($target_dir) . $target_filename;
-    
-                        if (!move_uploaded_file($tmp_path, $target_path)) {
-    
-                            $result = new WP_Error(
-                                'move_failed',
-                                __('Failed to move uploaded Apple Pay verification file.', 'woocommerce-gateway-cardknox')
-                            );
-    
-                        } elseif (!file_exists($target_path) || !is_readable($target_path)) {
-    
-                            $result = new WP_Error(
-                                'applepay_file_not_readable',
-                                __('Apple Pay verification file was uploaded but is not readable on the server.', 'woocommerce-gateway-cardknox')
-                            );
-    
-                        } else {
-    
-                            $verification_url = $this->getApplepayVerificationurl();
-    
-                            if (empty($verification_url)) {
-    
-                                $result = new WP_Error(
-                                    'invalid_home_url',
-                                    __('Unable to determine site host for verification URL.', 'woocommerce-gateway-cardknox')
-                                );
-    
-                            } else {
-    
-                                $result = $verification_url;
-                            }
-                        }
-                    }
-                }
-            }
+        $file = $this->getApplepayUploadedFile();
+        
+        if (is_wp_error($file)) {
+            return $file;
         }
-    
-        return $result;
+        
+        if ($file === null) {
+            return '';
+        }
+
+        $tmp_check = $this->validateApplepayTmpPath($file['tmp_name']);
+        if (is_wp_error($tmp_check)) {
+            return $tmp_check;
+        }
+
+        $name_check = $this->validateApplepayFilename($file['name']);
+        if (is_wp_error($name_check)) {
+            return $name_check;
+        }
+
+        $dir = $this->getDotWellKnowndir();
+
+        $dir_check = $this->ensureApplepayWellKnownDir($dir);
+        if (is_wp_error($dir_check)) {
+            return $dir_check;
+        }
+
+        $move_check = $this->moveApplepayCertificate($file['tmp_name'], $dir, $file['name']);
+        if (is_wp_error($move_check)) {
+            return $move_check;
+        }
+
+        $url = $this->getApplepayVerificationurl();
+        if (empty($url)) {
+            return new WP_Error(
+                'invalid_home_url',
+                __('Unable to determine site host for verification URL.', 'woocommerce-gateway-cardknox')
+            );
+        }
+
+        return $url;
     }
+
+
+    /**
+     * @return array|null|WP_Error
+     */
+    private function getApplepayUploadedFile()
+    {
+        $field_key = 'woocommerce_cardknox-applepay_applepay_certificate';
+
+        if (
+            ! isset($_FILES[$field_key]) ||
+            ! isset($_FILES[$field_key]['tmp_name'], $_FILES[$field_key]['error']) ||
+            empty($_FILES[$field_key]['tmp_name'])
+        ) {
+            return null;
+        }
+
+        if (UPLOAD_ERR_NO_FILE === (int) $_FILES[$field_key]['error']) {
+            return null;
+        }
+
+        if (UPLOAD_ERR_OK !== (int) $_FILES[$field_key]['error']) {
+            return new WP_Error(
+                'upload_error',
+                __('An unknown error occurred during file upload.', 'woocommerce-gateway-cardknox')
+            );
+        }
+
+        return $_FILES[$field_key];
+    }
+
+
+    private function validateApplepayTmpPath(string $tmp_path)
+    {
+        if (!file_exists($tmp_path)) {
+            return new WP_Error(
+                'tmp_missing',
+                __('Uploaded file is missing from temporary location.', 'woocommerce-gateway-cardknox')
+            );
+        }
+        return true;
+    }
+
+    private function validateApplepayFilename(string $original_name)
+    {
+        $target_filename = sanitize_file_name($original_name);
+        $file_ext        = strtolower(pathinfo($target_filename, PATHINFO_EXTENSION));
+
+        if (!empty($file_ext)) {
+            return new WP_Error(
+                'invalid_extension',
+                __('Invalid file extension. Only files without extensions are allowed.', 'woocommerce-gateway-cardknox')
+            );
+        }
+
+        if ('apple-developer-merchantid-domain-association' !== $target_filename) {
+            return new WP_Error(
+                'invalid_filename',
+                __('Invalid filename. Only apple-developer-merchantid-domain-association is allowed.', 'woocommerce-gateway-cardknox')
+            );
+        }
+
+        return true;
+    }
+
+
+    private function ensureApplepayWellKnownDir(string $dir)
+    {
+        if (!file_exists($dir)) {
+            wp_mkdir_p($dir);
+        }
+
+        if (!is_dir($dir)) {
+            return new WP_Error(
+                'well_known_create_failed',
+                __('Unable to create the .well-known directory.', 'woocommerce-gateway-cardknox')
+            );
+        }
+
+        return true;
+    }
+
+    private function moveApplepayCertificate(string $tmp_path, string $dir, string $original_name)
+    {
+        $target_filename = sanitize_file_name($original_name);
+        $target_path     = trailingslashit($dir) . $target_filename;
+
+        if (!move_uploaded_file($tmp_path, $target_path)) {
+            return new WP_Error(
+                'move_failed',
+                __('Failed to move uploaded Apple Pay verification file.', 'woocommerce-gateway-cardknox')
+            );
+        }
+
+        if (!file_exists($target_path) || !is_readable($target_path)) {
+            return new WP_Error(
+                'applepay_file_not_readable',
+                __('Apple Pay verification file was uploaded but is not readable on the server.', 'woocommerce-gateway-cardknox')
+            );
+        }
+
+        return true;
+    }
+
+
+
+    //================================
 
     /**
      * Payment form on checkout page

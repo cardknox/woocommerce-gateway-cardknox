@@ -315,28 +315,31 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     private function getApplepayUploadedFile()
     {
         $field_key = 'woocommerce_cardknox-applepay_applepay_certificate';
+        $result    = null;
 
-        if (
-            ! isset($_FILES[$field_key]) ||
-            ! isset($_FILES[$field_key]['tmp_name'], $_FILES[$field_key]['error']) ||
-            empty($_FILES[$field_key]['tmp_name'])
-        ) {
-            return null;
+        $has_file = (
+            isset($_FILES[$field_key]) &&
+            isset($_FILES[$field_key]['tmp_name'], $_FILES[$field_key]['error']) &&
+            ! empty($_FILES[$field_key]['tmp_name'])
+        );
+
+        if ($has_file) {
+            $error_code = (int) $_FILES[$field_key]['error'];
+
+            if (UPLOAD_ERR_OK === $error_code) {
+                $result = $_FILES[$field_key];
+            } elseif (UPLOAD_ERR_NO_FILE !== $error_code) {
+                $result = new WP_Error(
+                    'upload_error',
+                    __('An unknown error occurred during file upload.', 'woocommerce-gateway-cardknox')
+                );
+            }
+            // UPLOAD_ERR_NO_FILE => keep null
         }
 
-        if (UPLOAD_ERR_NO_FILE === (int) $_FILES[$field_key]['error']) {
-            return null;
-        }
-
-        if (UPLOAD_ERR_OK !== (int) $_FILES[$field_key]['error']) {
-            return new WP_Error(
-                'upload_error',
-                __('An unknown error occurred during file upload.', 'woocommerce-gateway-cardknox')
-            );
-        }
-
-        return $_FILES[$field_key];
+        return $result;
     }
+
 
 
     private function validateApplepayTmpPath(string $tmp_path)

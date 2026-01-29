@@ -1399,7 +1399,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             <table class="form-table">
                 <thead>
                     <tr>
-                        <th scope="col"></th>
+                        <th scope="col" style="padding: 0;"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1414,7 +1414,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             <table class="form-table">
                 <thead>
                     <tr>
-                        <th scope="col"></th>
+                        <th scope="col" style="padding: 0;"></th>
                     </tr>
                 </thead>
                 <tbody>

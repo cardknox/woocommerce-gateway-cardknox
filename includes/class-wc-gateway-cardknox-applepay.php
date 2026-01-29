@@ -249,8 +249,8 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
         // Root of WP install: ABSPATH -> /public_html/site/
         // dirname(dirname(ABSPATH)) -> /public_html/
-        //$target_dir = untrailingslashit(dirname(dirname(ABSPATH))) . '/.well-known';
-        $target_dir = $this->get_dot_well_known_dir();
+        
+        $target_dir = $this->getDotWellKnowndir();
 
         // Create directory if missing.
         if (! file_exists($target_dir)) {
@@ -318,8 +318,6 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             );
             return;
         }
-
-        //$verification_url = $scheme . '://' . $host . '/.well-known/' . $target_filename;
 
         $verification_url = $this->getApplepayVerificationurl();
 
@@ -940,7 +938,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     /**
      * Get .well-known absolute directory path (always dot-folder).
      */
-    private function get_dot_well_known_dir(): string
+    private function getDotWellKnowndir(): string
     {
         return untrailingslashit($this->getPublicWebRootpath()) . '/.well-known';
     }
@@ -967,7 +965,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     private function getApplepayCertificateInfo(): array
     {
         $filename   = 'apple-developer-merchantid-domain-association';
-        $target_dir = $this->get_dot_well_known_dir();
+        $target_dir = $this->getDotWellKnowndir();
         $path       = trailingslashit($target_dir) . $filename;
 
         $url = $this->getApplepayVerificationurl();

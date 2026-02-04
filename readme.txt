@@ -33,6 +33,12 @@ Visit [Sola](https://solapayments.com) to learn more.
 
 == Changelog ==
 
+= 1.2.84 =
+
+- Added domain accessibility verification during Apple Pay certificate upload.
+- Updated tags and plugin metadata for WordPress 6.9 compatibility.
+- Fixed session expiration error.
+
 = 1.2.83 =
 
 - Package updates.

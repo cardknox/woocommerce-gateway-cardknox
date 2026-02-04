@@ -1398,11 +1398,11 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                     settings_errors('woocommerce_cardknox_applepay');
             ?>
 
-            <table class="form-table" style="width:400px;">
+            <h3 style="margin:30px 0 0;"><?php _e('Apple Pay Settings', 'woocommerce-gateway-cardknox'); ?></h3>
+            <table class="form-table">
                 <thead>
                     <tr>
-                        <th><?php _e('Apple Pay Settings', 'woocommerce-gateway-cardknox'); ?></th>
-                        <th></th>
+                        <th style="padding:0;"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1413,11 +1413,11 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             </table>
         </div>
         <div id="google-pay-settings" class="panel">
-            <table class="form-table" style="width:400px;">
+            <h3 style="margin:30px 0 0;"><?php _e('Google Pay Settings', 'woocommerce-gateway-cardknox'); ?></h3>    
+            <table class="form-table">
                 <thead>
                     <tr>
-                        <th><?php _e('Google Pay Settings', 'woocommerce-gateway-cardknox'); ?></th>
-                        <th></th>
+                    <th style="padding:0;"></th>
                     </tr>
                 </thead>
                 <tbody>

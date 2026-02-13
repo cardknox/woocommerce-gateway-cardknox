@@ -38,11 +38,11 @@ Visit [Sola](https://solapayments.com) to learn more.
 - Added domain accessibility verification during Apple Pay certificate upload.
 - Updated tags and plugin metadata for WordPress 6.9 compatibility.
 - Fixed session expiration error.
+- Updated iFields latest version 3.3.2601.2901
 
 = 1.2.83 =
 
 - Package updates.
-- Updated iFields latest version 3.3.2601.2901
 
 = 1.2.82 =
 

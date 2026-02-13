@@ -6,7 +6,7 @@ export const PAYMENT_METHOD_NAME = 'cardknox';
 /**
  * iFields configuration
  */
-export const IFIELDS_VERSION = '3.1.2508.1401';
+export const IFIELDS_VERSION = '3.3.2601.2901';
 export const IFIELDS_CDN_URL = `https://cdn.cardknox.com/ifields/${IFIELDS_VERSION}/ifields.min.js`;
 export const IFIELDS_IFRAME_URL = `https://cdn.cardknox.com/ifields/${IFIELDS_VERSION}/ifield.htm`;
 

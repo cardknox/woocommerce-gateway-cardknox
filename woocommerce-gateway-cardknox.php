@@ -235,17 +235,14 @@ if (!class_exists('WC_Cardknox')) :
         public function enqueue_block_styles() {
 
             $handle = 'wc-cardknox-ifields'; // your actual script handle
-            
-            // Build dynamic logo URL
-            $card_logo_url = esc_url( WC_CARDKNOX_PLUGIN_URL . '/images/card-logos.png' );
-
-            // Pass data to JS
-            wp_localize_script(
+            wp_add_inline_script(
                 $handle,
-                'wcCardknoxData',
-                array(
-                    'cardLogoUrl' => $card_logo_url,
-                )
+                'window.wcCardknoxData = ' . wp_json_encode(
+                    array(
+                        'cardLogoUrl' => WC_CARDKNOX_PLUGIN_URL . '/images/card-logos.png',
+                    )
+                ) . ';',
+                'before'
             );
 
             if ( ! is_admin() && $this->isBlocksCheckoutActive() ) {

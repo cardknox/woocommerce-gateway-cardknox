@@ -4,7 +4,8 @@
 import { __ } from '@wordpress/i18n';
 import { useEffect } from '@wordpress/element';
 
-const cardLogoUrl = wcCardknoxData?.cardLogoUrl || '';
+//const cardLogoUrl = wcCardknoxData?.cardLogoUrl || '';
+const cardLogoUrl = window.wcCardknoxData?.cardLogoUrl || '';
 
 const CardknoxIFields = ({ errors, onExpiryChange, ValidationInputError, cardData }) => {
     

@@ -4,7 +4,8 @@
 import { __ } from '@wordpress/i18n';
 import { useEffect } from '@wordpress/element';
 
-const cardLogoUrl = wcCardknoxData?.cardLogoUrl || '';
+//const cardLogoUrl = wcCardknoxData?.cardLogoUrl || '';
+const cardLogoUrl = window.wcCardknoxData?.cardLogoUrl || '';
 
 const CardknoxIFields = ({ errors, onExpiryChange, ValidationInputError, cardData }) => {
     
@@ -51,7 +52,7 @@ const CardknoxIFields = ({ errors, onExpiryChange, ValidationInputError, cardDat
                         <iframe
                             data-ifields-id="card-number"
                             data-ifields-placeholder={__('Card Number', 'woocommerce-gateway-cardknox')}
-                            src="https://cdn.cardknox.com/ifields/3.1.2508.1401/ifield.htm"
+                            src="https://cdn.cardknox.com/ifields/3.3.2601.2901/ifield.htm"
                             frameBorder="0"
                             width="100%"
                             height="100%"
@@ -149,7 +150,7 @@ const CardknoxIFields = ({ errors, onExpiryChange, ValidationInputError, cardDat
                         <iframe
                             data-ifields-id="cvv"
                             data-ifields-placeholder={__('CVV', 'woocommerce-gateway-cardknox')}
-                            src="https://cdn.cardknox.com/ifields/3.1.2508.1401/ifield.htm"
+                            src="https://cdn.cardknox.com/ifields/3.3.2601.2901/ifield.htm"
                             frameBorder="0"
                             width="100%"
                             height="100%"

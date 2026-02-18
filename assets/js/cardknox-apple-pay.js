@@ -142,11 +142,17 @@ window.apRequest = {
   authorize: function (applePayload, totalAmount) {
     console.log(applePayload);
     var appToken = applePayload.token.paymentData.data;
-    if (appToken) {
-      var xcardnum = btoa(JSON.stringify(applePayload.token.paymentData));
-      jQuery("#applePaytoken").val(xcardnum);
-      jQuery("#place_order").trigger("click");
+    if (!appToken) {
+      throw new Error("Apple Pay token data is missing");
     }
+    var xcardnum = btoa(JSON.stringify(applePayload.token.paymentData));
+    jQuery("input[name='xCardNumToken']").remove();
+    jQuery("<input>").attr({
+      type: "hidden",
+      name: "xCardNumToken",
+      value: xcardnum,
+    }).appendTo("form.checkout");
+    jQuery("#place_order").trigger("click");
   },
   onPaymentAuthorize: function (applePayload) {
     const amt = getAmount();
@@ -156,12 +162,8 @@ window.apRequest = {
           .then((response) => {
             try {
               console.log(response);
-              const resp = JSON.parse(response);
-              if (!resp) throw "Invalid response: " + response;
-              if (resp.xError) {
-                throw resp;
-              }
-              resolve(response);
+              this.authorize(applePayload, amt.toString());
+              resolve(true);
             } catch (err) {
               throw err;
               // reject(err);

@@ -4,7 +4,7 @@ Plugin Name: WooCommerce Cardknox Gateway
 Description: Accept payments via credit card, Apple Pay, Google Pay, and manage transactions within WordPress.
 Author: Sola Payments.
 Author URI: https://solapayments.com/
-Version: 1.2.84
+Version: 1.2.85
 Requires at least: 4.4
 Tested up to: 6.9
 WC requires at least: 2.5
@@ -37,14 +37,14 @@ if (!defined('ABSPATH')) {
 /**
  * Required minimums and constants
  */
-define('WC_CARDKNOX_VERSION', '1.2.84');
+define('WC_CARDKNOX_VERSION', '1.2.85');
 define('WC_CARDKNOX_MIN_PHP_VER', '5.6.0');
 define('WC_CARDKNOX_MIN_WC_VER', '2.5.0');
 define('WC_CARDKNOX_MAIN_FILE', __FILE__);
 define('WC_CARDKNOX_PLUGIN_URL', untrailingslashit(plugins_url(basename(plugin_dir_path(__FILE__)), basename(__FILE__))));
 define('WC_CARDKNOX_PLUGIN_PATH', untrailingslashit(plugin_dir_path(__FILE__)));
 
-define( 'CARDKNOX_IFIELDS_URL', 'https://cdn.cardknox.com/ifields/3.1.2508.1401/ifields.min.js' );
+define( 'CARDKNOX_IFIELDS_URL', 'https://cdn.cardknox.com/ifields/3.3.2601.2901/ifields.min.js' );
 
 
 
@@ -212,7 +212,7 @@ if (!class_exists('WC_Cardknox')) :
                     'cardknox-ifields',
                     CARDKNOX_IFIELDS_URL,
                     array(),
-                    '3.1.2508.1401',
+                    '3.3.2601.2901',
                     false
                 );
                 if (! wp_script_is('cardknox-ifields', 'enqueued')) {
@@ -235,17 +235,14 @@ if (!class_exists('WC_Cardknox')) :
         public function enqueue_block_styles() {
 
             $handle = 'wc-cardknox-ifields'; // your actual script handle
-            
-            // Build dynamic logo URL
-            $card_logo_url = esc_url( WC_CARDKNOX_PLUGIN_URL . '/images/card-logos.png' );
-
-            // Pass data to JS
-            wp_localize_script(
+            wp_add_inline_script(
                 $handle,
-                'wcCardknoxData',
-                array(
-                    'cardLogoUrl' => $card_logo_url,
-                )
+                'window.wcCardknoxData = ' . wp_json_encode(
+                    array(
+                        'cardLogoUrl' => WC_CARDKNOX_PLUGIN_URL . '/images/card-logos.png',
+                    )
+                ) . ';',
+                'before'
             );
 
             if ( ! is_admin() && $this->isBlocksCheckoutActive() ) {
@@ -717,9 +714,9 @@ if (!class_exists('WC_Cardknox')) :
             // Common iFields script
             wp_enqueue_script(
                 'cardknox',
-                'https://cdn.cardknox.com/ifields/3.1.2508.1401/ifields.min.js',
+                'https://cdn.cardknox.com/ifields/3.3.2601.2901/ifields.min.js',
                 [],
-                '3.1.2508.1401',
+                '3.3.2601.2901',
                 false
             );
         

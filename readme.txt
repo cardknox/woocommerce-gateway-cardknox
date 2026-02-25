@@ -33,6 +33,11 @@ Visit [Sola](https://solapayments.com) to learn more.
 
 == Changelog ==
 
+= 1.2.85 =
+
+- Fixed Apple Pay declines caused by incorrect card number mapping.
+- Updated iField to the latest stable version 3.3.2601.2901.
+
 = 1.2.84 =
 
 - Added domain accessibility verification during Apple Pay certificate upload.

@@ -170,7 +170,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $cvc_field = '<p class="form-row form-row-last">
 			<label style="margin:0px;" for="' . esc_attr($this->id) . '-card-cvc">' . esc_html__('Card Code', 'woocommerce') . ' <span class="required">*</span></label>
 			<iframe data-ifields-id="cvv" data-ifields-placeholder="CVV"
-                        src="https://cdn.cardknox.com/ifields/3.1.2508.1401/ifield.htm?" + "' . esc_attr($timestamp) . '" frameBorder="0" width="100%"
+                        src="https://cdn.cardknox.com/ifields/3.3.2601.2901/ifield.htm?" + "' . esc_attr($timestamp) . '" frameBorder="0" width="100%"
                         height="55" id="cvv-frame"></iframe>
             <label data-ifields-id="card-data-error" style="color: red;"></label>
 		</p><input data-ifields-id="cvv-token" name="xCVV" id="cardknox-card-cvc" type="hidden"/>';
@@ -181,7 +181,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 				<label style="margin:0px !important; line-height: inherit;" for="' . esc_attr($this->id) . '-card-number">' . esc_html__('Card Number', 'woocommerce') . ' <span class="required">*</span></label>
 
 				<iframe data-ifields-id="card-number" data-ifields-placeholder="Card Number"
-                        src="https://cdn.cardknox.com/ifields/3.1.2508.1401/ifield.htm?" + "' . esc_attr($timestamp) . '" frameBorder="0" width="100%"
+                        src="https://cdn.cardknox.com/ifields/3.3.2601.2901/ifield.htm?" + "' . esc_attr($timestamp) . '" frameBorder="0" width="100%"
                         height="55"></iframe>
 			</p> <input data-ifields-id="card-number-token" name="xCardNum" id="cardknox-card-number" type="hidden"/>',
             'card-expiry-field' => '<p class="form-row form-row-first" style=" margin: 0 !important;">

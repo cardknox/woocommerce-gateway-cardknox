@@ -92,7 +92,7 @@ class WC_Cardknox_API
 
         if (is_wp_error($response) || empty($response['body'])) {
             self::log('Error Response: ' . print_r($response, true));
-            return new WP_Error('cardknox_error', __('There was a problem connecting to the payment gateway.', 'woocommerce-gateway-cardknox'));
+            return new WP_Error('cardknox_error', __('There was a problem connecting to the payment gateway.', 'woo-cardknox-gateway'));
         }
 
         $parsed_response = [];
@@ -104,10 +104,10 @@ class WC_Cardknox_API
             if (($parsed_response['xResult'] == "A") || ($parsed_response['xResult'] == "V")) {
                 return $parsed_response;
             } else {
-                return new WP_Error("cardknox_error", "{$parsed_response['xStatus']}: {$parsed_response['xError']}({$parsed_response['xRefNum']})({$parsed_response['xErrorCode']})", 'woocommerce-gateway-cardknox');
+                return new WP_Error("cardknox_error", "{$parsed_response['xStatus']}: {$parsed_response['xError']}({$parsed_response['xRefNum']})({$parsed_response['xErrorCode']})", 'woo-cardknox-gateway');
             }
         } else {
-            return new WP_Error('cardknox_error', __('There was a problem connecting to the payment gateway.', 'woocommerce-gateway-cardknox'));
+            return new WP_Error('cardknox_error', __('There was a problem connecting to the payment gateway.', 'woo-cardknox-gateway'));
         }
         // Handle response
         //		if ( ! empty( $parsed_response['xError'] ) ) {
@@ -116,7 +116,7 @@ class WC_Cardknox_API
         //			} else {
         //				$code = 'cardknox_error';
         //			}
-        //			return new WP_Error( $code, $parsed_response['xError'], 'woocommerce-gateway-cardknox' );
+        //			return new WP_Error( $code, $parsed_response['xError'], 'woo-cardknox-gateway' );
         //		} else {
         //			return $parsed_response;
         //		}

@@ -10,7 +10,7 @@ Tested up to: 6.9
 WC requires at least: 2.5
 WC tested up to: 8.4.0
 WooCommerce Subscriptions tested up to: 6.7.0
-Text Domain: woocommerce-gateway-cardknox
+Text Domain: woo-cardknox-gateway
 Domain Path: /languages
 Requires Plugins: woocommerce
 
@@ -58,7 +58,7 @@ if (version_compare(get_bloginfo('version'), '6.5', '<')) {
         echo '<div class="error"><p>';
         esc_html_e(
             'WooCommerce Sola Gateway requires WordPress version 6.5 or higher. Please update WordPress to use this plugin.',
-            'woocommerce-gateway-cardknox'
+            'woo-cardknox-gateway'
         );
         echo '</p></div>';
     });
@@ -283,7 +283,7 @@ if (!class_exists('WC_Cardknox')) :
                 return;
             }
         
-            load_plugin_textdomain('woocommerce-gateway-cardknox', false, dirname(plugin_basename(__FILE__)) . '/languages');
+            load_plugin_textdomain('woo-cardknox-gateway', false, dirname(plugin_basename(__FILE__)) . '/languages');
         
             include_once(dirname(__FILE__) . '/includes/class-wc-cardknox-api.php');
         
@@ -347,7 +347,7 @@ if (!class_exists('WC_Cardknox')) :
 
             if (empty($secret) && !(isset($_GET['page'], $_GET['section']) && 'wc-settings' === $_GET['page'] && 'cardknox' === $_GET['section'])) {
                 $setting_link = $this->get_setting_link();
-                $this->add_admin_notice('prompt_connect', 'notice notice-warning', sprintf(__('Sola is almost ready. To get started, <a href="%s">set your Sola account keys</a>.', 'woocommerce-gateway-cardknox'), $setting_link));
+                $this->add_admin_notice('prompt_connect', 'notice notice-warning', sprintf(__('Sola is almost ready. To get started, <a href="%s">set your Sola account keys</a>.', 'woo-cardknox-gateway'), $setting_link));
             }
         }
 
@@ -388,23 +388,23 @@ if (!class_exists('WC_Cardknox')) :
         public static function get_environment_warning()
         {
             if (version_compare(phpversion(), WC_CARDKNOX_MIN_PHP_VER, '<')) {
-                $message = __('WooCommerce Sola - The minimum PHP version required for this plugin is %1$s. You are running %2$s.', 'woocommerce-gateway-cardknox');
+                $message = __('WooCommerce Sola - The minimum PHP version required for this plugin is %1$s. You are running %2$s.', 'woo-cardknox-gateway');
 
                 return sprintf($message, WC_CARDKNOX_MIN_PHP_VER, phpversion());
             }
 
             if (!defined('WC_VERSION')) {
-                return __('WooCommerce Sola requires WooCommerce to be activated to work.', 'woocommerce-gateway-cardknox');
+                return __('WooCommerce Sola requires WooCommerce to be activated to work.', 'woo-cardknox-gateway');
             }
 
             if (version_compare(WC_VERSION, WC_CARDKNOX_MIN_WC_VER, '<')) {
-                $message = __('WooCommerce Sola - The minimum WooCommerce version required for this plugin is %1$s. You are running %2$s.', 'woocommerce-gateway-cardknox');
+                $message = __('WooCommerce Sola - The minimum WooCommerce version required for this plugin is %1$s. You are running %2$s.', 'woo-cardknox-gateway');
 
                 return sprintf($message, WC_CARDKNOX_MIN_WC_VER, WC_VERSION);
             }
 
             if (!function_exists('curl_init')) {
-                return __('WooCommerce Sola - cURL is not installed.', 'woocommerce-gateway-cardknox');
+                return __('WooCommerce Sola - cURL is not installed.', 'woo-cardknox-gateway');
             }
 
             return false;
@@ -424,9 +424,9 @@ if (!class_exists('WC_Cardknox')) :
             $setting_link = $this->get_setting_link();
 
             $plugin_links = array(
-                $this->generateLink($setting_link) . __('Settings', 'woocommerce-gateway-cardknox') . '</a>',
-                '<a href="https://docs.woocommerce.com/document/cardknox/">' . __('Docs', 'woocommerce-gateway-cardknox') . '</a>',
-                '<a href="https://woocommerce.com/contact-us/">' . __('Support', 'woocommerce-gateway-cardknox') . '</a>',
+                $this->generateLink($setting_link) . __('Settings', 'woo-cardknox-gateway') . '</a>',
+                '<a href="https://docs.woocommerce.com/document/cardknox/">' . __('Docs', 'woo-cardknox-gateway') . '</a>',
+                '<a href="https://woocommerce.com/contact-us/">' . __('Support', 'woo-cardknox-gateway') . '</a>',
             );
             return array_merge($plugin_links, $links);
         }
@@ -581,9 +581,9 @@ if (!class_exists('WC_Cardknox')) :
                     ));
 
                     if (is_wp_error($result)) {
-                        $order->add_order_note(__('Unable to capture transaction!', 'woocommerce-gateway-cardknox') . ' ' . $result->get_error_message());
+                        $order->add_order_note(__('Unable to capture transaction!', 'woo-cardknox-gateway') . ' ' . $result->get_error_message());
                     } else {
-                        $order->add_order_note(sprintf(__('Sola transaction captured (Charge ID: %s)', 'woocommerce-gateway-cardknox'), $result['xRefNum']));
+                        $order->add_order_note(sprintf(__('Sola transaction captured (Charge ID: %s)', 'woo-cardknox-gateway'), $result['xRefNum']));
                         update_post_meta($order_id, '_cardknox_transaction_captured', 'yes');
 
                         // Store other data such as fees
@@ -615,9 +615,9 @@ if (!class_exists('WC_Cardknox')) :
                     ));
 
                     if (is_wp_error($result)) {
-                        $order->add_order_note(__('Unable to refund transaction!', 'woocommerce-gateway-cardknox') . ' ' . $result->get_error_message());
+                        $order->add_order_note(__('Unable to refund transaction!', 'woo-cardknox-gateway') . ' ' . $result->get_error_message());
                     } else {
-                        $order->add_order_note(sprintf(__('Sola transaction refunded (RefNum: %s)', 'woocommerce-gateway-cardknox'), $result['xRefNum']));
+                        $order->add_order_note(sprintf(__('Sola transaction refunded (RefNum: %s)', 'woo-cardknox-gateway'), $result['xRefNum']));
                         delete_post_meta($order_id, '_cardknox_transaction_captured');
                         delete_post_meta($order_id, '_cardknox_xrefnum');
                     }
@@ -1104,7 +1104,7 @@ if (!class_exists('WC_Cardknox')) :
             try {
                 if ($parsedResponse['xResult'] === "E" || $parsedResponse['xResult'] === "D") {
                     wc_add_notice($parsedResponse['xError'], 'error');
-                    $this->log(sprintf(__('Error: %s', 'woocommerce-gateway-cardknox'), $parsedResponse['xError']));
+                    $this->log(sprintf(__('Error: %s', 'woo-cardknox-gateway'), $parsedResponse['xError']));
 
                     return wp_send_json($parsedResponse);
                 } else {
@@ -1116,7 +1116,7 @@ if (!class_exists('WC_Cardknox')) :
 
                     if (is_wp_error($parsedResponse)) {
                         $order->add_order_note($parsedResponse->get_error_message());
-                        throw new WC_Data_Exception( 'cardknox_declined', __( 'The transaction was declined, please try again.', 'woocommerce-gateway-cardknox' ) );
+                        throw new WC_Data_Exception( 'cardknox_declined', __( 'The transaction was declined, please try again.', 'woo-cardknox-gateway' ) );
                     }
 
                     $this->log("Info: set_transaction_id");
@@ -1146,7 +1146,7 @@ if (!class_exists('WC_Cardknox')) :
                 }
             } catch (Exception $e) {
                 wc_add_notice($e->getMessage(), 'error');
-                $this->log(sprintf(__('Error: %s', 'woocommerce-gateway-cardknox'), $e->getMessage()));
+                $this->log(sprintf(__('Error: %s', 'woo-cardknox-gateway'), $e->getMessage()));
 
                 return $e->getMessage();
             }

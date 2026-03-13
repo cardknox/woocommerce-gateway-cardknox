@@ -17,23 +17,23 @@ export const validateCardData = (cardData) => {
 
     // Validate expiry month
     if (!cardData.expiryMonth) {
-        errors.expiry = __('Expiry month is required', 'woocommerce-gateway-cardknox');
+        errors.expiry = __('Expiry month is required', 'woo-cardknox-gateway');
     } else {
         const month = parseInt(cardData.expiryMonth, 10);
         if (month < 1 || month > 12) {
-            errors.expiry = __('Invalid expiry month', 'woocommerce-gateway-cardknox');
+            errors.expiry = __('Invalid expiry month', 'woo-cardknox-gateway');
         }
     }
 
     // Validate expiry year
     if (!cardData.expiryYear) {
-        errors.expiry = __('Expiry year is required', 'woocommerce-gateway-cardknox');
+        errors.expiry = __('Expiry year is required', 'woo-cardknox-gateway');
     } else {
         const currentYear = new Date().getFullYear();
         const year = parseInt(cardData.expiryYear, 10);
         
         if (year < currentYear) {
-            errors.expiry = __('Card has expired', 'woocommerce-gateway-cardknox');
+            errors.expiry = __('Card has expired', 'woo-cardknox-gateway');
         }
         
         // Check if card expires this year but month has passed
@@ -42,7 +42,7 @@ export const validateCardData = (cardData) => {
             const expMonth = parseInt(cardData.expiryMonth, 10);
             
             if (expMonth < currentMonth) {
-                errors.expiry = __('Card has expired', 'woocommerce-gateway-cardknox');
+                errors.expiry = __('Card has expired', 'woo-cardknox-gateway');
             }
         }
     }
@@ -195,7 +195,7 @@ export const validateExpiryDate = (month, year) => {
 
     if (!month || !year) {
         result.isValid = false;
-        result.message = __('Expiry date is required', 'woocommerce-gateway-cardknox');
+        result.message = __('Expiry date is required', 'woo-cardknox-gateway');
         return result;
     }
 
@@ -208,21 +208,21 @@ export const validateExpiryDate = (month, year) => {
     // Check if month is valid
     if (expMonth < 1 || expMonth > 12) {
         result.isValid = false;
-        result.message = __('Invalid expiry month', 'woocommerce-gateway-cardknox');
+        result.message = __('Invalid expiry month', 'woo-cardknox-gateway');
         return result;
     }
 
     // Check if card has expired
     if (expYear < currentYear || (expYear === currentYear && expMonth < currentMonth)) {
         result.isValid = false;
-        result.message = __('Card has expired', 'woocommerce-gateway-cardknox');
+        result.message = __('Card has expired', 'woo-cardknox-gateway');
         return result;
     }
 
     // Check if expiry date is too far in the future (more than 20 years)
     if (expYear > currentYear + 20) {
         result.isValid = false;
-        result.message = __('Invalid expiry year', 'woocommerce-gateway-cardknox');
+        result.message = __('Invalid expiry year', 'woo-cardknox-gateway');
         return result;
     }
 

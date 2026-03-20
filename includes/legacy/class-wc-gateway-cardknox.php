@@ -64,8 +64,8 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 	 */
 	public function __construct() {
 		$this->id                   = 'cardknox';
-		$this->method_title         = __( 'Sola', 'woocommerce-gateway-cardknox' );
-		$this->method_description   = __( 'Sola works by adding credit card fields on the checkout and then sending the details to Sola for verification.', 'woocommerce-gateway-cardknox' );
+		$this->method_title         = __( 'Sola', 'woo-cardknox-gateway' );
+		$this->method_description   = __( 'Sola works by adding credit card fields on the checkout and then sending the details to Sola for verification.', 'woo-cardknox-gateway' );
 		$this->has_fields           = true;
 		$this->view_transaction_url = 'https://portal.solapayments.com/transactions?referenceNumber=%s';
 		$this->supports             = array(
@@ -158,14 +158,14 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 		// Check required fields
 		if ( ! $this->transaction_key ) {
 			echo '<div class="error"><p>' . sprintf(
-				__( 'Sola error: Please enter your transaction key <a href="%s">here</a>', 'woocommerce-gateway-cardknox' ),
+				__( 'Sola error: Please enter your transaction key <a href="%s">here</a>', 'woo-cardknox-gateway' ),
 				admin_url( $settings_url )
 			) . '</p></div>';
 			return;
 	
 		} elseif ( ! $this->token_key ) {
 			echo '<div class="error"><p>' . sprintf(
-				__( 'Sola error: Please enter your token key <a href="%s">here</a>', 'woocommerce-gateway-cardknox' ),
+				__( 'Sola error: Please enter your token key <a href="%s">here</a>', 'woo-cardknox-gateway' ),
 				admin_url( $settings_url )
 			) . '</p></div>';
 			return;
@@ -174,7 +174,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 		// Simple check for duplicate keys
 		if ( $this->transaction_key == $this->token_key ) {
 			echo '<div class="error"><p>' . sprintf(
-				__( 'Sola error: Your transaction and token keys match. Please check and re-enter.', 'woocommerce-gateway-cardknox' ),
+				__( 'Sola error: Your transaction and token keys match. Please check and re-enter.', 'woo-cardknox-gateway' ),
 				admin_url( $settings_url )
 			) . '</p></div>';
 			return;
@@ -183,7 +183,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 		// Show message if enabled and FORCE SSL is disabled
 		if ( ( function_exists( 'wc_site_is_https' ) && ! wc_site_is_https() ) && ( 'no' === get_option( 'woocommerce_force_ssl_checkout' ) && ! class_exists( 'WordPressHTTPS' ) ) )
 		{
-			echo '<div class="error"><p>' . sprintf( __( 'Sola is enabled, but the <a href="%1$s">force SSL option</a> is disabled; your checkout may not be secure! Please enable SSL and ensure your server has a valid <a href="%2$s" target="_blank">SSL certificate</a> - Sola will only work in test mode.', 'woocommerce-gateway-cardknox' ),
+			echo '<div class="error"><p>' . sprintf( __( 'Sola is enabled, but the <a href="%1$s">force SSL option</a> is disabled; your checkout may not be secure! Please enable SSL and ensure your server has a valid <a href="%2$s" target="_blank">SSL certificate</a> - Sola will only work in test mode.', 'woo-cardknox-gateway' ),
 			admin_url( 'admin.php?page=wc-settings&tab=checkout' ), 'https://en.wikipedia.org/wiki/Transport_Layer_Security') . '</p></div>';
 		}
 	}
@@ -277,8 +277,8 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 			wp_enqueue_script( 'woocommerce_cardknox', plugins_url( 'assets/js/cardknox.js', WC_CARDKNOX_MAIN_FILE ), array( 'jquery-payment', 'cardknox' ), WC_CARDKNOX_VERSION, true );
 		$cardknox_params = array(
 			'key'                  => $this->token_key,
-			'i18n_terms'           => __( 'Please accept the terms and conditions first', 'woocommerce-gateway-cardknox' ),
-			'i18n_required_fields' => __( 'Please fill in required checkout fields first', 'woocommerce-gateway-cardknox' ),
+			'i18n_terms'           => __( 'Please accept the terms and conditions first', 'woo-cardknox-gateway' ),
+			'i18n_required_fields' => __( 'Please fill in required checkout fields first', 'woo-cardknox-gateway' ),
 		);
 		wp_localize_script( 'woocommerce_cardknox', 'wc_cardknox_params', apply_filters( 'wc_cardknox_params', $cardknox_params ) );
 	}
@@ -295,7 +295,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 		$post_data['xCurrency']     = strtolower( $order->get_order_currency() ? $order->get_order_currency() : get_woocommerce_currency() );
 		$post_data['xAmount']       = $this->get_cardknox_amount( $order->get_total(), $post_data['currency'] );
         $post_data['xEmail'] 		= $order->billing_email;
-		$post_data['xDescription'] 	= sprintf( __( '%s - Order %s', 'woocommerce-gateway-cardknox' ), wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ), $order->get_order_number() );
+		$post_data['xDescription'] 	= sprintf( __( '%s - Order %s', 'woo-cardknox-gateway' ), wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ), $order->get_order_number() );
         $post_data['xInvoice'] 		= $order->get_order_number();
         $post_data['xIP'] 			= $order->customer_ip_address;
 
@@ -342,7 +342,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 			if ( $order->get_total() > 0 ) {
 
 				if ( $order->get_total()  < WC_Cardknox::get_minimum_amount() / 100 ) {
-					throw new Exception( sprintf( __( 'Sorry, the minimum allowed order total is %1$s to use this payment method.', 'woocommerce-gateway-cardknox' ), wc_price( WC_Cardknox::get_minimum_amount() / 100 ) ) );
+					throw new Exception( sprintf( __( 'Sorry, the minimum allowed order total is %1$s to use this payment method.', 'woo-cardknox-gateway' ), wc_price( WC_Cardknox::get_minimum_amount() / 100 ) ) );
 				}
 				WC_Cardknox::log( "Info: Begin processing payment for order $order_id for the amount of {$order->get_total()}" );
 
@@ -379,7 +379,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 		} catch ( Exception $e ) {
 			wc_add_notice( $e->getMessage(), 'error' );
 			WC()->session->set( 'refresh_totals', true );
-			WC_Cardknox::log( sprintf( __( 'Error: %s', 'woocommerce-gateway-cardknox' ), $e->getMessage() ) );
+			WC_Cardknox::log( sprintf( __( 'Error: %s', 'woo-cardknox-gateway' ), $e->getMessage() ) );
 			return false;
 		}
 	}
@@ -414,7 +414,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 
 		if ( $this->capture ) {
 			$order->payment_complete($response['xRefNum']);
-            $message = sprintf( __( 'Sola transaction captured (capture RefNum: %s)', 'woocommerce-gateway-cardknox' ), $response['xRefNum'] );
+            $message = sprintf( __( 'Sola transaction captured (capture RefNum: %s)', 'woo-cardknox-gateway' ), $response['xRefNum'] );
 
 			WC_Cardknox::log( "Successful charge: " . $message );
 		} else {
@@ -426,9 +426,9 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 
 			if ($this->authonly_status == "on-hold")
 			{
-				$order->update_status( 'on-hold', sprintf( __( 'Sola charge authorized (Charge ID: %s). Process order to take payment, or cancel to remove the pre-authorization.', 'woocommerce-gateway-cardknox' ), $response['xRefNum'] ) );
+				$order->update_status( 'on-hold', sprintf( __( 'Sola charge authorized (Charge ID: %s). Process order to take payment, or cancel to remove the pre-authorization.', 'woo-cardknox-gateway' ), $response['xRefNum'] ) );
 			} else {
-				$order->update_status( 'processing', sprintf( __( 'Sola charge authorized (Charge ID: %s). Complete order to take payment, or cancel to remove the pre-authorization.', 'woocommerce-gateway-cardknox' ), $response['xRefNum'] ) );
+				$order->update_status( 'processing', sprintf( __( 'Sola charge authorized (Charge ID: %s). Complete order to take payment, or cancel to remove the pre-authorization.', 'woo-cardknox-gateway' ), $response['xRefNum'] ) );
 			}
 
 			WC_Cardknox::log( "Successful auth: " . $response['xRefNum'] );
@@ -463,7 +463,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 					'Error',
 					sprintf(
 						/* translators: %s = refund amount */
-						__( 'Refund Amount Required %s', 'woocommerce-gateway-cardknox' ),
+						__( 'Refund Amount Required %s', 'woo-cardknox-gateway' ),
 						$amount
 					)
 				);
@@ -478,7 +478,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 		if ( $total !=  $amount) {
 			$command = 'cc:refund';
             if ($captured === "no") {
-				return new WP_Error('Error', __( 'Partial Refund Not Allowed On Authorize Only Transactions', 'woocommerce-gateway-cardknox' ) );
+				return new WP_Error('Error', __( 'Partial Refund Not Allowed On Authorize Only Transactions', 'woo-cardknox-gateway' ) );
             }
 		}
 
@@ -495,12 +495,12 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway {
 			WC_Cardknox::log( "Error: " . $response['xError'] );
 			return $response;
 		} elseif ( ! empty( $response['xRefNum'] ) ) {
-			$refund_message = sprintf( __( 'Refunded %s - Refund ID: %s - Reason: %s', 'woocommerce-gateway-cardknox' ), wc_price( $response['xAuthAmount'] ), $response['xRefNum'], $reason );
+			$refund_message = sprintf( __( 'Refunded %s - Refund ID: %s - Reason: %s', 'woo-cardknox-gateway' ), wc_price( $response['xAuthAmount'] ), $response['xRefNum'], $reason );
 			$order->add_order_note( $refund_message );
 			WC_Cardknox::log( "Success: " . html_entity_decode( strip_tags( $refund_message ) ) );
 			return true;
         } else {
-            return new WP_Error("refund failed", 'woocommerce-gateway-cardknox' );
+            return new WP_Error("refund failed", 'woo-cardknox-gateway' );
         }
 	}
 }

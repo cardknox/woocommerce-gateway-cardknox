@@ -19,7 +19,7 @@ const SavePaymentCheckbox = ({ checked, onChange }) => {
                     <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" />
                 </svg>
                 <span className="wc-block-components-checkbox__label">
-                    {__('Save payment information to my account for future purchases.', 'woocommerce-gateway-cardknox')}
+                    {__('Save payment information to my account for future purchases.', 'woo-cardknox-gateway')}
                 </span>
             </label>
         </div>

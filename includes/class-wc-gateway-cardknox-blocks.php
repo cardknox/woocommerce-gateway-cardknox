@@ -91,7 +91,7 @@ final class WC_Gateway_Cardknox_Blocks_Support extends AbstractPaymentMethodType
             true
         );
     
-        wp_set_script_translations('wc-cardknox-blocks', 'woocommerce-gateway-cardknox');
+        wp_set_script_translations('wc-cardknox-blocks', 'woo-cardknox-gateway');
     
         return array('wc-cardknox-blocks');
     }

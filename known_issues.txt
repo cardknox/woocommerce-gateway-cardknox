@@ -1,1 +1,2 @@
 1. card type icons dont sync due to ifields
+3. by default we should match styling to exp

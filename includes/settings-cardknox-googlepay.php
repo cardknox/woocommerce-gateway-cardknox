@@ -16,48 +16,48 @@ $gbuttonPrefix = 'Google Pay Button';
 
 $wc_cardknox_google_pay_settings = array(
     $gkeyPrefix . '_enabled' => array(
-        $gkeyTitle       => __('Enabled', 'woocommerce-gateway-cardknox'),
+        $gkeyTitle       => __('Enabled', 'woo-cardknox-gateway'),
         $gkeyType        => $gselectType,
         $gkeyOptions     => array(
-            'no'     => __('No', 'woocommerce-gateway-cardknox'),
-            'yes'    => __('Yes', 'woocommerce-gateway-cardknox'),
+            'no'     => __('No', 'woo-cardknox-gateway'),
+            'yes'    => __('Yes', 'woo-cardknox-gateway'),
         ),
         $gkeyDefault => 'no',
     ),
     $gkeyPrefix . '_quickcheckout' => array(
-        $gkeyTitle       => __('Disable Quick Checkout to Cart Page', 'woocommerce-gateway-cardknox'),
+        $gkeyTitle       => __('Disable Quick Checkout to Cart Page', 'woo-cardknox-gateway'),
         $gkeyType        => 'checkbox',
         'description' => __(
             'Disable Quick Checkout to Cart Page',
-            'woocommerce-gateway-cardknox'
+            'woo-cardknox-gateway'
         ),
         $gkeyDefault    => 'no',
         $gkeyDescTip    => true,
     ),
     $gkeyPrefix . '_title' => array(
-        $gkeyTitle       => __('Title', 'woocommerce-gateway-cardknox'),
+        $gkeyTitle       => __('Title', 'woo-cardknox-gateway'),
         $gkeyType        => $gtextType,
-        $gkeyDefault     => __('Google Pay', 'woocommerce-gateway-cardknox'),
+        $gkeyDefault     => __('Google Pay', 'woo-cardknox-gateway'),
     ),
     $gkeyPrefix . '_merchant_name' => array(
-        $gkeyTitle       => __('Merchant Name', 'woocommerce-gateway-cardknox'),
+        $gkeyTitle       => __('Merchant Name', 'woo-cardknox-gateway'),
         $gkeyType        => $gtextType,
-        $gkeyDefault     => __('Example Merchant', 'woocommerce-gateway-cardknox'),
+        $gkeyDefault     => __('Example Merchant', 'woo-cardknox-gateway'),
     ),
     $gkeyPrefix . '_environment' => array(
-        $gkeyTitle       => __('Environment', 'woocommerce-gateway-cardknox'),
+        $gkeyTitle       => __('Environment', 'woo-cardknox-gateway'),
         $gkeyType        => $gselectType,
         $gkeyOptions     => array(
-            'TEST'          => __('Test', 'woocommerce-gateway-cardknox'),
-            'PRODUCTION'    => __('Production', 'woocommerce-gateway-cardknox'),
+            'TEST'          => __('Test', 'woo-cardknox-gateway'),
+            'PRODUCTION'    => __('Production', 'woo-cardknox-gateway'),
         ),
     ),
     $gkeyPrefix . '_button_style' => array(
-        $gkeyTitle       => __($gbuttonPrefix . 'Style', 'woocommerce-gateway-cardknox'),
+        $gkeyTitle       => __($gbuttonPrefix . 'Style', 'woo-cardknox-gateway'),
         $gkeyType        => $gselectType,
         $gkeyOptions     => array(
-            'black'          => __('Black', 'woocommerce-gateway-cardknox'),
-            'white'          => __('White', 'woocommerce-gateway-cardknox'),
+            'black'          => __('Black', 'woo-cardknox-gateway'),
+            'white'          => __('White', 'woo-cardknox-gateway'),
         ),
     ),
 );

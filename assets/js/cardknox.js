@@ -59,7 +59,7 @@ jQuery(function ($) {
       xVersion: wc_cardknox_params.xVersion,
       xSoftwareName: wc_cardknox_params.xSoftwareName,
       xSoftwareVersion: wc_cardknox_params.xSoftwareVersion,
-      xAllowDuplicate: 1,
+      //xAllowDuplicate: 1,
     };
 
     $.ajax({

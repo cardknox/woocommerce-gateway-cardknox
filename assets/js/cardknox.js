@@ -18,6 +18,28 @@
 
 jQuery(function ($) {
   "use strict";
+
+    var is3DSInitialized = false;
+    var iFieldsReady = false;
+
+    var defaultStyle = {
+      border: "1px solid #c3c3c3",
+      "font-size": "14px",
+      padding: "3px"
+    };
+    var validStyle = {
+      border: "1px solid green",
+      "font-size": "14px",
+      padding: "3px"
+    };
+    var invalidStyle = {
+      border: "1px solid red",
+      "font-size": "14px",
+      padding: "3px"
+    };
+
+
+
   /* Open and close for legacy class */
     $("form.checkout, form#order_review").on("change",'input[name="wc-cardknox-payment-token"]',function () 
     {
@@ -31,13 +53,48 @@ jQuery(function ($) {
     }
   );
 
-  window.onload = function () {
-    if (wc_cardknox_params.enable_3ds == "yes") {
-      enable3DS(wc_cardknox_params.threeds_env, handle3DSResults);
-    } else {
-      enable3DS(wc_cardknox_params.threeds_env, null);
+
+  function setup3DS() {
+      if (is3DSInitialized) {
+        return;
+      }
+      if (!iFieldsReady) {
+        return;
+      }
+      is3DSInitialized = true;
+      if (wc_cardknox_params.enable_3ds == "yes") {
+        enable3DS(wc_cardknox_params.threeds_env, handle3DSResults);
+      } else {
+        enable3DS(wc_cardknox_params.threeds_env, null);
+      }
     }
-  };
+
+  // Initialize 3DS when Cardknox payment method is selected
+  $(document).on("change", 'input[name="payment_method"]', function () {
+    if ($(this).val() === "cardknox") {
+      setup3DS();
+    }
+  });
+
+  // Initialize 3DS when "Use a new payment method" is selected under Cardknox
+  $(document).on("change", 'input[name="wc-cardknox-payment-token"]', function () {
+    if ($(this).val() === "new" && $("#payment_method_cardknox").is(":checked")) {
+      setup3DS();
+    }
+  });
+
+  // Also try to setup 3DS after WooCommerce updates the checkout (AJAX fragments reload)
+  $(document.body).on("updated_checkout", function () {
+    if ($("#payment_method_cardknox").is(":checked")) {
+      // Delay to ensure iFields iframes in the updated DOM are fully loaded
+      setTimeout(function () {
+        setup3DS();
+      }, 2000);
+    }
+  });
+
+
+
 
   function handle3DSResults(
     actionCode,
@@ -436,6 +493,14 @@ jQuery(function ($) {
             : invalidStyle
         );
       });
+
+        // Mark iFields as ready once iframe is loaded and focusable
+        var checkCardLoaded = setInterval(function () {
+          clearInterval(checkCardLoaded);
+          focusIfield('card-number');
+          iFieldsReady = true;
+        }, 1000);
+
     },
   };
 

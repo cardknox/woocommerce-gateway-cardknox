@@ -78,7 +78,7 @@ class WC_Cardknox_API
         $request['xSDKVersion'] =  WC_CARDKNOX_VERSION;
         $request['xSDKName'] =  'CardknoxWooCommerce';
         $request['xSupports64BitRefnum'] = true;
-        $request['xAllowDuplicate'] = 1;
+        
         self::log(" request: " . print_r($request, true));
         self::log(" endpoint: " . self::ENDPOINT);
         $response = wp_safe_remote_post(

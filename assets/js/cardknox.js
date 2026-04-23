@@ -39,7 +39,6 @@ jQuery(function ($) {
     };
 
 
-
   /* Open and close for legacy class */
     $("form.checkout, form#order_review").on("change",'input[name="wc-cardknox-payment-token"]',function () 
     {
@@ -78,7 +77,11 @@ jQuery(function ($) {
 
   // Initialize 3DS when "Use a new payment method" is selected under Cardknox
   $(document).on("change", 'input[name="wc-cardknox-payment-token"]', function () {
-    if ($(this).val() === "new" && $("#payment_method_cardknox").is(":checked")) {
+    var selectedToken = $('input[name="wc-cardknox-payment-token"]:checked').val();
+    var selectedMethod = $('input[name="payment_method"]:checked').val();
+    var isCardknoxActive = selectedMethod === "cardknox" || $("#payment_method_cardknox").is(":checked");
+
+    if (selectedToken === "new" && isCardknoxActive) {
       setup3DS();
     }
   });

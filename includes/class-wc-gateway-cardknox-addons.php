@@ -100,7 +100,7 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
     public function process_subscription_payment($order = '', $amount = 0)
     {
         if ($amount  < WC_Cardknox::get_minimum_amount() / 100) {
-            return new WP_Error('cardknox_error', sprintf(__('Sorry, the minimum allowed order total is %1$s to use this payment method.', 'woocommerce-gateway-cardknox'), wc_price(WC_Cardknox::get_minimum_amount() / 100)));
+            return new WP_Error('cardknox_error', sprintf(__('Sorry, the minimum allowed order total is %1$s to use this payment method.', 'woo-cardknox-gateway'), wc_price(WC_Cardknox::get_minimum_amount() / 100)));
         }
 
         // Get source from order
@@ -241,7 +241,7 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
 
     public function delete_renewal_meta($renewal_order)
     {
-        delete_post_meta(($this->wc_pre_30 ? $renewal_order->id : $renewal_order->get_id()), __( 'Sola Payment ID', 'woocommerce-gateway-cardknox' ) );
+        delete_post_meta(($this->wc_pre_30 ? $renewal_order->id : $renewal_order->get_id()), __( 'Sola Payment ID', 'woo-cardknox-gateway' ) );
         return $renewal_order;
     }
 
@@ -256,7 +256,7 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
         $response = $this->process_subscription_payment($renewal_order, $amount_to_charge);
 
         if (is_wp_error($response)) {
-            $renewal_order->update_status('failed', sprintf(__('Sola Transaction Failed (%s)', 'woocommerce-gateway-cardknox'), $response->get_error_message()));
+            $renewal_order->update_status('failed', sprintf(__('Sola Transaction Failed (%s)', 'woo-cardknox-gateway'), $response->get_error_message()));
         }
     }
 
@@ -371,7 +371,7 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
         $cardknox_masked_card   = get_post_meta(($this->wc_pre_30 ? $subscription->id : $subscription->get_id()), '_cardknox_masked_card', true);
         $cardknox_cardtype      = get_post_meta(($this->wc_pre_30 ? $subscription->id : $subscription->get_id()), '_cardknox_cardtype', true);
 
-        $payment_method_to_display = sprintf(__('Via %1$s card %2$s', 'woocommerce-gateway-cardknox'), $cardknox_cardtype, $cardknox_masked_card);
+        $payment_method_to_display = sprintf(__('Via %1$s card %2$s', 'woo-cardknox-gateway'), $cardknox_cardtype, $cardknox_masked_card);
 
         if (!$cardknox_card_id || !is_string($cardknox_card_id)) {
             $user_id            = $customer_user;

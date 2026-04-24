@@ -32,25 +32,25 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     public function __construct()
     {
         $this->id                   = 'cardknox-applepay';
-        $this->method_title         = __('Sola Apple Pay', 'woocommerce-gateway-cardknox');
+        $this->method_title         = __('Sola Apple Pay', 'woo-cardknox-gateway');
         $this->title                = __('Sola Apple Pay', 'woocommerce-other-payment-gateway');
 
         $methodDescription  = '<div id="apple-pay-settings" class="panel">';
         $methodDescription .= '<div style="margin-top: 30px;">';
-        $methodDescription .= '<h3 style="margin-bottom: 10px;">' . esc_html__( 'Apple Pay Registration Instructions', 'woocommerce-gateway-cardknox' ) . '</h3>';
+        $methodDescription .= '<h3 style="margin-bottom: 10px;">' . esc_html__( 'Apple Pay Registration Instructions', 'woo-cardknox-gateway' ) . '</h3>';
         $methodDescription .= '<ol class="apple-pay-instructions">';
-        $methodDescription .= '<li>' . esc_html__( 'Login to your', 'woocommerce-gateway-cardknox' ) . ' <strong>' . esc_html__( 'Sola Portal', 'woocommerce-gateway-cardknox' ) . '</strong></li>';
-        $methodDescription .= '<li>' . esc_html__( 'Go to', 'woocommerce-gateway-cardknox' ) .' <strong>' . esc_html__( 'Settings > Gateway Settings > Payment Methods', 'woocommerce-gateway-cardknox' ) . '</strong> <a target="_blank" rel="noopener" href="https://portal.solapayments.com/settings/gateway-settings/payment-methods">'. esc_html__( 'Open Link', 'woocommerce-gateway-cardknox' ) . '</a></li>';
-        $methodDescription .= '<li>' . esc_html__( 'Please use this option:', 'woocommerce-gateway-cardknox' ) .' <strong>' . esc_html__( 'Register for Apple Pay with Sola Certificate', 'woocommerce-gateway-cardknox' ) . '</strong></li>';
-        $methodDescription .= '<li>' . esc_html__( 'Click on', 'woocommerce-gateway-cardknox' ) .' <strong>' . esc_html__( 'Register', 'woocommerce-gateway-cardknox' ) . '</strong> ' . esc_html__( 'button', 'woocommerce-gateway-cardknox' ) . '</li>';
-        $methodDescription .= '<li>' . esc_html__( 'Download the Apple developer association certificate file', 'woocommerce-gateway-cardknox' ) . '</li>';
-        $methodDescription .= '<li>' . sprintf(esc_html__( 'Upload Applepay Certificate by click on below %s button', 'woocommerce-gateway-cardknox' ),'<strong>' . esc_html__( '"Choose Certificate"', 'woocommerce-gateway-cardknox' ) . '</strong>') . '</li>';
-        $methodDescription .= '<li>' . esc_html__( 'Save', 'woocommerce-gateway-cardknox' ) . '</li>';
-        $methodDescription .= '<li>' . esc_html__( 'Register domain.', 'woocommerce-gateway-cardknox' ) . '</li>';
+        $methodDescription .= '<li>' . esc_html__( 'Login to your', 'woo-cardknox-gateway' ) . ' <strong>' . esc_html__( 'Sola Portal', 'woo-cardknox-gateway' ) . '</strong></li>';
+        $methodDescription .= '<li>' . esc_html__( 'Go to', 'woo-cardknox-gateway' ) .' <strong>' . esc_html__( 'Settings > Gateway Settings > Payment Methods', 'woo-cardknox-gateway' ) . '</strong> <a target="_blank" rel="noopener" href="https://portal.solapayments.com/settings/gateway-settings/payment-methods">'. esc_html__( 'Open Link', 'woo-cardknox-gateway' ) . '</a></li>';
+        $methodDescription .= '<li>' . esc_html__( 'Please use this option:', 'woo-cardknox-gateway' ) .' <strong>' . esc_html__( 'Register for Apple Pay with Sola Certificate', 'woo-cardknox-gateway' ) . '</strong></li>';
+        $methodDescription .= '<li>' . esc_html__( 'Click on', 'woo-cardknox-gateway' ) .' <strong>' . esc_html__( 'Register', 'woo-cardknox-gateway' ) . '</strong> ' . esc_html__( 'button', 'woo-cardknox-gateway' ) . '</li>';
+        $methodDescription .= '<li>' . esc_html__( 'Download the Apple developer association certificate file', 'woo-cardknox-gateway' ) . '</li>';
+        $methodDescription .= '<li>' . sprintf(esc_html__( 'Upload Applepay Certificate by click on below %s button', 'woo-cardknox-gateway' ),'<strong>' . esc_html__( '"Choose Certificate"', 'woo-cardknox-gateway' ) . '</strong>') . '</li>';
+        $methodDescription .= '<li>' . esc_html__( 'Save', 'woo-cardknox-gateway' ) . '</li>';
+        $methodDescription .= '<li>' . esc_html__( 'Register domain.', 'woo-cardknox-gateway' ) . '</li>';
         $methodDescription .= '</ol></div></div>';
 
         $this->method_description = sprintf(
-            __($methodDescription, 'woocommerce-gateway-cardknox'),
+            __($methodDescription, 'woo-cardknox-gateway'),
             'https://www.cardknox.com'
         );
         $this->has_fields           = true;
@@ -80,7 +80,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         $this->enabled                          = $this->get_option('applepay_enabled');
         $this->appleQuickCheckout               = $this->get_option('applepay_quickcheckout');
         $this->title                            = $this->get_option('applepay_title');
-        $this->description                      = __('Pay with your apple card.', 'woocommerce-gateway-cardknox');
+        $this->description                      = __('Pay with your apple card.', 'woo-cardknox-gateway');
         $this->applepaymerchantidentifier       = $this->get_option('applepay_merchant_identifier');
         $this->applepay_environment             = $this->get_option('applepay_environment');
         $this->applepay_button_style            = $this->get_option('applepay_button_style');
@@ -164,18 +164,18 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         // Extra upload error mapping (in case error is not OK).
         if (UPLOAD_ERR_OK !== (int) $uploaded_file['error']) {
             $upload_errors = array(
-                UPLOAD_ERR_INI_SIZE   => __('The uploaded file exceeds the upload_max_filesize directive in php.ini.', 'woocommerce-gateway-cardknox'),
-                UPLOAD_ERR_FORM_SIZE  => __('The uploaded file exceeds the MAX_FILE_SIZE directive specified in the HTML form.', 'woocommerce-gateway-cardknox'),
-                UPLOAD_ERR_PARTIAL    => __('The uploaded file was only partially uploaded.', 'woocommerce-gateway-cardknox'),
-                UPLOAD_ERR_NO_FILE    => __('No file was uploaded.', 'woocommerce-gateway-cardknox'),
-                UPLOAD_ERR_NO_TMP_DIR => __('Missing a temporary folder.', 'woocommerce-gateway-cardknox'),
-                UPLOAD_ERR_CANT_WRITE => __('Failed to write file to disk.', 'woocommerce-gateway-cardknox'),
-                UPLOAD_ERR_EXTENSION  => __('A PHP extension stopped the file upload.', 'woocommerce-gateway-cardknox'),
+                UPLOAD_ERR_INI_SIZE   => __('The uploaded file exceeds the upload_max_filesize directive in php.ini.', 'woo-cardknox-gateway'),
+                UPLOAD_ERR_FORM_SIZE  => __('The uploaded file exceeds the MAX_FILE_SIZE directive specified in the HTML form.', 'woo-cardknox-gateway'),
+                UPLOAD_ERR_PARTIAL    => __('The uploaded file was only partially uploaded.', 'woo-cardknox-gateway'),
+                UPLOAD_ERR_NO_FILE    => __('No file was uploaded.', 'woo-cardknox-gateway'),
+                UPLOAD_ERR_NO_TMP_DIR => __('Missing a temporary folder.', 'woo-cardknox-gateway'),
+                UPLOAD_ERR_CANT_WRITE => __('Failed to write file to disk.', 'woo-cardknox-gateway'),
+                UPLOAD_ERR_EXTENSION  => __('A PHP extension stopped the file upload.', 'woo-cardknox-gateway'),
             );
 
             $error_message = isset($upload_errors[$uploaded_file['error']])
                 ? $upload_errors[$uploaded_file['error']]
-                : __('An unknown error occurred during file upload.', 'woocommerce-gateway-cardknox');
+                : __('An unknown error occurred during file upload.', 'woo-cardknox-gateway');
 
             wc_add_notice($error_message, 'error');
             return;
@@ -198,7 +198,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         if (! empty($file_ext)) {
             $this->addUniqueSettingsError(
                 'invalid_extension',
-                __('Invalid file extension. Only files without extensions are allowed.', 'woocommerce-gateway-cardknox')
+                __('Invalid file extension. Only files without extensions are allowed.', 'woo-cardknox-gateway')
             );
             return;
         }
@@ -206,7 +206,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         if ('apple-developer-merchantid-domain-association' !== $target_filename) {
             $this->addUniqueSettingsError(
                 'invalid_filename',
-                __('Invalid filename. Only apple-developer-merchantid-domain-association is allowed.', 'woocommerce-gateway-cardknox')
+                __('Invalid filename. Only apple-developer-merchantid-domain-association is allowed.', 'woo-cardknox-gateway')
             );
             return;
         }
@@ -215,7 +215,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         if (! $finfo) {
             $this->addUniqueSettingsError(
                 'fileinfo_error',
-                __('Server error: Unable to open file info.', 'woocommerce-gateway-cardknox')
+                __('Server error: Unable to open file info.', 'woo-cardknox-gateway')
             );
             return;
         }
@@ -226,7 +226,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         if ('text/plain' !== $mime_type) {
             $this->addUniqueSettingsError(
                 'invalid_mime_type',
-                __('Invalid file type. Only plain text files are allowed.', 'woocommerce-gateway-cardknox')
+                __('Invalid file type. Only plain text files are allowed.', 'woo-cardknox-gateway')
             );
             return;
         }
@@ -244,7 +244,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         if (! is_dir($target_dir)) {
             $this->addUniqueSettingsError(
                 'well_known_create_failed',
-                __('Unable to create the .well-known directory.', 'woocommerce-gateway-cardknox')
+                __('Unable to create the .well-known directory.', 'woo-cardknox-gateway')
             );
             return;
         }
@@ -275,7 +275,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         if (! move_uploaded_file($tmp_path, $target_path)) {
             $this->addUniqueSettingsError(
                 'move_failed',
-                __('Failed to move uploaded Apple Pay verification file.', 'woocommerce-gateway-cardknox')
+                __('Failed to move uploaded Apple Pay verification file.', 'woo-cardknox-gateway')
             );
             return;
         }
@@ -284,7 +284,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         if (! file_exists($target_path) || ! is_readable($target_path)) {
             $this->addUniqueSettingsError(
                 'applepay_file_not_readable',
-                __('Apple Pay verification file was uploaded but is not readable on the server.', 'woocommerce-gateway-cardknox')
+                __('Apple Pay verification file was uploaded but is not readable on the server.', 'woo-cardknox-gateway')
             );
             return;
         }
@@ -297,7 +297,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         if (empty($host)) {
             $this->addUniqueSettingsError(
                 'invalid_home_url',
-                __('Unable to determine site host for verification URL.', 'woocommerce-gateway-cardknox')
+                __('Unable to determine site host for verification URL.', 'woo-cardknox-gateway')
             );
             return;
         }
@@ -319,7 +319,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
                 'applepay_domain_inaccessible',
                 sprintf(
                     /* translators: %s: error message */
-                    __('Apple Pay domain is Inaccessible. %s', 'woocommerce-gateway-cardknox'),
+                    __('Apple Pay domain is Inaccessible. %s', 'woo-cardknox-gateway'),
                     $response->get_error_message()
                 )
             );
@@ -331,7 +331,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
                 add_settings_error(
                     'woocommerce_cardknox_applepay',
                     'applepay_domain_accessible',
-                    __('Apple Pay domain is Accessible (200 OK).', 'woocommerce-gateway-cardknox'),
+                    __('Apple Pay domain is Accessible (200 OK).', 'woo-cardknox-gateway'),
                     'updated'
                 );
             } else {
@@ -339,7 +339,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
                     'applepay_domain_inaccessible',
                     sprintf(
                         /* translators: %d: HTTP status code */
-                        __('Apple Pay domain is Inaccessible. HTTP Status Code: %d', 'woocommerce-gateway-cardknox'),
+                        __('Apple Pay domain is Inaccessible. HTTP Status Code: %d', 'woo-cardknox-gateway'),
                         (int) $status_code
                     )
                 );
@@ -451,20 +451,20 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
             if (! empty($existing_url)) {
 
-                $desc .= '<br><strong>' . esc_html__('Current uploaded Apple Pay file:', 'woocommerce-gateway-cardknox') . '</strong> ';
+                $desc .= '<br><strong>' . esc_html__('Current uploaded Apple Pay file:', 'woo-cardknox-gateway') . '</strong> ';
                 $desc .= sprintf(
                     '<a href="%1$s" target="_blank" rel="noopener noreferrer">%1$s</a>',
                     esc_url($existing_url)
                 );
 
-                $desc .= '<br><small><code>' . esc_html__('Path:', 'woocommerce-gateway-cardknox') . ' ' . esc_html($target_path) . '</code></small>';
+                $desc .= '<br><small><code>' . esc_html__('Path:', 'woo-cardknox-gateway') . ' ' . esc_html($target_path) . '</code></small>';
             } else {
 
-                $desc .= '<br><strong>' . esc_html__('No Apple Pay verification file found.', 'woocommerce-gateway-cardknox') . '</strong>';
+                $desc .= '<br><strong>' . esc_html__('No Apple Pay verification file found.', 'woo-cardknox-gateway') . '</strong>';
 
                 if ($has_similar) {
                     $desc .= '<br><small style="color:#b32d2e;">' .
-                        esc_html__('A similar/renamed file exists, but Apple requires the exact filename:', 'woocommerce-gateway-cardknox') .
+                        esc_html__('A similar/renamed file exists, but Apple requires the exact filename:', 'woo-cardknox-gateway') .
                         ' <code>' . esc_html($filename) . '</code></small>';
                 }
             }
@@ -646,7 +646,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
                         sprintf(
                             __(
                                 'Sorry, the minimum allowed order total is %1$s to use this payment method.',
-                                'woocommerce-gateway-cardknox'
+                                'woo-cardknox-gateway'
                             ),
                             wc_price(WC_Cardknox::get_minimum_amount() / 100)
                         )
@@ -660,7 +660,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
                 if (is_wp_error($response)) {
                     $order->add_order_note($response->get_error_message());
-                    throw new WC_Data_Exception('cardknox_declined', __('The transaction was declined, please try again.', 'woocommerce-gateway-cardknox'));
+                    throw new WC_Data_Exception('cardknox_declined', __('The transaction was declined, please try again.', 'woo-cardknox-gateway'));
                 }
 
                 $this->log("Info: set_transaction_id");
@@ -689,7 +689,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             );
         } catch (Exception $e) {
             wc_add_notice($e->getMessage(), 'error');
-            $this->log(sprintf(__('Error: %s', 'woocommerce-gateway-cardknox'), $e->getMessage()));
+            $this->log(sprintf(__('Error: %s', 'woo-cardknox-gateway'), $e->getMessage()));
 
             if ($order->has_status(array('pending', 'failed'))) {
                 $this->send_failed_order_email($orderId);
@@ -728,7 +728,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             $message = sprintf(
                 __(
                     'Sola transaction captured (capture RefNum: %s)',
-                    'woocommerce-gateway-cardknox'
+                    'woo-cardknox-gateway'
                 ),
                 $response['xRefNum']
             );
@@ -753,7 +753,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
                         __(
                             'Sola charge authorized (Charge ID: %s).
                     Process order to take payment, or cancel to remove the pre-authorization.',
-                            'woocommerce-gateway-cardknox'
+                            'woo-cardknox-gateway'
                         ),
                         $response['xRefNum']
                     )
@@ -763,7 +763,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
                     __(
                         'Sola charge authorized (Charge ID: %s).
                     Complete order to take payment, or cancel to remove the pre-authorization.',
-                        'woocommerce-gateway-cardknox'
+                        'woo-cardknox-gateway'
                     ),
                     $response['xRefNum']
                 ));
@@ -797,7 +797,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             if (!is_null($amount)) {
                 if ($amount < .01) {
                     $this->log('Error: Amount Required ' . $amount);
-                    $error_message = __('Refund Amount Required.', 'woocommerce-gateway-cardknox');
+                    $error_message = __('Refund Amount Required.', 'woo-cardknox-gateway');
                     return new WP_Error('Error', $error_message . ' ' . $amount);
                 } else {
                     $body['xAmount'] = $this->get_cardknox_amount($amount);
@@ -824,7 +824,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
                     $this->log('Success: ' . html_entity_decode(strip_tags((string) $refundMessage)));
                     $result = true;
                 } else {
-                    $result = new WP_Error('refund_failed', __('Refund failed', 'woocommerce-gateway-cardknox'));
+                    $result = new WP_Error('refund_failed', __('Refund failed', 'woo-cardknox-gateway'));
                 }
             }
         }
@@ -838,7 +838,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
         if ($total != $amount) {
             if ($captured === "no") {
-                return new WP_Error('Error', __('Partial Refund Not Allowed On Authorize Only Transactions', 'woocommerce-gateway-cardknox'));
+                return new WP_Error('Error', __('Partial Refund Not Allowed On Authorize Only Transactions', 'woo-cardknox-gateway'));
             } else {
                 return 'cc:refund';
             }
@@ -850,7 +850,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
     private function getRefundMessage($response, $reason)
     {
         return sprintf(
-            __('Refunded %1$s - Refund ID: %2$s - Reason: %3$s', 'woocommerce-gateway-cardknox'),
+            __('Refunded %1$s - Refund ID: %2$s - Reason: %3$s', 'woo-cardknox-gateway'),
             wc_price($response['xAuthAmount']),
             $response['xRefNum'],
             $reason

@@ -30,7 +30,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
     public function __construct()
     {
         $this->id                   = 'cardknox-googlepay';
-        $this->method_title         = __('Sola Google Pay', 'woocommerce-gateway-cardknox');
+        $this->method_title         = __('Sola Google Pay', 'woo-cardknox-gateway');
         $this->title                = __('Sola', 'woocommerce-other-payment-gateway');
         $this->method_description   = __('Sola Google Pay', 'woocommerce-other-payment-gateway');
         $this->has_fields           = true;
@@ -61,7 +61,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         $this->enabled                          = $this->get_option('googlepay_enabled');
         $this->googlepayQuickCheckout           = $this->get_option('googlepay_quickcheckout');
         $this->title                            = $this->get_option('googlepay_title');
-        $this->description                      = __('Pay with your Google Pay.', 'woocommerce-gateway-cardknox');
+        $this->description                      = __('Pay with your Google Pay.', 'woo-cardknox-gateway');
         $this->googlepayMerchantName            = $this->get_option('googlepay_merchant_name');
         $this->googlepayEnvironment             = $this->get_option('googlepay_environment');
         $this->googlepayButtonStyle             = $this->get_option('googlepay_button_style');
@@ -329,7 +329,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
                         sprintf(
                             __(
                                 'Sorry, the minimum allowed order total is %1$s to use this payment method.',
-                                'woocommerce-gateway-cardknox'
+                                'woo-cardknox-gateway'
                             ),
                             wc_price(WC_Cardknox::get_minimum_amount() / 100)
                         )
@@ -345,7 +345,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
 
                 if (is_wp_error($response)) {
                     $orderGooglePay->add_order_note($response->get_error_message());
-                    throw new WC_Data_Exception( 'cardknox_declined', __( 'The transaction was declined, please try again.', 'woocommerce-gateway-cardknox' ) );
+                    throw new WC_Data_Exception( 'cardknox_declined', __( 'The transaction was declined, please try again.', 'woo-cardknox-gateway' ) );
                 }
 
                 $this->glog("Info: set_transaction_id");
@@ -374,7 +374,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
             );
         } catch (Exception $e) {
             wc_add_notice($e->getMessage(), 'error');
-            $this->glog(sprintf(__('Error: %s', 'woocommerce-gateway-cardknox'), $e->getMessage()));
+            $this->glog(sprintf(__('Error: %s', 'woo-cardknox-gateway'), $e->getMessage()));
 
             if ($orderGooglePay->has_status(array('pending', 'failed'))) {
                 $this->send_failed_order_gemailg($orderId);
@@ -413,7 +413,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
             $message = sprintf(
                 __(
                     'Cardknox transaction captured (capture RefNum: %s)',
-                    'woocommerce-gateway-cardknox'
+                    'woo-cardknox-gateway'
                 ),
                 $response['xRefNum']
             );
@@ -438,7 +438,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
                         __(
                             'Cardknox charge authorized (Charge ID: %s).
                     Process order to take payment, or cancel to remove the pre-authorization.',
-                            'woocommerce-gateway-cardknox'
+                            'woo-cardknox-gateway'
                         ),
                         $response['xRefNum']
                     )
@@ -448,7 +448,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
                     __(
                         'Cardknox charge authorized (Charge ID: %s).
                     Complete order to take payment, or cancel to remove the pre-authorization.',
-                        'woocommerce-gateway-cardknox'
+                        'woo-cardknox-gateway'
                     ),
                     $response['xRefNum']
                 ));
@@ -481,7 +481,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
 
             if (!is_null($amount) && $amount < 0.01) {
                 $this->glog('Error: Amount Required ' . $amount);
-                $result = new WP_Error('Error', __( 'Refund Amount Required', 'woocommerce-gateway-cardknox') . $amount);
+                $result = new WP_Error('Error', __( 'Refund Amount Required', 'woo-cardknox-gateway') . $amount);
                 
             } else {
                 if (!is_null($amount)) {
@@ -508,7 +508,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
                         $this->glog('Success: ' . html_entity_decode(strip_tags((string) $refundMessage)));
                         $result = true;
                     } else {
-                        $result = new WP_Error('refund_failed', __( 'Refund failed', 'woocommerce-gateway-cardknox' ));
+                        $result = new WP_Error('refund_failed', __( 'Refund failed', 'woo-cardknox-gateway' ));
                     }
                 }
             }
@@ -523,7 +523,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
 
         if ($total != $amount) {
             if ($captured === "no") {
-                return new WP_Error('Error', __( 'Partial Refund Not Allowed On Authorize Only Transactions', 'woocommerce-gateway-cardknox' ) );
+                return new WP_Error('Error', __( 'Partial Refund Not Allowed On Authorize Only Transactions', 'woo-cardknox-gateway' ) );
             } else {
                 return 'cc:refund';
             }
@@ -535,7 +535,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
     private function getRefundMessageg($response, $reason)
     {
         return sprintf(
-            __('Refunded %1$s - Refund ID: %2$s - Reason: %3$s', 'woocommerce-gateway-cardknox'),
+            __('Refunded %1$s - Refund ID: %2$s - Reason: %3$s', 'woo-cardknox-gateway'),
             wc_price($response['xAuthAmount']),
             $response['xRefNum'],
             $reason

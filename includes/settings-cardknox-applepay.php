@@ -18,7 +18,7 @@ $fileType = 'file';
 $wc_cardknox_apple_pay_settings = array(
 
     $keyPrefix . '_certificate' => array(
-        'title'    => __('Apple Certificate', 'woocommerce-gateway-cardknox'),
+        'title'    => __('Apple Certificate', 'woo-cardknox-gateway'),
         'type'     => $fileType,
         'css'      => 'position: absolute;z-index: 999;min-height: 44px;opacity: 1;padding-left: 160px;top: 30px; width: 700px;',
         'custom_attributes' => array(
@@ -31,61 +31,61 @@ $wc_cardknox_apple_pay_settings = array(
         ',
     ),    
     $keyPrefix . '_enabled' => array(
-        $keyTitle       => __('Enabled', 'woocommerce-gateway-cardknox'),
+        $keyTitle       => __('Enabled', 'woo-cardknox-gateway'),
         $keyType        => $selectType,
         $keyOptions     => array(
-            'no'     => __('No', 'woocommerce-gateway-cardknox'),
-            'yes'    => __('Yes', 'woocommerce-gateway-cardknox'),
+            'no'     => __('No', 'woo-cardknox-gateway'),
+            'yes'    => __('Yes', 'woo-cardknox-gateway'),
         ),
     ),
     $keyPrefix . '_quickcheckout' => array(
-        $keyTitle       => __('Disable Quick Checkout to Cart Page', 'woocommerce-gateway-cardknox'),
+        $keyTitle       => __('Disable Quick Checkout to Cart Page', 'woo-cardknox-gateway'),
         $keyType        => 'checkbox',
         'description' => __(
             'Disable Quick Checkout to Cart Page',
-            'woocommerce-gateway-cardknox'
+            'woo-cardknox-gateway'
         ),
         $keyDefault    => 'no',
         $keyDescTip    => true,
     ),
     $keyPrefix . '_title' => array(
-        $keyTitle       => __('Title', 'woocommerce-gateway-cardknox'),
+        $keyTitle       => __('Title', 'woo-cardknox-gateway'),
         $keyType        => $textType,
-        $keyDefault     => __('Apple Pay', 'woocommerce-gateway-cardknox'),
+        $keyDefault     => __('Apple Pay', 'woo-cardknox-gateway'),
     ),
     $keyPrefix . '_merchant_identifier' => array(
-        $keyTitle       => __('Merchant Identifier', 'woocommerce-gateway-cardknox'),
+        $keyTitle       => __('Merchant Identifier', 'woo-cardknox-gateway'),
         $keyType        => $textType,
-        $keyDefault     => __('merchant.cardknox.com', 'woocommerce-gateway-cardknox'),
+        $keyDefault     => __('merchant.cardknox.com', 'woo-cardknox-gateway'),
     ),
     $keyPrefix . '_environment' => array(
-        $keyTitle       => __('Environment', 'woocommerce-gateway-cardknox'),
+        $keyTitle       => __('Environment', 'woo-cardknox-gateway'),
         $keyType        => $selectType,
         $keyOptions     => array(
-            'TEST'          => __('Test', 'woocommerce-gateway-cardknox'),
-            'PRODUCTION'    => __('Production', 'woocommerce-gateway-cardknox'),
+            'TEST'          => __('Test', 'woo-cardknox-gateway'),
+            'PRODUCTION'    => __('Production', 'woo-cardknox-gateway'),
         ),
     ),
     $keyPrefix . '_button_style' => array(
-        $keyTitle       => __($buttonPrefix . ' Style', 'woocommerce-gateway-cardknox'),
+        $keyTitle       => __($buttonPrefix . ' Style', 'woo-cardknox-gateway'),
         $keyType        => $selectType,
         $keyOptions     => array(
-            'black'          => __('Black', 'woocommerce-gateway-cardknox'),
-            'white'          => __('White', 'woocommerce-gateway-cardknox'),
-            'whiteOutline'   => __('WhiteOutline', 'woocommerce-gateway-cardknox'),
+            'black'          => __('Black', 'woo-cardknox-gateway'),
+            'white'          => __('White', 'woo-cardknox-gateway'),
+            'whiteOutline'   => __('WhiteOutline', 'woo-cardknox-gateway'),
         ),
     ),
     $keyPrefix . '_button_type' => array(
-        $keyTitle       => __($buttonPrefix . ' Type', 'woocommerce-gateway-cardknox'),
+        $keyTitle       => __($buttonPrefix . ' Type', 'woo-cardknox-gateway'),
         $keyType        => $selectType,
         $keyOptions     => array(
-            'buy'            => __('Buy', 'woocommerce-gateway-cardknox'),
-            'pay'            => __('Pay', 'woocommerce-gateway-cardknox'),
-            'plain'          => __('Plain', 'woocommerce-gateway-cardknox'),
-            'order'          => __('Order', 'woocommerce-gateway-cardknox'),
-            'donate'         => __('Donate', 'woocommerce-gateway-cardknox'),
-            'continue'       => __('Continue', 'woocommerce-gateway-cardknox'),
-            'checkout '      => __('Checkout', 'woocommerce-gateway-cardknox'),
+            'buy'            => __('Buy', 'woo-cardknox-gateway'),
+            'pay'            => __('Pay', 'woo-cardknox-gateway'),
+            'plain'          => __('Plain', 'woo-cardknox-gateway'),
+            'order'          => __('Order', 'woo-cardknox-gateway'),
+            'donate'         => __('Donate', 'woo-cardknox-gateway'),
+            'continue'       => __('Continue', 'woo-cardknox-gateway'),
+            'checkout '      => __('Checkout', 'woo-cardknox-gateway'),
         ),
     )
 );

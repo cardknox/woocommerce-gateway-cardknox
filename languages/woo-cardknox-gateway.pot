@@ -1,0 +1,845 @@
+# Copyright (C) 2026 Sola Payments.
+# This file is distributed under the same license as the WooCommerce Cardknox Gateway plugin.
+msgid ""
+msgstr ""
+"Project-Id-Version: WooCommerce Cardknox Gateway 1.2.85\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/woo-cardknox-gateway\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-03-13T13:46:59+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: woo-cardknox-gateway\n"
+
+#. Plugin Name of the plugin
+#: woocommerce-gateway-cardknox.php
+msgid "WooCommerce Cardknox Gateway"
+msgstr ""
+
+#. Description of the plugin
+#: woocommerce-gateway-cardknox.php
+msgid "Accept payments via credit card, Apple Pay, Google Pay, and manage transactions within WordPress."
+msgstr ""
+
+#. Author of the plugin
+#: woocommerce-gateway-cardknox.php
+msgid "Sola Payments."
+msgstr ""
+
+#. Author URI of the plugin
+#: woocommerce-gateway-cardknox.php
+msgid "https://solapayments.com/"
+msgstr ""
+
+#: includes/class-wc-cardknox-api.php:95
+#: includes/class-wc-cardknox-api.php:110
+msgid "There was a problem connecting to the payment gateway."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-addons.php:103
+#: includes/class-wc-gateway-cardknox-applepay.php:647
+#: includes/class-wc-gateway-cardknox-googlepay.php:330
+#: includes/class-wc-gateway-cardknox.php:657
+#: includes/legacy/class-wc-gateway-cardknox.php:345
+#, php-format
+msgid "Sorry, the minimum allowed order total is %1$s to use this payment method."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-addons.php:244
+msgid "Sola Payment ID"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-addons.php:259
+#, php-format
+msgid "Sola Transaction Failed (%s)"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-addons.php:374
+#, php-format
+msgid "Via %1$s card %2$s"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:35
+msgid "Sola Apple Pay"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:40
+#: includes/class-wc-gateway-cardknox.php:1375
+msgid "Apple Pay Registration Instructions"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:42
+#: includes/class-wc-gateway-cardknox.php:1377
+msgid "Login to your"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:42
+#: includes/class-wc-gateway-cardknox.php:1377
+msgid "Sola Portal"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:43
+#: includes/class-wc-gateway-cardknox.php:1379
+msgid "Go to"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:43
+#: includes/class-wc-gateway-cardknox.php:1380
+msgid "Settings > Gateway Settings > Payment Methods"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:43
+#: includes/class-wc-gateway-cardknox.php:1382
+msgid "Open Link"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:44
+#: includes/class-wc-gateway-cardknox.php:1385
+msgid "Please use this option:"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:44
+#: includes/class-wc-gateway-cardknox.php:1385
+msgid "Register for Apple Pay with Sola Certificate"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:45
+#: includes/class-wc-gateway-cardknox.php:1386
+msgid "Click on"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:45
+#: includes/class-wc-gateway-cardknox.php:1386
+msgid "Register"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:45
+#: includes/class-wc-gateway-cardknox.php:1386
+msgid "button"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:46
+#: includes/class-wc-gateway-cardknox.php:1387
+msgid "Download the Apple developer association certificate file"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:47
+#: includes/class-wc-gateway-cardknox.php:1388
+#, php-format
+msgid "Upload Applepay Certificate by click on below %s button"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:47
+#: includes/class-wc-gateway-cardknox.php:1388
+msgid "\"Choose Certificate\""
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:48
+#: includes/class-wc-gateway-cardknox.php:1389
+msgid "Save"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:49
+#: includes/class-wc-gateway-cardknox.php:1390
+msgid "Register domain."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:83
+msgid "Pay with your apple card."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:167
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:168
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive specified in the HTML form."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:169
+msgid "The uploaded file was only partially uploaded."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:170
+msgid "No file was uploaded."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:171
+msgid "Missing a temporary folder."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:172
+msgid "Failed to write file to disk."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:173
+msgid "A PHP extension stopped the file upload."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:178
+msgid "An unknown error occurred during file upload."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:201
+msgid "Invalid file extension. Only files without extensions are allowed."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:209
+msgid "Invalid filename. Only apple-developer-merchantid-domain-association is allowed."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:218
+msgid "Server error: Unable to open file info."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:229
+msgid "Invalid file type. Only plain text files are allowed."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:247
+msgid "Unable to create the .well-known directory."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:278
+msgid "Failed to move uploaded Apple Pay verification file."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:287
+msgid "Apple Pay verification file was uploaded but is not readable on the server."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:300
+msgid "Unable to determine site host for verification URL."
+msgstr ""
+
+#. translators: %s: error message
+#: includes/class-wc-gateway-cardknox-applepay.php:322
+#, php-format
+msgid "Apple Pay domain is Inaccessible. %s"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:334
+msgid "Apple Pay domain is Accessible (200 OK)."
+msgstr ""
+
+#. translators: %d: HTTP status code
+#: includes/class-wc-gateway-cardknox-applepay.php:342
+#, php-format
+msgid "Apple Pay domain is Inaccessible. HTTP Status Code: %d"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:454
+msgid "Current uploaded Apple Pay file:"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:460
+msgid "Path:"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:463
+msgid "No Apple Pay verification file found."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:467
+msgid "A similar/renamed file exists, but Apple requires the exact filename:"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:663
+#: includes/class-wc-gateway-cardknox-googlepay.php:348
+#: includes/class-wc-gateway-cardknox.php:698
+#: woocommerce-gateway-cardknox.php:1119
+msgid "The transaction was declined, please try again."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:692
+#: includes/class-wc-gateway-cardknox-googlepay.php:377
+#: includes/class-wc-gateway-cardknox.php:749
+#: includes/legacy/class-wc-gateway-cardknox.php:382
+#: woocommerce-gateway-cardknox.php:1107
+#: woocommerce-gateway-cardknox.php:1149
+#, php-format
+msgid "Error: %s"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:729
+#: includes/class-wc-gateway-cardknox.php:981
+#: includes/legacy/class-wc-gateway-cardknox.php:417
+#, php-format
+msgid "Sola transaction captured (capture RefNum: %s)"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:753
+#, php-format
+msgid ""
+"Sola charge authorized (Charge ID: %s).\n"
+"                    Process order to take payment, or cancel to remove the pre-authorization."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:763
+#, php-format
+msgid ""
+"Sola charge authorized (Charge ID: %s).\n"
+"                    Complete order to take payment, or cancel to remove the pre-authorization."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:800
+msgid "Refund Amount Required."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:827
+#: includes/class-wc-gateway-cardknox-googlepay.php:511
+msgid "Refund failed"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:841
+#: includes/class-wc-gateway-cardknox-googlepay.php:526
+#: includes/class-wc-gateway-cardknox.php:1114
+#: includes/legacy/class-wc-gateway-cardknox.php:481
+msgid "Partial Refund Not Allowed On Authorize Only Transactions"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-applepay.php:853
+#: includes/class-wc-gateway-cardknox-googlepay.php:538
+#: includes/class-wc-gateway-cardknox.php:1132
+#, php-format
+msgid "Refunded %1$s - Refund ID: %2$s - Reason: %3$s"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-googlepay.php:33
+msgid "Sola Google Pay"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-googlepay.php:64
+msgid "Pay with your Google Pay."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-googlepay.php:414
+#, php-format
+msgid "Cardknox transaction captured (capture RefNum: %s)"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-googlepay.php:438
+#, php-format
+msgid ""
+"Cardknox charge authorized (Charge ID: %s).\n"
+"                    Process order to take payment, or cancel to remove the pre-authorization."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-googlepay.php:448
+#, php-format
+msgid ""
+"Cardknox charge authorized (Charge ID: %s).\n"
+"                    Complete order to take payment, or cancel to remove the pre-authorization."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox-googlepay.php:484
+msgid "Refund Amount Required"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox.php:88
+#: includes/legacy/class-wc-gateway-cardknox.php:67
+msgid "Sola"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox.php:89
+#, php-format
+msgid "Sola works by adding credit card fields on the checkout and then sending the details to Sola for verification. <a href=\"%1$s\" target=\"_blank\">Sign up</a> for a Sola account."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox.php:270
+#: includes/legacy/class-wc-gateway-cardknox.php:186
+#, php-format
+msgid "Sola is enabled, but the <a href=\"%1$s\">force SSL option</a> is disabled; your checkout may not be secure! Please enable SSL and ensure your server has a valid <a href=\"%2$s\" target=\"_blank\">SSL certificate</a> - Sola will only work in test mode."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox.php:353
+msgid "Add Card"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox.php:416
+msgid "Missing Trasnaction Key. Please set the trasnaction key field above and re-try."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox.php:474
+#: includes/legacy/class-wc-gateway-cardknox.php:280
+msgid "Please accept the terms and conditions first"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox.php:475
+#: includes/legacy/class-wc-gateway-cardknox.php:281
+msgid "Please fill in required checkout fields first"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox.php:598
+msgid "Required: card number"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox.php:601
+msgid "Required: CVV"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox.php:993
+#: includes/legacy/class-wc-gateway-cardknox.php:429
+#, php-format
+msgid "Sola charge authorized (Charge ID: %s). Process order to take payment, or cancel to remove the pre-authorization."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox.php:995
+#: includes/legacy/class-wc-gateway-cardknox.php:431
+#, php-format
+msgid "Sola charge authorized (Charge ID: %s). Complete order to take payment, or cancel to remove the pre-authorization."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox.php:1014
+#: includes/class-wc-gateway-cardknox.php:1034
+#: includes/class-wc-gateway-cardknox.php:1049
+msgid "There was a problem adding the card."
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox.php:1060
+msgid "An error occurred while Adding Payment Method."
+msgstr ""
+
+#. translators: %s = refund amount
+#: includes/class-wc-gateway-cardknox.php:1100
+#: includes/legacy/class-wc-gateway-cardknox.php:466
+#, php-format
+msgid "Refund Amount Required %s"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox.php:1341
+msgid "Last 4 Digits Of Credit Card:"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox.php:1354
+#: includes/settings-cardknox.php:39
+msgid "Credit Card"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox.php:1355
+#: includes/settings-cardknox-applepay.php:54
+msgid "Apple Pay"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox.php:1356
+#: includes/settings-cardknox-googlepay.php:40
+msgid "Google Pay"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox.php:1362
+msgid "Credit Card Settings"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox.php:1401
+msgid "Apple Pay Settings"
+msgstr ""
+
+#: includes/class-wc-gateway-cardknox.php:1416
+msgid "Google Pay Settings"
+msgstr ""
+
+#: includes/legacy/class-wc-gateway-cardknox.php:68
+msgid "Sola works by adding credit card fields on the checkout and then sending the details to Sola for verification."
+msgstr ""
+
+#: includes/legacy/class-wc-gateway-cardknox.php:161
+#, php-format
+msgid "Sola error: Please enter your transaction key <a href=\"%s\">here</a>"
+msgstr ""
+
+#: includes/legacy/class-wc-gateway-cardknox.php:168
+#, php-format
+msgid "Sola error: Please enter your token key <a href=\"%s\">here</a>"
+msgstr ""
+
+#: includes/legacy/class-wc-gateway-cardknox.php:177
+msgid "Sola error: Your transaction and token keys match. Please check and re-enter."
+msgstr ""
+
+#: includes/legacy/class-wc-gateway-cardknox.php:298
+#, php-format
+msgid "%s - Order %s"
+msgstr ""
+
+#: includes/legacy/class-wc-gateway-cardknox.php:498
+#, php-format
+msgid "Refunded %s - Refund ID: %s - Reason: %s"
+msgstr ""
+
+#: includes/settings-cardknox-applepay.php:21
+msgid "Apple Certificate"
+msgstr ""
+
+#: includes/settings-cardknox-applepay.php:34
+#: includes/settings-cardknox-googlepay.php:19
+msgid "Enabled"
+msgstr ""
+
+#: includes/settings-cardknox-applepay.php:37
+#: includes/settings-cardknox-googlepay.php:22
+msgid "No"
+msgstr ""
+
+#: includes/settings-cardknox-applepay.php:38
+#: includes/settings-cardknox-googlepay.php:23
+msgid "Yes"
+msgstr ""
+
+#: includes/settings-cardknox-applepay.php:42
+#: includes/settings-cardknox-applepay.php:44
+#: includes/settings-cardknox-googlepay.php:28
+#: includes/settings-cardknox-googlepay.php:30
+msgid "Disable Quick Checkout to Cart Page"
+msgstr ""
+
+#: includes/settings-cardknox-applepay.php:52
+#: includes/settings-cardknox-googlepay.php:38
+#: includes/settings-cardknox.php:36
+msgid "Title"
+msgstr ""
+
+#: includes/settings-cardknox-applepay.php:57
+msgid "Merchant Identifier"
+msgstr ""
+
+#: includes/settings-cardknox-applepay.php:59
+msgid "merchant.cardknox.com"
+msgstr ""
+
+#: includes/settings-cardknox-applepay.php:62
+#: includes/settings-cardknox-googlepay.php:48
+msgid "Environment"
+msgstr ""
+
+#: includes/settings-cardknox-applepay.php:65
+#: includes/settings-cardknox-googlepay.php:51
+msgid "Test"
+msgstr ""
+
+#: includes/settings-cardknox-applepay.php:66
+#: includes/settings-cardknox-googlepay.php:52
+#: includes/settings-cardknox.php:141
+msgid "Production"
+msgstr ""
+
+#: includes/settings-cardknox-applepay.php:73
+#: includes/settings-cardknox-googlepay.php:59
+msgid "Black"
+msgstr ""
+
+#: includes/settings-cardknox-applepay.php:74
+#: includes/settings-cardknox-googlepay.php:60
+msgid "White"
+msgstr ""
+
+#: includes/settings-cardknox-applepay.php:75
+msgid "WhiteOutline"
+msgstr ""
+
+#: includes/settings-cardknox-applepay.php:82
+msgid "Buy"
+msgstr ""
+
+#: includes/settings-cardknox-applepay.php:83
+msgid "Pay"
+msgstr ""
+
+#: includes/settings-cardknox-applepay.php:84
+msgid "Plain"
+msgstr ""
+
+#: includes/settings-cardknox-applepay.php:85
+msgid "Order"
+msgstr ""
+
+#: includes/settings-cardknox-applepay.php:86
+msgid "Donate"
+msgstr ""
+
+#: includes/settings-cardknox-applepay.php:87
+msgid "Continue"
+msgstr ""
+
+#: includes/settings-cardknox-applepay.php:88
+msgid "Checkout"
+msgstr ""
+
+#: includes/settings-cardknox-googlepay.php:43
+msgid "Merchant Name"
+msgstr ""
+
+#: includes/settings-cardknox-googlepay.php:45
+msgid "Example Merchant"
+msgstr ""
+
+#: includes/settings-cardknox.php:29
+msgid "Enable/Disable"
+msgstr ""
+
+#: includes/settings-cardknox.php:30
+msgid "Enable Sola Payments"
+msgstr ""
+
+#: includes/settings-cardknox.php:38
+msgid "This controls the title which the user sees during checkout."
+msgstr ""
+
+#: includes/settings-cardknox.php:43
+msgid "Description"
+msgstr ""
+
+#: includes/settings-cardknox.php:45
+msgid "This controls the description which the user sees during checkout."
+msgstr ""
+
+#: includes/settings-cardknox.php:46
+msgid "Pay with your credit card."
+msgstr ""
+
+#: includes/settings-cardknox.php:50
+msgid "Sola API Key (Transaction Key)"
+msgstr ""
+
+#: includes/settings-cardknox.php:52
+msgid "Get your API keys from The Sola Portal."
+msgstr ""
+
+#: includes/settings-cardknox.php:57
+msgid "Sola iFields Key (Token Key)"
+msgstr ""
+
+#: includes/settings-cardknox.php:59
+msgid "Get your iFields key from The Sola Portal."
+msgstr ""
+
+#: includes/settings-cardknox.php:64
+msgid "Capture"
+msgstr ""
+
+#: includes/settings-cardknox.php:65
+msgid "Capture charge immediately"
+msgstr ""
+
+#: includes/settings-cardknox.php:68
+msgid "Whether or not to immediately capture the transaction. When unchecked, the transaction will need to be captured later."
+msgstr ""
+
+#: includes/settings-cardknox.php:73
+msgid "Authorize Only Order Status"
+msgstr ""
+
+#: includes/settings-cardknox.php:77
+msgid "Configures what the order status should be changed to after a authorize only transaction"
+msgstr ""
+
+#: includes/settings-cardknox.php:81
+msgid "Set order status to on-hold when payment is authorized"
+msgstr ""
+
+#: includes/settings-cardknox.php:82
+msgid "set order status to processing when payment is authorized"
+msgstr ""
+
+#: includes/settings-cardknox.php:86
+msgid "Saved Cards"
+msgstr ""
+
+#: includes/settings-cardknox.php:87
+msgid "Enable Payment via Saved Cards"
+msgstr ""
+
+#: includes/settings-cardknox.php:89
+msgid "If enabled, users will be able to pay with a saved card during checkout. Card details are saved on Sola servers, not on your store."
+msgstr ""
+
+#: includes/settings-cardknox.php:94
+msgid "Logging"
+msgstr ""
+
+#: includes/settings-cardknox.php:95
+msgid "Log debug messages"
+msgstr ""
+
+#: includes/settings-cardknox.php:97
+msgid "Save debug messages to the WooCommerce System Status log."
+msgstr ""
+
+#: includes/settings-cardknox.php:102
+msgid "Background color"
+msgstr ""
+
+#: includes/settings-cardknox.php:104
+msgid "Background color for card number and cvv. Default #F2F2F2"
+msgstr ""
+
+#: includes/settings-cardknox.php:111
+msgid "Payment From Applicable Countries"
+msgstr ""
+
+#: includes/settings-cardknox.php:114
+msgid "All Allowed Countries"
+msgstr ""
+
+#: includes/settings-cardknox.php:115
+msgid "Specific Countries"
+msgstr ""
+
+#: includes/settings-cardknox.php:119
+msgid "Payment From Specific Countries"
+msgstr ""
+
+#: includes/settings-cardknox.php:124
+#: includes/settings-cardknox.php:125
+#: includes/settings-cardknox.php:127
+msgid "Enable 3DS"
+msgstr ""
+
+#: includes/settings-cardknox.php:132
+msgid "3DS environment"
+msgstr ""
+
+#: includes/settings-cardknox.php:136
+msgid "To set up the environment for processing a 3DS authentication transaction"
+msgstr ""
+
+#: includes/settings-cardknox.php:140
+msgid "Staging"
+msgstr ""
+
+#: woocommerce-gateway-cardknox.php:59
+msgid "WooCommerce Sola Gateway requires WordPress version 6.5 or higher. Please update WordPress to use this plugin."
+msgstr ""
+
+#: woocommerce-gateway-cardknox.php:350
+#, php-format
+msgid "Sola is almost ready. To get started, <a href=\"%s\">set your Sola account keys</a>."
+msgstr ""
+
+#: woocommerce-gateway-cardknox.php:391
+#, php-format
+msgid "WooCommerce Sola - The minimum PHP version required for this plugin is %1$s. You are running %2$s."
+msgstr ""
+
+#: woocommerce-gateway-cardknox.php:397
+msgid "WooCommerce Sola requires WooCommerce to be activated to work."
+msgstr ""
+
+#: woocommerce-gateway-cardknox.php:401
+#, php-format
+msgid "WooCommerce Sola - The minimum WooCommerce version required for this plugin is %1$s. You are running %2$s."
+msgstr ""
+
+#: woocommerce-gateway-cardknox.php:407
+msgid "WooCommerce Sola - cURL is not installed."
+msgstr ""
+
+#: woocommerce-gateway-cardknox.php:427
+msgid "Settings"
+msgstr ""
+
+#: woocommerce-gateway-cardknox.php:428
+msgid "Docs"
+msgstr ""
+
+#: woocommerce-gateway-cardknox.php:429
+msgid "Support"
+msgstr ""
+
+#: woocommerce-gateway-cardknox.php:584
+msgid "Unable to capture transaction!"
+msgstr ""
+
+#: woocommerce-gateway-cardknox.php:586
+#, php-format
+msgid "Sola transaction captured (Charge ID: %s)"
+msgstr ""
+
+#: woocommerce-gateway-cardknox.php:618
+msgid "Unable to refund transaction!"
+msgstr ""
+
+#: woocommerce-gateway-cardknox.php:620
+#, php-format
+msgid "Sola transaction refunded (RefNum: %s)"
+msgstr ""
+
+#: blocks/src/components/CardknoxIFields.js:47
+#: blocks/src/components/CardknoxIFields.js:54
+msgid "Card Number"
+msgstr ""
+
+#: blocks/src/components/CardknoxIFields.js:92
+msgid "Expiry (MM/YY)"
+msgstr ""
+
+#: blocks/src/components/CardknoxIFields.js:103
+msgid "MM / YY"
+msgstr ""
+
+#: blocks/src/components/CardknoxIFields.js:141
+#: blocks/src/components/CardknoxPaymentForm.js:171
+msgid "Expiration must be in the future"
+msgstr ""
+
+#: blocks/src/components/CardknoxIFields.js:147
+msgid "CVV Code"
+msgstr ""
+
+#: blocks/src/components/CardknoxIFields.js:152
+msgid "CVV"
+msgstr ""
+
+#: blocks/src/components/CardknoxPaymentForm.js:174
+#: blocks/src/utils/cardknox-validator.js:198
+msgid "Expiry date is required"
+msgstr ""
+
+#: blocks/src/components/CardknoxPaymentForm.js:181
+msgid "Please check your card details."
+msgstr ""
+
+#: blocks/src/components/CardknoxPaymentForm.js:194
+msgid "Unable to process card data. Please try again."
+msgstr ""
+
+#: blocks/src/components/CardknoxPaymentForm.js:214
+msgid "Payment processing failed."
+msgstr ""
+
+#: blocks/src/components/CardknoxPaymentForm.js:248
+msgid "Invalid card number"
+msgstr ""
+
+#: blocks/src/components/CardknoxPaymentForm.js:258
+msgid "Invalid CVV"
+msgstr ""
+
+#: blocks/src/components/SavePaymentCheckbox.js:22
+msgid "Save payment information to my account for future purchases."
+msgstr ""
+
+#: blocks/src/utils/cardknox-validator.js:20
+msgid "Expiry month is required"
+msgstr ""
+
+#: blocks/src/utils/cardknox-validator.js:24
+#: blocks/src/utils/cardknox-validator.js:211
+msgid "Invalid expiry month"
+msgstr ""
+
+#: blocks/src/utils/cardknox-validator.js:30
+msgid "Expiry year is required"
+msgstr ""
+
+#: blocks/src/utils/cardknox-validator.js:36
+#: blocks/src/utils/cardknox-validator.js:45
+#: blocks/src/utils/cardknox-validator.js:218
+msgid "Card has expired"
+msgstr ""
+
+#: blocks/src/utils/cardknox-validator.js:225
+msgid "Invalid expiry year"
+msgstr ""

@@ -33,6 +33,11 @@ Visit [Sola](https://solapayments.com) to learn more.
 
 == Changelog ==
 
+= 1.2.88 =
+
+- Fixed duplicate handling in payment requests.
+- Improved 3DS initialization handling.
+
 = 1.2.85 =
 
 - Fixed Apple Pay declines caused by incorrect card number mapping.

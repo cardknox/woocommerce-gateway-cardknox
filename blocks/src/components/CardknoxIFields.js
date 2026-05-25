@@ -44,14 +44,14 @@ const CardknoxIFields = ({ errors, onExpiryChange, ValidationInputError, cardDat
 
             <div className="form-row form-row-wide" style={{ paddingBottom: '0', margin: '0 0 15px 0', width: '100%' }}>
                 <label style={{ margin: '0 0 5px 0', lineHeight: 'inherit', display: 'block', fontWeight: 400 }} htmlFor="cardknox-card-number">
-                    {__('Card Number', 'woocommerce-gateway-cardknox')} <span className="required">*</span>
+                    {__('Card Number', 'woo-cardknox-gateway')} <span className="required">*</span>
                 </label>
 
                 <div className="cardknox-card-number-wrapper" style={{ position: 'relative' }}>
                     <div className="cardknox-iframe-container" style={{ position: 'relative', overflow: 'hidden', backgroundColor: '#fff', height: '65px' }}>
                         <iframe
                             data-ifields-id="card-number"
-                            data-ifields-placeholder={__('Card Number', 'woocommerce-gateway-cardknox')}
+                            data-ifields-placeholder={__('Card Number', 'woo-cardknox-gateway')}
                             src="https://cdn.cardknox.com/ifields/3.3.2601.2901/ifield.htm"
                             frameBorder="0"
                             width="100%"
@@ -89,7 +89,7 @@ const CardknoxIFields = ({ errors, onExpiryChange, ValidationInputError, cardDat
             <div className="cardknox-row" style={{ display: 'flex', gap: '15px', marginBottom: '0px' }}>
                 <div className="form-row form-row-first" style={{ flex: '1', margin: '0' }}>
                     <label style={{ margin: '0 0 5px 0', lineHeight: 'inherit', display: 'block', fontWeight: 400 }} htmlFor="cardknox-expiry">
-                        {__('Expiry (MM/YY)', 'woocommerce-gateway-cardknox')} <span className="required">*</span>
+                        {__('Expiry (MM/YY)', 'woo-cardknox-gateway')} <span className="required">*</span>
                     </label>
                     <input
                         id="cardknox-card-expiry"
@@ -100,7 +100,7 @@ const CardknoxIFields = ({ errors, onExpiryChange, ValidationInputError, cardDat
                         autoCapitalize="no"
                         spellCheck="no"
                         type="tel"
-                        placeholder={__('MM / YY', 'woocommerce-gateway-cardknox')}
+                        placeholder={__('MM / YY', 'woo-cardknox-gateway')}
                         style={{
                             outline: 'none',
                             border:
@@ -138,18 +138,18 @@ const CardknoxIFields = ({ errors, onExpiryChange, ValidationInputError, cardDat
                         }}
                     />
                     {(errors.expiry || (!validateExpiry() && cardData.expiryMonth && cardData.expiryYear)) && (
-                        <ValidationInputError errorMessage={errors.expiry || __('Expiration must be in the future', 'woocommerce-gateway-cardknox')} />
+                        <ValidationInputError errorMessage={errors.expiry || __('Expiration must be in the future', 'woo-cardknox-gateway')} />
                     )}
                 </div>
 
                 <div className="form-row form-row-last" style={{ flex: '1', margin: '0' }}>
                     <label style={{ margin: '0 0 5px 0', lineHeight: 'inherit', display: 'block', fontWeight: 400 }} htmlFor="cardknox-cvv">
-                        {__('CVV Code', 'woocommerce-gateway-cardknox')} <span className="required">*</span>
+                        {__('CVV Code', 'woo-cardknox-gateway')} <span className="required">*</span>
                     </label>
                     <div className="cardknox-iframe-container cvv-container" style={{ position: 'relative', overflow: 'hidden', backgroundColor: '#fff', height: '65px' }}>
                         <iframe
                             data-ifields-id="cvv"
-                            data-ifields-placeholder={__('CVV', 'woocommerce-gateway-cardknox')}
+                            data-ifields-placeholder={__('CVV', 'woo-cardknox-gateway')}
                             src="https://cdn.cardknox.com/ifields/3.3.2601.2901/ifield.htm"
                             frameBorder="0"
                             width="100%"

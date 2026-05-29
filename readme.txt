@@ -7,7 +7,6 @@ Requires PHP: 5.6.0
 Stable tag: trunk
 License: GNU GPL 3.0
 
-
 Accept payments with the Sola gateway.
 
 == Description ==

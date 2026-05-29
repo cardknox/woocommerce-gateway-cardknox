@@ -168,17 +168,17 @@ const CardknoxPaymentForm = (props) => {
                         const expMonth = parseInt(card.expiryMonth, 10);
                         const expYear = parseInt(card.expiryYear, 10);
                         if (expYear < currentYear || (expYear === currentYear && expMonth < currentMonth)) {
-                            validationErrors.expiry = __('Expiration must be in the future', 'woocommerce-gateway-cardknox');
+                            validationErrors.expiry = __('Expiration must be in the future', 'woo-cardknox-gateway');
                         }
                     } else {
-                        validationErrors.expiry = __('Expiry date is required', 'woocommerce-gateway-cardknox');
+                        validationErrors.expiry = __('Expiry date is required', 'woo-cardknox-gateway');
                     }
 
                     if (Object.keys(validationErrors).length > 0) {
                         setErrors(validationErrors);
                         return {
                             type: emitRes.responseTypes.ERROR,
-                            message: __('Please check your card details.', 'woocommerce-gateway-cardknox'),
+                            message: __('Please check your card details.', 'woo-cardknox-gateway'),
                         };
                     }
 
@@ -191,7 +191,7 @@ const CardknoxPaymentForm = (props) => {
                     if (!tokens?.cardNumberToken || !tokens?.cvvToken) {
                         return {
                             type: emitRes.responseTypes.ERROR,
-                            message: __('Unable to process card data. Please try again.', 'woocommerce-gateway-cardknox'),
+                            message: __('Unable to process card data. Please try again.', 'woo-cardknox-gateway'),
                         };
                     }
 
@@ -211,7 +211,7 @@ const CardknoxPaymentForm = (props) => {
                 } catch (error) {
                     return {
                         type: emitRes.responseTypes.ERROR,
-                        message: error?.message || __('Payment processing failed.', 'woocommerce-gateway-cardknox'),
+                        message: error?.message || __('Payment processing failed.', 'woo-cardknox-gateway'),
                     };
                 }
             });
@@ -245,7 +245,7 @@ const CardknoxPaymentForm = (props) => {
             if (cardNumberToken || data.cardNumberIsValid) {
                 delete newErrors.cardNumber;
             } else if (data.cardNumberLength > 0 && !data.cardNumberIsValid) {
-                newErrors.cardNumber = __('Invalid card number', 'woocommerce-gateway-cardknox');
+                newErrors.cardNumber = __('Invalid card number', 'woo-cardknox-gateway');
             } else {
                 delete newErrors.cardNumber;
             }
@@ -255,7 +255,7 @@ const CardknoxPaymentForm = (props) => {
             if (cvvToken || data.cvvIsValid) {
                 delete newErrors.cvv;
             } else if (data.cvvLength > 0 && !data.cvvIsValid) {
-                newErrors.cvv = __('Invalid CVV', 'woocommerce-gateway-cardknox');
+                newErrors.cvv = __('Invalid CVV', 'woo-cardknox-gateway');
             } else {
                 delete newErrors.cvv;
             }

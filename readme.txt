@@ -33,6 +33,10 @@ Visit [Sola](https://solapayments.com) to learn more.
 
 == Changelog ==
 
+= 1.2.89 =
+
+- Tested on the latest version of WordPress and WooCommerce
+
 = 1.2.88 =
 
 - Fixed duplicate handling in payment requests.

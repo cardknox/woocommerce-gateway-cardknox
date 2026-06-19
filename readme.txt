@@ -2,7 +2,7 @@
 Contributors: dlehren
 Tags: credit card, woocommerce, payment gateway, apple pay, google pay
 Requires at least: 6.5
-Tested up to: 6.9
+Tested up to: 7.0
 Requires PHP: 5.6.0
 Stable tag: trunk
 License: GNU GPL 3.0
@@ -32,6 +32,10 @@ Experience payments that scale with your business.
 Visit [Sola](https://solapayments.com) to learn more.
 
 == Changelog ==
+
+= 1.2.89 =
+
+- Tested on the latest version of WordPress and WooCommerce
 
 = 1.2.88 =
 

@@ -65,10 +65,10 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         $this->googlepayMerchantName            = $this->get_option('googlepay_merchant_name');
         $this->googlepayEnvironment             = $this->get_option('googlepay_environment');
         $this->googlepayButtonStyle             = $this->get_option('googlepay_button_style');
-        $this->capture                          = 'yes' === $this->get_option( 'capture', 'no' );   // New Code
-        $this->authonlyStatus                   = isset( $option['auth_only_order_status'] ) ? $option['auth_only_order_status'] : 'wc-on-hold';    // New Code
-        $this->googlepayApplicableCountries     = in_array((string)($option['applicable_countries'] ?? '0'), ['0','1'], true) ? (string)($option['applicable_countries'] ?? '0') : '0';   // New Code
-        $this->googlepaySpecificCountries       = isset( $option['specific_countries'] ) && is_array( $option['specific_countries'] ) ? $option['specific_countries'] : []; // New Code   
+        $this->capture                          = 'yes' === ( isset( $option['capture'] ) ? $option['capture'] : 'no' );
+        $this->authonlyStatus                   = isset( $option['auth_only_order_status'] ) ? $option['auth_only_order_status'] : 'wc-on-hold';
+        $this->googlepayApplicableCountries     = in_array((string)($option['applicable_countries'] ?? '0'), ['0','1'], true) ? (string)($option['applicable_countries'] ?? '0') : '0';
+        $this->googlepaySpecificCountries       = isset( $option['specific_countries'] ) && is_array( $option['specific_countries'] ) ? $option['specific_countries'] : [];   
 
 
         $this->wcVersion = version_compare(WC_VERSION, '3.0.0', '<');

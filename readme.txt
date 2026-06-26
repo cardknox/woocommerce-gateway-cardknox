@@ -3,7 +3,7 @@ Contributors: dlehren
 Tags: credit card, woocommerce, payment gateway, apple pay, google pay
 Requires at least: 6.5
 Tested up to: 7.0
-Requires PHP: 5.6.0
+Requires PHP: 8.2
 Stable tag: trunk
 License: GNU GPL 3.0
 

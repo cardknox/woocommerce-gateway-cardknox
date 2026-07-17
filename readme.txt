@@ -35,6 +35,7 @@ Visit [Sola](https://solapayments.com) to learn more.
 
 = 1.2.89 =
 
+- Updated iFields to version 3.5.2607.1401 to support 3DS Fix.
 - Tested on the latest version of WordPress and WooCommerce
 
 = 1.2.88 =

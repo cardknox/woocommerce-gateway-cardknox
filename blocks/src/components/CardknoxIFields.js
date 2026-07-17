@@ -52,7 +52,7 @@ const CardknoxIFields = ({ errors, onExpiryChange, ValidationInputError, cardDat
                         <iframe
                             data-ifields-id="card-number"
                             data-ifields-placeholder={__('Card Number', 'woo-cardknox-gateway')}
-                            src="https://cdn.cardknox.com/ifields/3.3.2601.2901/ifield.htm"
+                            src="https://cdn.cardknox.com/ifields/3.5.2607.1401/ifield.htm"
                             frameBorder="0"
                             width="100%"
                             height="100%"
@@ -150,7 +150,7 @@ const CardknoxIFields = ({ errors, onExpiryChange, ValidationInputError, cardDat
                         <iframe
                             data-ifields-id="cvv"
                             data-ifields-placeholder={__('CVV', 'woo-cardknox-gateway')}
-                            src="https://cdn.cardknox.com/ifields/3.3.2601.2901/ifield.htm"
+                            src="https://cdn.cardknox.com/ifields/3.5.2607.1401/ifield.htm"
                             frameBorder="0"
                             width="100%"
                             height="100%"

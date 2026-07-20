@@ -33,6 +33,10 @@ Visit [Sola](https://solapayments.com) to learn more.
 
 == Changelog ==
 
+= 1.2.90 =
+
+- Fixed an issue with Digital Wallet transactions being set to Auth Only
+
 = 1.2.89 =
 
 - Updated iFields to version 3.5.2607.1401 to support 3DS Fix.

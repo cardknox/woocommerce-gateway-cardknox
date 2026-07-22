@@ -3,7 +3,7 @@ Contributors: dlehren
 Tags: credit card, woocommerce, payment gateway, apple pay, google pay
 Requires at least: 6.5
 Tested up to: 7.0
-Requires PHP: 5.6.0
+Requires PHP: 8.2
 Stable tag: trunk
 License: GNU GPL 3.0
 
@@ -30,6 +30,30 @@ Whether you're selling one-time products or subscriptions, Sola’s configurable
 
 Experience payments that scale with your business.
 Visit [Sola](https://solapayments.com) to learn more.
+
+== Screenshots ==
+
+01. screenshot-1.png
+02. screenshot-2.png
+03. screenshot-3.png
+04. screenshot-4.png
+05. screenshot-5.png
+06. screenshot-6.png
+07. screenshot-7.png
+08. screenshot-8.png
+09. screenshot-9.png
+10. screenshot-10.png
+11.screenshot-11.png
+12. screenshot-12.png
+13. screenshot-13.png
+14. screenshot-14.png
+15. screenshot-15.png
+16. screenshot-16.png
+17. screenshot-17.png
+18. screenshot-18.png
+19. screenshot-19.png
+20. screenshot-20.png
+
 
 == Changelog ==
 

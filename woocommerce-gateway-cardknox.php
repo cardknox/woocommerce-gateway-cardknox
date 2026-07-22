@@ -38,8 +38,8 @@ if (!defined('ABSPATH')) {
  * Required minimums and constants
  */
 define('WC_CARDKNOX_VERSION', '1.2.90');
-define('WC_CARDKNOX_MIN_PHP_VER', '5.6.0');
-define('WC_CARDKNOX_MIN_WC_VER', '2.5.0');
+define('WC_CARDKNOX_MIN_PHP_VER', '8.2');
+define('WC_CARDKNOX_MIN_WC_VER', '8.8');
 define('WC_CARDKNOX_MAIN_FILE', __FILE__);
 define('WC_CARDKNOX_PLUGIN_URL', untrailingslashit(plugins_url(basename(plugin_dir_path(__FILE__)), basename(__FILE__))));
 define('WC_CARDKNOX_PLUGIN_PATH', untrailingslashit(plugin_dir_path(__FILE__)));

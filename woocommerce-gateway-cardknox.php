@@ -4,7 +4,7 @@ Plugin Name: WooCommerce Cardknox Gateway
 Description: Accept payments via credit card, Apple Pay, Google Pay, and manage transactions within WordPress.
 Author: Sola Payments.
 Author URI: https://solapayments.com/
-Version: 1.2.89
+Version: 1.2.90
 Requires at least: 6.5
 Tested up to: 7.0
 WC requires at least: 2.5
@@ -37,14 +37,14 @@ if (!defined('ABSPATH')) {
 /**
  * Required minimums and constants
  */
-define('WC_CARDKNOX_VERSION', '1.2.89');
+define('WC_CARDKNOX_VERSION', '1.2.90');
 define('WC_CARDKNOX_MIN_PHP_VER', '8.2');
 define('WC_CARDKNOX_MIN_WC_VER', '8.8');
 define('WC_CARDKNOX_MAIN_FILE', __FILE__);
 define('WC_CARDKNOX_PLUGIN_URL', untrailingslashit(plugins_url(basename(plugin_dir_path(__FILE__)), basename(__FILE__))));
 define('WC_CARDKNOX_PLUGIN_PATH', untrailingslashit(plugin_dir_path(__FILE__)));
 
-define( 'CARDKNOX_IFIELDS_URL', 'https://cdn.cardknox.com/ifields/3.3.2601.2901/ifields.min.js' );
+define( 'CARDKNOX_IFIELDS_URL', 'https://cdn.cardknox.com/ifields/3.5.2607.1401/ifields.min.js' );
 
 
 
@@ -212,7 +212,7 @@ if (!class_exists('WC_Cardknox')) :
                     'cardknox-ifields',
                     CARDKNOX_IFIELDS_URL,
                     array(),
-                    '3.3.2601.2901',
+                    '3.5.2607.1401',
                     false
                 );
                 if (! wp_script_is('cardknox-ifields', 'enqueued')) {
@@ -714,9 +714,9 @@ if (!class_exists('WC_Cardknox')) :
             // Common iFields script
             wp_enqueue_script(
                 'cardknox',
-                'https://cdn.cardknox.com/ifields/3.3.2601.2901/ifields.min.js',
+                CARDKNOX_IFIELDS_URL,
                 [],
-                '3.3.2601.2901',
+                '3.5.2607.1401',
                 false
             );
         

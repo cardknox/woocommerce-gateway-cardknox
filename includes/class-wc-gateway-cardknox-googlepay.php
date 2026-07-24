@@ -65,10 +65,10 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
         $this->googlepayMerchantName            = $this->get_option('googlepay_merchant_name');
         $this->googlepayEnvironment             = $this->get_option('googlepay_environment');
         $this->googlepayButtonStyle             = $this->get_option('googlepay_button_style');
-        $this->capture                          = 'yes' === $this->get_option( 'capture', 'no' );   // New Code
-        $this->authonlyStatus                   = isset( $option['auth_only_order_status'] ) ? $option['auth_only_order_status'] : 'wc-on-hold';    // New Code
-        $this->googlepayApplicableCountries     = in_array((string)($option['applicable_countries'] ?? '0'), ['0','1'], true) ? (string)($option['applicable_countries'] ?? '0') : '0';   // New Code
-        $this->googlepaySpecificCountries       = isset( $option['specific_countries'] ) && is_array( $option['specific_countries'] ) ? $option['specific_countries'] : []; // New Code   
+        $this->capture                          = 'yes' === ( isset( $option['capture'] ) ? $option['capture'] : 'no' );
+        $this->authonlyStatus                   = isset( $option['auth_only_order_status'] ) ? $option['auth_only_order_status'] : 'wc-on-hold';
+        $this->googlepayApplicableCountries     = in_array((string)($option['applicable_countries'] ?? '0'), ['0','1'], true) ? (string)($option['applicable_countries'] ?? '0') : '0';
+        $this->googlepaySpecificCountries       = isset( $option['specific_countries'] ) && is_array( $option['specific_countries'] ) ? $option['specific_countries'] : [];   
 
 
         $this->wcVersion = version_compare(WC_VERSION, '3.0.0', '<');
@@ -585,7 +585,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
                 <div class="message message-error error gpay-error" style="display: none;"></div>
             </div>
             <div id="divGpay" class="gp hidden">
-                <iframe id="igp" class="gp" data-ifields-id="igp" data-ifields-oninit="gpRequest.initGP" src="https://cdn.cardknox.com/ifields/3.3.2601.2901/igp.htm" allowpaymentrequest sandbox="allow-popups allow-modals allow-scripts allow-same-origin
+                <iframe id="igp" class="gp" data-ifields-id="igp" data-ifields-oninit="gpRequest.initGP" src="https://cdn.cardknox.com/ifields/3.5.2607.1401/igp.htm" allowpaymentrequest sandbox="allow-popups allow-modals allow-scripts allow-same-origin
                                  allow-forms allow-popups-to-escape-sandbox allow-top-navigation" title="GPay checkout page">
                 </iframe>
             </div>

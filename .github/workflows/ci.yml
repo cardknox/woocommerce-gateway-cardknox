@@ -1,0 +1,170 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Aikido Safe Chain installer, pinned by release tag + checksum.
+  # Bump both values together: https://github.com/AikidoSec/safe-chain/releases
+  SAFE_CHAIN_INSTALLER_VERSION: '1.5.15'
+  SAFE_CHAIN_INSTALLER_SHA256: 'de0565e3d6346407a604e84e639e95fea8758748063da2216bbfdca5feda5dd2'
+
+jobs:
+  blocks:
+    name: Safe Chain gate + blocks build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: blocks
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Node must be installed before Safe Chain, so the Safe Chain shims end up
+      # ahead of the real npm on PATH.
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: blocks/package-lock.json
+
+      - name: Install Aikido Safe Chain
+        working-directory: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          installer="$RUNNER_TEMP/install-safe-chain.sh"
+          curl -fsSL "https://github.com/AikidoSec/safe-chain/releases/download/${SAFE_CHAIN_INSTALLER_VERSION}/install-safe-chain.sh" -o "$installer"
+          echo "${SAFE_CHAIN_INSTALLER_SHA256}  $installer" | sha256sum -c -
+          # --ci installs executable shims (npm, npx, yarn, pnpm, pip, ...) and
+          # appends them to GITHUB_PATH instead of using interactive shell aliases.
+          sh "$installer" --ci
+          rm -f "$installer"
+
+      # The installer only warns if `safe-chain setup-ci` fails, which would leave
+      # the installs below unscanned. Fail the build instead of silently degrading.
+      - name: Verify Safe Chain is intercepting npm
+        working-directory: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          safe-chain --version
+          npm_path="$(command -v npm)"
+          echo "npm resolves to: $npm_path"
+          case "$npm_path" in
+            "$HOME"/.safe-chain/shims/*)
+              echo "Safe Chain shim is active."
+              ;;
+            *)
+              echo "::error::npm does not resolve to a Safe Chain shim ($npm_path); dependency installs would be unprotected."
+              exit 1
+              ;;
+          esac
+
+      # Malware findings from Aikido Intel fail this step, blocking the PR.
+      - name: Install dependencies (scanned by Safe Chain)
+        run: npm ci
+
+      - name: Build blocks assets
+        run: npm run build
+
+      - name: Upload blocks build output
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: blocks-build
+          path: blocks/build
+          if-no-files-found: error
+          retention-days: 7
+
+  php-lint:
+    name: PHP ${{ matrix.php }} syntax check
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['7.4', '8.2', '8.3']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+
+      - name: Lint PHP files
+        run: |
+          set -euo pipefail
+          find . \( -path ./blocks/node_modules -o -path ./vendor -o -path ./.git \) -prune \
+            -o -name '*.php' -print0 | xargs -0 -n1 -P4 php -l
+
+  php-unit:
+    name: PHPUnit (WordPress ${{ matrix.wp }}, PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '8.2'
+            wp: latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mysqli, zip
+          tools: phpunit:9.6
+          coverage: none
+
+      # bin/install-wp-tests.sh checks out the WordPress test suite over SVN and
+      # creates the test database with mysqladmin.
+      - name: Install SVN and MySQL client
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends subversion mysql-client
+
+      # WordPress >= 5.9 refuses to bootstrap its test suite without the Yoast
+      # PHPUnit polyfills, which this plugin has no composer.json to pull in.
+      - name: Install PHPUnit polyfills
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/wp-polyfills"
+          cat > "$RUNNER_TEMP/wp-polyfills/composer.json" <<'JSON'
+          { "require": { "yoast/phpunit-polyfills": "^2.0" } }
+          JSON
+          composer install --no-interaction --working-dir="$RUNNER_TEMP/wp-polyfills"
+          echo "WP_TESTS_PHPUNIT_POLYFILLS_PATH=$RUNNER_TEMP/wp-polyfills/vendor/yoast/phpunit-polyfills" >> "$GITHUB_ENV"
+
+      - name: Install WordPress test suite
+        run: bash bin/install-wp-tests.sh wordpress_test root root 127.0.0.1:3306 ${{ matrix.wp }}
+
+      - name: Run PHPUnit
+        run: phpunit
+
+      - name: Run PHPUnit (multisite)
+        env:
+          WP_MULTISITE: 1
+        run: phpunit

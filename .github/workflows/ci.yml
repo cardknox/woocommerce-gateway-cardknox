@@ -28,7 +28,11 @@ jobs:
         working-directory: blocks
     steps:
       - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7
+        with:
+          # This job never pushes, so do not leave GITHUB_TOKEN in .git/config
+          # where a later step or a compromised dependency could read it.
+          persist-credentials: false
 
       # Node must be installed before Safe Chain, so the Safe Chain shims end up
       # ahead of the real npm on PATH.

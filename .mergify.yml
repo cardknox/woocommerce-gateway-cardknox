@@ -17,3 +17,12 @@ merge_protections:
       # GitHub names a check run after the workflow *job*, not the workflow,
       # so this is the `name:` of the job in .github/workflows/ci.yml.
       - check-success = Safe Chain gate + blocks build
+
+  - name: Aikido code scan must pass
+    description: >-
+      The Aikido Security pull request scan must succeed before merging into
+      master. Quoted because the check name contains a colon.
+    if:
+      - base = master
+    success_conditions:
+      - "check-success = Aikido Security: check code"

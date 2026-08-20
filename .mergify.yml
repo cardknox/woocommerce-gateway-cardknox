@@ -1,0 +1,19 @@
+# Mergify configuration - https://docs.mergify.com/
+# Mergify reads this file from the default branch (master) only.
+
+merge_protections_settings:
+  # Report protection results as a "Mergify Merge Protections" check run, so the
+  # check can be marked required in the master branch protection / ruleset.
+  reporting_method: check-runs
+
+merge_protections:
+  - name: CI must pass
+    description: >-
+      The Aikido Safe Chain malware gate and the blocks build
+      (.github/workflows/ci.yml) must succeed before merging into master.
+    if:
+      - base = master
+    success_conditions:
+      # GitHub names a check run after the workflow *job*, not the workflow,
+      # so this is the `name:` of the job in .github/workflows/ci.yml.
+      - check-success = Safe Chain gate + blocks build

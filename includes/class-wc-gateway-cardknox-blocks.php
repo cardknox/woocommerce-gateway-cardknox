@@ -90,6 +90,17 @@ final class WC_Gateway_Cardknox_Blocks_Support extends AbstractPaymentMethodType
             $loaded['version'] ?? time(),
             true
         );
+
+        $style_path = WC_CARDKNOX_PLUGIN_PATH . '/blocks/build/style-index.css';
+        if ( file_exists( $style_path ) ) {
+            wp_register_style(
+                'wc-cardknox-blocks',
+                WC_CARDKNOX_PLUGIN_URL . '/blocks/build/style-index.css',
+                array(),
+                filemtime( $style_path )
+            );
+            wp_enqueue_style( 'wc-cardknox-blocks' );
+        }
     
         wp_set_script_translations('wc-cardknox-blocks', 'woo-cardknox-gateway');
     

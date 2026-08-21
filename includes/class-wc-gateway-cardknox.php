@@ -471,8 +471,10 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $token_key = $this->token_key;
         $cardknox_params = array(
             'key'                  => $token_key,
+            'checkout_url'         => WC_AJAX::get_endpoint('checkout'),
             'i18n_terms'           => __('Please accept the terms and conditions first', 'woo-cardknox-gateway'),
             'i18n_required_fields' => __('Please fill in required checkout fields first', 'woo-cardknox-gateway'),
+            'i18n_checkout_error'  => __('Unable to place order. Please try again.', 'woo-cardknox-gateway'),
             'bgcolor'              => $this->bgcolor,
             'enable_3ds'           => $this->enable3Ds,
             'threeds_env'          => $this->threedsEnv,

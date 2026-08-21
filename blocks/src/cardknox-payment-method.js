@@ -50,7 +50,9 @@ const CardknoxPaymentMethod = {
     ariaLabel: label,
     supports: {
         features: settings.supports ?? ['products'],
-        showSaveOption: settings.showSaveOption ?? false,
+        // Keep false so WooCommerce Blocks does not render its own save checkbox.
+        // We render a custom SavePaymentCheckbox from gateway settings instead.
+        showSaveOption: false,
         showSavedCards: Array.isArray(settings.savedCards) && settings.savedCards.length > 0,
     },
     placeOrderButtonLabel: __('Place Order', 'woocommerce-gateway-cardknox'),

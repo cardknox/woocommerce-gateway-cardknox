@@ -5,8 +5,8 @@ import { __ } from '@wordpress/i18n';
 
 const SavePaymentCheckbox = ({ checked, onChange }) => {
     return (
-        <div className="wc-payment-gateway-cardknox__save-payment-method wc-block-components-payment-methods__save-card-info">
-            <label className="wc-block-components-checkbox wc-block-components-payment-methods__save-card-infos-checkbox">
+        <div className="wc-payment-gateway-cardknox__save-payment-method">
+            <label className="wc-block-components-checkbox">
                 <input
                     type="checkbox"
                     name="wc-cardknox-new-payment-method"

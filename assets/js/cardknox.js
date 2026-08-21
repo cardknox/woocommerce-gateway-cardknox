@@ -21,6 +21,7 @@ jQuery(function ($) {
 
     var is3DSInitialized = false;
     var iFieldsReady = false;
+    var isPlacingOrder = false;
 
     var defaultStyle = {
       border: "1px solid #c3c3c3",
@@ -273,7 +274,6 @@ jQuery(function ($) {
               setIfieldStyle("cvv", { border: "1px solid #c3c3c3" });
             }
             wc_cardknox_form.onCardknoxResponse();
-            jQuery(document.body).trigger("update_checkout");
           },
           function () {
             //onError
@@ -320,23 +320,28 @@ jQuery(function ($) {
                 );
                 return false;
             }
+            if (isPlacingOrder) {
+              return false;
+            }
+            isPlacingOrder = true;
+
             wc_cardknox_form.form.append("<input type='hidden' class='xExp' id='xExp' name='xExp' value='"+xExp+"'/>");
+
+            var checkoutUrl = (typeof wc_checkout_params !== "undefined" && wc_checkout_params.checkout_url)
+              ? wc_checkout_params.checkout_url
+              : (wc_cardknox_params.checkout_url || "/?wc-ajax=checkout");
 
             $.ajax({
                 type: "POST",
-                url: "?wc-ajax=checkout", // Ensure this points to the correct URL
-                data: $("form.woocommerce-checkout").serialize(),
-                beforeSend: function () {
-                // Show the loader
-                //   $(".blockUI").show();
-                },
+                dataType: "json",
+                url: checkoutUrl,
+                data: wc_cardknox_form.form.serialize(),
                 success: function (response) {
-                //   console.log("response", response);
-
                 if (response.result === "success") {
                     let jsonResp = response.response;
 
                     if (
+                    jsonResp &&
                     jsonResp.xResult == "V" &&
                     jsonResp.xVerifyPayload &&
                     jsonResp.xVerifyPayload !== "" &&
@@ -344,31 +349,37 @@ jQuery(function ($) {
                     jsonResp.xVerifyURL !== ""
                     ) {
                     verify3DS(jsonResp);
+                    return;
                     }
 
-                    if (jsonResp.xResult == "A") {
+                    if (jsonResp && jsonResp.xResult == "A" && response.redirect) {
+                    window.location.href = response.redirect;
+                    return;
+                    }
+
+                    if (response.redirect) {
                     window.location.href = response.redirect;
                     }
-
-                    // Handle success, such as showing a confirmation message
                 } else {
-                    // Handle failure
-                    $("form.woocommerce-checkout .blockUI.blockOverlay").hide();
                     $(".woocommerce-error, .woocommerce-message").remove();
-                    wc_cardknox_form.form.prepend(response.messages);
-                    //return false;
+                    if (response.messages) {
+                      wc_cardknox_form.form.prepend(response.messages);
+                    }
+                    wc_cardknox_form.unblock();
                 }
-                $("form.woocommerce-checkout .blockUI.blockOverlay").hide();
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                // Handle error (e.g., show an error message)
                 console.log("Error placing order:", textStatus, errorThrown);
-
-                // Hide the loader
-                $("form.woocommerce-checkout .blockUI.blockOverlay").hide();
+                $(".woocommerce-error, .woocommerce-message").remove();
+                wc_cardknox_form.form.prepend(
+                  '<ul class="woocommerce-error" role="alert"><li>' +
+                    wc_cardknox_params.i18n_checkout_error +
+                  "</li></ul>"
+                );
+                wc_cardknox_form.unblock();
                 },
                 complete: function () {
-                // Ensure loader is hidden after the request completes
+                isPlacingOrder = false;
                 $("form.woocommerce-checkout .blockUI.blockOverlay").hide();
                 },
             });

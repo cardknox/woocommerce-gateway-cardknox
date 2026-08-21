@@ -6,6 +6,7 @@ const { registerPaymentMethod } = window.wc.wcBlocksRegistry;
 /**
  * Internal dependencies
  */
+import './style.css';
 import CardknoxPaymentMethod from './cardknox-payment-method';
 
 // Register the payment method when DOM is ready

@@ -234,44 +234,70 @@ const CardknoxPaymentForm = (props) => {
     }, []);
 
     const handleIFieldUpdate = useCallback((data) => {
-        // Update validation state based on iField data
-        const newErrors = { ...errors };
+        // Autofill: never flash card/cvv validation messages.
+        // Manual typing: show message only for the active field being edited.
+        setErrors((prev) => {
+            const next = { ...prev };
+            let changed = false;
 
-        // Check if tokens exist first
+            if (data.__cardknoxAutofill) {
+                if (next.cardNumber) {
+                    delete next.cardNumber;
+                    changed = true;
+                }
+                if (next.cvv) {
+                    delete next.cvv;
+                    changed = true;
+                }
+                return changed ? next : prev;
+            }
+
+            if (Object.prototype.hasOwnProperty.call(data, '__cardknoxCardError')) {
+                const cardMessage = data.__cardknoxCardError || '';
+                if (cardMessage) {
+                    if (next.cardNumber !== cardMessage) {
+                        next.cardNumber = cardMessage;
+                        changed = true;
+                    }
+                } else if (next.cardNumber) {
+                    delete next.cardNumber;
+                    changed = true;
+                }
+            } else if (data.cardNumberIsValid && next.cardNumber) {
+                delete next.cardNumber;
+                changed = true;
+            }
+
+            if (Object.prototype.hasOwnProperty.call(data, '__cardknoxCvvError')) {
+                const cvvMessage = data.__cardknoxCvvError || '';
+                if (cvvMessage) {
+                    if (next.cvv !== cvvMessage) {
+                        next.cvv = cvvMessage;
+                        changed = true;
+                    }
+                } else if (next.cvv) {
+                    delete next.cvv;
+                    changed = true;
+                }
+            } else if (data.cvvIsValid && next.cvv) {
+                delete next.cvv;
+                changed = true;
+            }
+
+            return changed ? next : prev;
+        });
+
         const cardNumberToken = document.querySelector('[data-ifields-id="card-number-token"]')?.value;
         const cvvToken = document.querySelector('[data-ifields-id="cvv-token"]')?.value;
-
-        if (data.lastActiveField === 'card-number' || data.cardNumberLength !== undefined) {
-            if (cardNumberToken || data.cardNumberIsValid) {
-                delete newErrors.cardNumber;
-            } else if (data.cardNumberLength > 0 && !data.cardNumberIsValid) {
-                newErrors.cardNumber = __('Invalid card number', 'woo-cardknox-gateway');
-            } else {
-                delete newErrors.cardNumber;
-            }
-        }
-
-        if (data.lastActiveField === 'cvv' || data.cvvLength !== undefined) {
-            if (cvvToken || data.cvvIsValid) {
-                delete newErrors.cvv;
-            } else if (data.cvvLength > 0 && !data.cvvIsValid) {
-                newErrors.cvv = __('Invalid CVV', 'woo-cardknox-gateway');
-            } else {
-                delete newErrors.cvv;
-            }
-        }
-
-        setErrors(newErrors);
         const cardNumberValid = !!(cardNumberToken || data.cardNumberIsValid);
         const cvvValid = !!(cvvToken || data.cvvIsValid);
         setIsValid(cardNumberValid && cvvValid);
 
-        // Containers must not draw borders now; iField content handles it. Clear any container borders.
         const cardContainer = document.querySelector('.cardknox-iframe-container');
         const cvvContainer = document.querySelector('.cvv-container');
         if (cardContainer) cardContainer.style.border = '0';
         if (cvvContainer) cvvContainer.style.border = '0';
-    }, [errors]);
+    }, []);
 
     const handleExpiryChange = (field, value) => {
         setCardData(prev => ({

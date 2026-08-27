@@ -20,6 +20,6 @@
     "@wordpress/scripts": "^31.6.0"
   },
   "overrides": {
-    "js-yaml@4": "^4.3.2"
+    "js-yaml@4": "4.3.1"
   }
 }

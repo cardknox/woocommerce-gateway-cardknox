@@ -18,5 +18,8 @@
   "license": "GPL-3.0",
   "devDependencies": {
     "@wordpress/scripts": "^31.6.0"
+  },
+  "overrides": {
+    "js-yaml@4": "^4.3.2"
   }
 }

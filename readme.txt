@@ -57,6 +57,10 @@ Visit [Sola](https://solapayments.com) to learn more.
 
 == Changelog ==
 
+= 1.2.92 =
+
+- Improved checkout reliability and CVV autofill validation.
+
 = 1.2.90 =
 
 - Fixed an issue with Digital Wallet transactions being set to Auth Only

@@ -169,7 +169,9 @@ const CardknoxIFields = ({ errors, onExpiryChange, ValidationInputError, cardDat
             {/* Hidden fields for tokens */}
             <input type="hidden" data-ifields-id="card-number-token" name="xCardNum" />
             <input type="hidden" data-ifields-id="cvv-token" name="xCVV" />
-
+            {/* Mentioned 3DS */}
+            <input type="hidden" id="x3dsReferenceId" name="x3dsReferenceId" value="" />
+            <input type="hidden" id="x3dsInitializeStatus" name="x3dsInitializeStatus" value="" />
             <div className="clear"></div>
         </div>
     );

@@ -71,6 +71,7 @@ const useCardknoxIFields = () => {
 			iFieldsKey,
 			softwareName,
 			softwareVersion,
+			threedsEnv,
 			onUpdate, // (optional) last iFields state callback
 		}) => {
 			if (isInitializedRef.current) return;
@@ -307,6 +308,13 @@ const useCardknoxIFields = () => {
 						clearWooNotices();
 					}
 				});
+			}
+
+			// Initialize 3DS session (required by merchant account even when full 3DS challenge is disabled)
+			if (typeof window.enable3DS === 'function' && threedsEnv) {
+				window.setTimeout(() => {
+					window.enable3DS(threedsEnv, null);
+				}, 1000);
 			}
 
 			isInitializedRef.current = true;

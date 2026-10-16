@@ -1,21 +1,91 @@
+/*Start PLGN-245 (TICKET RELATED) */
 let cartTotal = {
   total: parseFloat(applePaysettings.total).toFixed(2),
 };
-jQuery(document.body).on("updated_cart_totals", function () {
-  jQuery.ajax({
-    url: applePaysettings.ajax_url,
-    type: "POST",
-    data: {
-      action: "update_cart_total",
-    },
-    success: function (response) {
-      if (response.success) {
-        // Update the global variable with the new total
-        cartTotal.total = response.data.total;
-      }
-    },
-  });
 
+function getApButtonColor(applePaysettings) {
+  // Match checkout: return ifields enum values only (strings break enableApplePay with i[t[e]]).
+  var apButtonColor = APButtonColor.black;
+  switch (applePaysettings.button_style) {
+    case "black":
+      apButtonColor = APButtonColor.black;
+      break;
+    case "white":
+      apButtonColor = APButtonColor.white;
+      break;
+    case "whiteOutline":
+      apButtonColor = APButtonColor.whiteOutline;
+      break;
+    default:
+      apButtonColor = APButtonColor.black;
+  }
+  return apButtonColor;
+}
+
+function getApButtonType(applePaysettings) {
+  var apButtonType = APButtonType.pay;
+  switch (applePaysettings.button_type) {
+    case "pay":
+      apButtonType = APButtonType.pay;
+      break;
+    case "buy":
+      apButtonType = APButtonType.buy;
+      break;
+    case "plain":
+      apButtonType = APButtonType.plain;
+      break;
+    case "order":
+      apButtonType = APButtonType.order;
+      break;
+    case "donate":
+      apButtonType = APButtonType.donate;
+      break;
+    case "continue":
+      apButtonType = APButtonType.continue;
+      break;
+    case "checkout":
+      apButtonType = APButtonType.checkout;
+      break;
+    default:
+      apButtonType = APButtonType.pay;
+  }
+  return apButtonType;
+}
+
+function ensureCartApplePayContainer() {
+  if (document.getElementById("ap-container")) {
+    return true;
+  }
+
+  // Fallback: theme/PHP may not print #ap-container — create it next to cart checkout buttons.
+  var mount =
+    document.querySelector(".wc-proceed-to-checkout") ||
+    document.querySelector("#divGpay") ||
+    document.querySelector(".cart_totals");
+
+  if (!mount) {
+    console.warn("Apple Pay: no mount point found on cart page.");
+    return false;
+  }
+
+  var wrap = document.createElement("div");
+  wrap.className = "cardknox-applepay-cart-wrap";
+  wrap.innerHTML =
+    '<div id="ap-container" class="ap" style="min-height:55px;margin:10px 0;"></div>' +
+    '<div class="messages"><div class="message message-error error applepay-error" style="display:none;"></div></div>';
+
+  if (mount.classList && mount.classList.contains("wc-proceed-to-checkout")) {
+    mount.appendChild(wrap);
+  } else if (mount.parentNode) {
+    mount.parentNode.insertBefore(wrap, mount.nextSibling);
+  } else {
+    return false;
+  }
+
+  return !!document.getElementById("ap-container");
+}
+
+function initCardknoxCartApplePay() {
   if (
     applePaysettings.merchant_identifier == "" ||
     applePaysettings.merchant_identifier == null ||
@@ -26,28 +96,68 @@ jQuery(document.body).on("updated_cart_totals", function () {
         "<div class='woocommerce-error' role='alert'>Please contact support. Failed to initialize Apple Pay. </div>"
       )
       .show();
-  } else {
-    ckApplePay.enableApplePay({
-      initFunction: "apRequest.initAP",
-      amountField: "amount",
-    });
+    return;
   }
-});
 
-document.addEventListener("DOMContentLoaded", function (event) {
+  if (!ensureCartApplePayContainer()) {
+    return;
+  }
+
+  if (typeof ckApplePay === "undefined" || typeof APButtonColor === "undefined") {
+    // ifields can finish after our script; retry briefly.
+    if (typeof initCardknoxCartApplePay._sdkRetries !== "number") {
+      initCardknoxCartApplePay._sdkRetries = 0;
+    }
+    if (initCardknoxCartApplePay._sdkRetries < 20) {
+      initCardknoxCartApplePay._sdkRetries += 1;
+      setTimeout(initCardknoxCartApplePay, 150);
+      return;
+    }
+    console.warn("Apple Pay: ifields SDK not ready yet.");
+    return;
+  }
+
+  initCardknoxCartApplePay._sdkRetries = 0;
+
+  // Must match checkout: SDK resolves "apRequest.*" on window and needs real enums (not null).
+  if (!window.apRequest || !window.apRequest.buttonOptions) {
+    console.warn("Apple Pay: apRequest not ready.");
+    return;
+  }
+  window.apRequest.buttonOptions.buttonColor = getApButtonColor(applePaysettings);
+  window.apRequest.buttonOptions.buttonType = getApButtonType(applePaysettings);
+
   ckApplePay.enableApplePay({
     initFunction: "apRequest.initAP",
     amountField: "amount",
   });
+}
+
+jQuery(document.body).on("updated_cart_totals", function () {
+  jQuery.ajax({
+    url: applePaysettings.ajax_url,
+    type: "POST",
+    data: {
+      action: "update_cart_total",
+    },
+    success: function (response) {
+      if (response.success) {
+        cartTotal.total = response.data.total;
+      }
+    },
+  });
+  initCardknoxCartApplePay();
 });
+/* END PLGN-245 (TICKET RELATED) */
 
 let lastSelectedShippingMethod = "";
 
-const apRequest = {
+// Same as checkout cardknox-apple-pay.js — must be on window for ifields initFunction paths.
+window.apRequest = {
   buttonOptions: {
     buttonContainer: "ap-container",
-    buttonColor: getApButtonColor(applePaysettings),
-    buttonType: getApButtonType(applePaysettings),
+    buttonColor: typeof APButtonColor !== "undefined" ? getApButtonColor(applePaysettings) : null,
+    buttonType: typeof APButtonType !== "undefined" ? getApButtonType(applePaysettings) : null,
   },
   totalAmount: null,
   taxAmt: null,
@@ -372,38 +482,13 @@ function getAmount() {
   return parseFloat(totals).toFixed(2);
 }
 
-function getApButtonColor(applePaysettings) {
-  switch (applePaysettings.button_style) {
-    case "white":
-      return APButtonColor.white;
-    case "whiteOutline":
-      return APButtonColor.whiteOutline;
-    case "black":
-    default:
-      return APButtonColor.black;
-  }
-}
+/*Start PLGN-245 (TICKET RELATED) */
+// Init after DOM is ready so cart buttons (.wc-proceed-to-checkout) exist.
+jQuery(function () {
+  initCardknoxCartApplePay();
+});
 
-function getApButtonType(applePaysettings) {
-  switch (applePaysettings.button_type) {
-    case "buy":
-      return APButtonType.buy;
-    case "plain":
-      return APButtonType.plain;
-    case "order":
-      return APButtonType.order;
-    case "donate":
-      return APButtonType.donate;
-    case "continue":
-      return APButtonType.continue;
-    case "checkout":
-      return APButtonType.checkout;
-    case "pay":
-    default:
-      return APButtonType.pay;
-  }
-}
-
+var cardknoxApayOrderSubmitting = false;
 function applePaycreateWooCommerceOrder(
   token,
   amount,
@@ -411,6 +496,12 @@ function applePaycreateWooCommerceOrder(
   shippingContact,
   lastSelectedShippingMethod
 ) {
+  // Prevent duplicate AJAX / double order creation from cart quick checkout.
+  if (cardknoxApayOrderSubmitting) {
+    return;
+  }
+  cardknoxApayOrderSubmitting = true;
+
   jQuery.ajax({
     url: applePaysettings.ajax_url,
     type: "POST",
@@ -427,6 +518,7 @@ function applePaycreateWooCommerceOrder(
       if (response.success) {
         window.location.href = response.data.redirect_url;
       } else {
+        cardknoxApayOrderSubmitting = false;
         jQuery(".applepay-error")
           .html("<div> " + response.data + " </div>")
           .show();
@@ -436,6 +528,7 @@ function applePaycreateWooCommerceOrder(
       }
     },
     error: function (error) {
+      cardknoxApayOrderSubmitting = false;
       console.log(error); // Log the full error response
       jQuery(".applepay-error")
         .html("<div> " + error.responseText + " </div>")
@@ -446,3 +539,4 @@ function applePaycreateWooCommerceOrder(
     },
   });
 }
+/* END PLGN-245 (TICKET RELATED) */

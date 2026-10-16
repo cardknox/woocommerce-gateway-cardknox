@@ -100,12 +100,25 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         add_action('woocommerce_review_order_after_submit', array($this, 'cardknox_review_order_after_submit'));
         add_filter('woocommerce_available_payment_gateways', array($this, 'cardknox_allow_payment_method_by_country'));
 
-        if (is_cart() && $this->appleQuickCheckout == 'no') {
-            add_action('woocommerce_proceed_to_checkout', array($this, 'cardknox_review_order_after_submit'), 20);
-        }
+        /*Start PLGN-245 (TICKET RELATED) */
+        // is_cart() is unreliable in the constructor — register cart button on wp when query is ready.
+        add_action('wp', array($this, 'maybe_add_cart_applepay_button'));
+        /* END PLGN-245 (TICKET RELATED) */
 
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
         add_action('admin_enqueue_scripts',  array($this, 'custom_admin_upload_btn_css'));
+    }
+
+    /**
+     * Output Apple Pay button markup on the cart page when quick checkout is enabled.
+     */
+    public function maybe_add_cart_applepay_button()
+    {
+        /*Start PLGN-245 (TICKET RELATED) */
+        if (is_cart() && 'no' === $this->appleQuickCheckout && 'yes' === $this->enabled) {
+            add_action('woocommerce_proceed_to_checkout', array($this, 'cardknox_review_order_after_submit'), 20);
+        }
+        /* END PLGN-245 (TICKET RELATED) */
     }
 
     public function custom_admin_upload_btn_css($hook)
@@ -499,6 +512,14 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             return;
         }
 
+        /*Start PLGN-245 (TICKET RELATED) */
+        // Cart quick-checkout uses cardknox-apple-pay-cart.js — skip checkout AP script on cart
+        // to avoid double handlers / duplicate orders.
+        if (is_cart() && 'no' === $this->appleQuickCheckout) {
+            return;
+        }
+        /* END PLGN-245 (TICKET RELATED) */
+
         wp_enqueue_script(
             'woocommerce_cardknox_apple_pay',
             plugins_url('assets/js/cardknox-apple-pay.min.js', WC_CARDKNOX_MAIN_FILE),
@@ -575,12 +596,13 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
     public function get_payment_data($postData)
     {
+        /*Start PLGN-245 (TICKET RELATED) */
         if (isset($_POST['xCardNumToken'])) {
-
-            $postData['xCardNum']               = wc_clean($_POST['xCardNumToken']);
-            $postData['xAmount']                = WC()->cart->total;
-            $postData['xDigitalWalletType']     = 'applepay';
+            // Keep xAmount from the order (set in get_order_data); never trust client amount.
+            $postData['xCardNum']           = wc_clean(wp_unslash($_POST['xCardNumToken']));
+            $postData['xDigitalWalletType'] = 'applepay';
         }
+        /* END PLGN-245 (TICKET RELATED) */
         return $postData;
     }
 

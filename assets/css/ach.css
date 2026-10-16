@@ -1,0 +1,77 @@
+/*----Start PLGN-157( ACH ) Task----*/
+.wc-cardknox-ach-form .form-row {
+    margin-bottom: 12px;
+}
+
+.wc-cardknox-ach-form label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.wc-cardknox-ach-form .input-text,
+.wc-cardknox-ach-form select {
+    width: 100%;
+    max-width: 100%;
+}
+
+.wc-cardknox-ach-account-type {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+
+.wc-cardknox-ach-account-type label {
+    font-weight: 400;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.wc-cardknox-ach-account-field iframe {
+    width: 100%;
+    max-width: 100%;
+    border: 0;
+    vertical-align: top;
+}
+
+.wc-cardknox-ach-agreement {
+    margin: 16px 0 10px;
+    padding: 12px;
+    border: 1px solid #c3c3c3;
+    border-radius: 4px;
+    background: #f9f9f9;
+    max-height: 160px;
+    overflow-y: auto;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.wc-cardknox-ach-consent {
+    margin-top: 10px;
+}
+
+.wc-cardknox-ach-consent label {
+    font-weight: 400;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.wc-cardknox-ach-error {
+    color: #b32d2e;
+    font-size: 13px;
+    margin-top: 4px;
+    display: none;
+}
+
+.wc-cardknox-ach-field-invalid {
+    border-color: #b32d2e !important;
+}
+
+#cardknox-ach-ifields-error {
+    display: block;
+    margin-top: 4px;
+}
+/*----End PLGN-157( ACH ) Task----*/

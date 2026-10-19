@@ -359,8 +359,25 @@ if (!class_exists('WC_Cardknox')) :
             add_action('woocommerce_order_status_processing_to_cancelled', array($this, 'refund_payment'));
             add_action('woocommerce_order_status_processing_to_completed', array($this, 'capture_payment'));
             $this->settingPage = 'admin.php?page=wc-settings&tab=checkout&section=';
-            add_action('wp_ajax_nopriv_get_data', array($this, 'threedsAjaxHandler'));
-            add_action('wp_ajax_get_data', array($this, 'threedsAjaxHandler'));
+
+            if ($this->is_3ds_enabled()) {
+                add_action('wp_ajax_nopriv_cardknox_3ds_verify', array($this, 'threedsAjaxHandler'));
+                add_action('wp_ajax_cardknox_3ds_verify', array($this, 'threedsAjaxHandler'));
+            }
+        }
+
+        /**
+         * Whether Cardknox 3DS is enabled in gateway settings.
+         *
+         * @return bool
+         */
+        public function is_3ds_enabled()
+        {
+            $options = get_option('woocommerce_cardknox_settings', array());
+            if (is_serialized($options)) {
+                $options = maybe_unserialize($options);
+            }
+            return is_array($options) && isset($options['enable-3ds']) && 'yes' === $options['enable-3ds'];
         }
         /**
          * Allow this class and other classes to add slug keyed notices (to avoid duplication)
@@ -1288,87 +1305,234 @@ if (!class_exists('WC_Cardknox')) :
         }
         
         /**
-         * 3ds API verificaion
+         * 3DS API verification (authenticated to checkout session).
          */
         public function threedsAjaxHandler()
         {
+            check_ajax_referer('cardknox_3ds_verify', 'security');
 
-            $apiUrl = "https://x1.cardknox.com/verify";
+            if (!$this->is_3ds_enabled()) {
+                wp_send_json(
+                    array(
+                        'xResult' => 'E',
+                        'xError'  => __('3D Secure is not enabled.', 'woo-cardknox-gateway'),
+                    ),
+                    403
+                );
+            }
 
-            
-            $options = get_option('woocommerce_cardknox_settings');
+            if (!function_exists('WC') || !WC()->session) {
+                wp_send_json(
+                    array(
+                        'xResult' => 'E',
+                        'xError'  => __('Checkout session is not available. Please try again.', 'woo-cardknox-gateway'),
+                    ),
+                    400
+                );
+            }
+
+            $pending = WC()->session->get('cardknox_3ds_pending');
+            if (
+                empty($pending) ||
+                empty($pending['order_id']) ||
+                empty($pending['order_key']) ||
+                empty($pending['x_ref_num'])
+            ) {
+                wp_send_json(
+                    array(
+                        'xResult' => 'E',
+                        'xError'  => __('Invalid or expired 3D Secure session. Please try again.', 'woo-cardknox-gateway'),
+                    ),
+                    403
+                );
+            }
+
+            $order = wc_get_order(absint($pending['order_id']));
+            if (!$order || $order->get_order_key() !== $pending['order_key']) {
+                wp_send_json(
+                    array(
+                        'xResult' => 'E',
+                        'xError'  => __('Order not found for this checkout session.', 'woo-cardknox-gateway'),
+                    ),
+                    403
+                );
+            }
+
+            $session_order_id = absint(WC()->session->get('order_awaiting_payment'));
+            if ($session_order_id && $session_order_id !== (int) $order->get_id()) {
+                wp_send_json(
+                    array(
+                        'xResult' => 'E',
+                        'xError'  => __('Order does not match the current checkout session.', 'woo-cardknox-gateway'),
+                    ),
+                    403
+                );
+            }
+
+            $customer_id = (int) $order->get_customer_id();
+            if ($customer_id && $customer_id !== get_current_user_id()) {
+                wp_send_json(
+                    array(
+                        'xResult' => 'E',
+                        'xError'  => __('You are not allowed to complete payment for this order.', 'woo-cardknox-gateway'),
+                    ),
+                    403
+                );
+            }
+
+            if (!$order->needs_payment()) {
+                wp_send_json(
+                    array(
+                        'xResult' => 'E',
+                        'xError'  => __('This order does not require payment.', 'woo-cardknox-gateway'),
+                    ),
+                    400
+                );
+            }
+
+            $client_ref = isset($_POST['xRefNum']) ? sanitize_text_field(wp_unslash($_POST['xRefNum'])) : '';
+            $pending_ref = (string) $pending['x_ref_num'];
+            $order_ref = (string) $order->get_meta('_cardknox_3ds_pending_ref');
+
+            if (
+                '' === $client_ref ||
+                !hash_equals($pending_ref, $client_ref) ||
+                ('' !== $order_ref && !hash_equals($order_ref, $client_ref))
+            ) {
+                wp_send_json(
+                    array(
+                        'xResult' => 'E',
+                        'xError'  => __('Invalid transaction reference for this order.', 'woo-cardknox-gateway'),
+                    ),
+                    403
+                );
+            }
+
+            $payment_info = new WC_Gateway_Cardknox();
+            $options = get_option('woocommerce_cardknox_settings', array());
             if (is_serialized($options)) {
-                $options = maybe_unserialize($options); 
+                $options = maybe_unserialize($options);
             }
             $transaction_key = isset($options['transaction_key']) ? $options['transaction_key'] : null;
-            $request = $_POST;
-            $request['xKey'] = $transaction_key;
-        
-            unset($request['action']);
+
+            if (empty($transaction_key)) {
+                wp_send_json(
+                    array(
+                        'xResult' => 'E',
+                        'xError'  => __('Payment gateway is not configured.', 'woo-cardknox-gateway'),
+                    ),
+                    500
+                );
+            }
+
+            // Only forward allow-listed 3DS fields from the client.
+            $allowed_client_fields = array(
+                'xCavv',
+                'xEci',
+                'x3dsAuthenticationStatus',
+                'x3dsSignatureVerificationStatus',
+                'x3dsActionCode',
+                'x3dsError',
+            );
+
+            /* verify rejects xCommand/xAmount/xInvoice. Keep those server-side only
+                via session-bound order + xRefNum checks — never accept client overrides. 
+            */
+            $request = array(
+                'xKey'             => $transaction_key,
+                'xRefNum'          => $pending_ref,
+                'xVersion'         => '5.0.0',
+                'xSoftwareName'    => 'Wordpress_WooCommerce',
+                'xSoftwareVersion' => WC()->version,
+            );
+
+            foreach ($allowed_client_fields as $field) {
+                if (isset($_POST[$field])) {
+                    $request[$field] = sanitize_text_field(wp_unslash($_POST[$field]));
+                }
+            }
 
             $response = wp_safe_remote_post(
-                $apiUrl,
+                'https://x1.cardknox.com/verify',
                 array(
-                    'method'     => 'POST',
-                    'body'       => $request,
-                    'timeout'    => 70
+                    'method'  => 'POST',
+                    'body'    => $request,
+                    'timeout' => 70,
                 )
             );
 
-            $parsedResponse = [];
-            parse_str($response['body'], $parsedResponse);
+            if (is_wp_error($response) || empty($response['body'])) {
+                $message = is_wp_error($response)
+                    ? $response->get_error_message()
+                    : __('There was a problem connecting to the payment gateway.', 'woo-cardknox-gateway');
+                $this->log(sprintf(__('Error: %s', 'woo-cardknox-gateway'), $message));
+                wp_send_json(
+                    array(
+                        'xResult' => 'E',
+                        'xError'  => $message,
+                    ),
+                    502
+                );
+            }
+
+            $parsed_response = array();
+            parse_str($response['body'], $parsed_response);
 
             try {
-                if ($parsedResponse['xResult'] === "E" || $parsedResponse['xResult'] === "D") {
-                    wc_add_notice($parsedResponse['xError'], 'error');
-                    $this->log(sprintf(__('Error: %s', 'woo-cardknox-gateway'), $parsedResponse['xError']));
+                $x_result = isset($parsed_response['xResult']) ? $parsed_response['xResult'] : '';
 
-                    return wp_send_json($parsedResponse);
-                } else {
-
-                    $paymentInfo = new WC_Gateway_Cardknox();
-
-                    $order  = wc_get_order($parsedResponse['xInvoice']);
-                    $redirect = $order->get_checkout_order_received_url();
-
-                    if (is_wp_error($parsedResponse)) {
-                        $order->add_order_note($parsedResponse->get_error_message());
-                        throw new WC_Data_Exception( 'cardknox_declined', __( 'The transaction was declined, please try again.', 'woo-cardknox-gateway' ) );
-                    }
-
-                    $this->log("Info: set_transaction_id");
-                    $order->set_transaction_id($parsedResponse['xRefNum']);
-                    
-                    
-                    $this->log("Info: save_payment");
-                    $paymentInfo->save_payment($forceCustomer, $parsedResponse);
-                    $this->log("Info: save_payment forceCustomer=".$forceCustomer );
-                    $this->log("Info: parsedResponse parsedResponse=".$parsedResponse );
-
-                    $this->log("Info: process_response");
-                    $paymentInfo->process_response($parsedResponse, $order);
-
-                    $this->log("Info: empty_cart");
-
-                    WC()->cart->empty_cart();
-
-                    $this->log("Info: wc_gateway_cardknox_process_payment");
-                    do_action('wc_gateway_cardknox_process_payment', $parsedResponse, $order);
-
-                    $this->log("Info: thank you page redirect");
-
-                    $parsedResponse['redirect'] = $redirect;
-
-                    return wp_send_json($parsedResponse);
+                if ('A' !== $x_result) {
+                    $error = !empty($parsed_response['xError'])
+                        ? $parsed_response['xError']
+                        : __('3D Secure verification was not approved. Please try again.', 'woo-cardknox-gateway');
+                    wc_add_notice($error, 'error');
+                    $this->log(sprintf(__('Error: %s', 'woo-cardknox-gateway'), $error));
+                    return wp_send_json($parsed_response);
                 }
+
+                $response_invoice = isset($parsed_response['xInvoice']) ? (string) $parsed_response['xInvoice'] : '';
+                if ('' !== $response_invoice && (string) $order->get_id() !== $response_invoice) {
+                    throw new Exception(__('Gateway response does not match the expected order.', 'woo-cardknox-gateway'));
+                }
+
+                $force_customer = !empty($pending['force_customer']);
+                $redirect = $order->get_checkout_order_received_url();
+
+                $this->log('Info: set_transaction_id');
+                $order->set_transaction_id($parsed_response['xRefNum']);
+
+                $this->log('Info: save_payment');
+                $payment_info->save_payment($force_customer, $parsed_response);
+
+                $this->log('Info: process_response');
+                $payment_info->process_response($parsed_response, $order);
+
+                $order->delete_meta_data('_cardknox_3ds_pending_ref');
+                $order->save();
+                WC()->session->set('cardknox_3ds_pending', null);
+
+                $this->log('Info: empty_cart');
+                WC()->cart->empty_cart();
+
+                $this->log('Info: wc_gateway_cardknox_process_payment');
+                do_action('wc_gateway_cardknox_process_payment', $parsed_response, $order);
+
+                $this->log('Info: thank you page redirect');
+                $parsed_response['redirect'] = $redirect;
+
+                return wp_send_json($parsed_response);
             } catch (Exception $e) {
                 wc_add_notice($e->getMessage(), 'error');
                 $this->log(sprintf(__('Error: %s', 'woo-cardknox-gateway'), $e->getMessage()));
 
-                return $e->getMessage();
+                wp_send_json(
+                    array(
+                        'xResult' => 'E',
+                        'xError'  => $e->getMessage(),
+                    ),
+                    400
+                );
             }
-
-            die();
         }
     }
 

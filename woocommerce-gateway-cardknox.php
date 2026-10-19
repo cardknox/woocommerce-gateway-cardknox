@@ -1104,6 +1104,7 @@ if (!class_exists('WC_Cardknox')) :
                 wp_die();
             }
 
+            $this->release_quickcheckout_lock('gpay');
             wp_send_json_success(array('redirect_url' => $payment_result));
             wp_die();
         }
@@ -1172,7 +1173,7 @@ if (!class_exists('WC_Cardknox')) :
             // add billing and shipping addresses
             $billing = array(
                 'first_name'    => sanitize_text_field($billingContact['firstName'] ?? ''),
-                'last_name'     => sanitize_text_field($billingContact['billingLastName'] ?? ''),
+                'last_name'     => sanitize_text_field($billingContact['lastName'] ?? ''),
                 'address_1'     => sanitize_text_field($billingContact['address'] ?? ''),
                 'address_2'     => '',
                 'city'          => sanitize_text_field($billingContact['city'] ?? ''),
@@ -1185,7 +1186,7 @@ if (!class_exists('WC_Cardknox')) :
 
             $shipping_address = array(
                 'first_name'    => sanitize_text_field($shippingContact['firstName'] ?? ''),
-                'last_name'     => sanitize_text_field($shippingContact['billingLastName'] ?? ''),
+                'last_name'     => sanitize_text_field($shippingContact['lastName'] ?? ''),
                 'address_1'     => sanitize_text_field($shippingContact['address'] ?? ''),
                 'address_2'     => '',
                 'city'          => sanitize_text_field($shippingContact['city'] ?? ''),
@@ -1215,6 +1216,7 @@ if (!class_exists('WC_Cardknox')) :
                 wp_die();
             }
 
+            $this->release_quickcheckout_lock('apay');
             wp_send_json_success(array('redirect_url' => $payment_result));
             wp_die();
         }

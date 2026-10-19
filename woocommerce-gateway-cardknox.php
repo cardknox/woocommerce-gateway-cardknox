@@ -194,12 +194,12 @@ if (!class_exists('WC_Cardknox')) :
             add_action('init', array($this, 'register_block_scripts'));
             add_action('wp_enqueue_scripts', array($this, 'quickChekoutPaymentScripts'));
             add_action('wp_enqueue_scripts', array($this, 'enqueue_block_styles'));
-            /*Start PLGN-245 (TICKET RELATED) */
+            
             add_action('init', array($this, 'register_quickcheckout_ajax_handlers'), 20);
-            /* END PLGN-245 (TICKET RELATED) */
+            
         }
 
-        /*Start PLGN-245 (TICKET RELATED) */
+        
         /**
          * Register cart quick-checkout AJAX endpoints only when the related
          * gateway and quick-checkout feature are enabled.
@@ -242,7 +242,7 @@ if (!class_exists('WC_Cardknox')) :
                 add_action('wp_ajax_nopriv_applepay_cardknox_create_order', array($this, 'applepayCardknoxCreateorder'));
             }
         }
-        /* END PLGN-245 (TICKET RELATED) */
+        
 
         /**
          * Register scripts for block editor support
@@ -765,7 +765,7 @@ if (!class_exists('WC_Cardknox')) :
                 return;
             }
         
-            /*Start PLGN-245 (TICKET RELATED) */
+            
             // Option is "Disable Quick Checkout": show when gateway enabled AND disable checkbox is unchecked ('no').
             $show_googlepay_quickcheckout = ( 'yes' === $options['googlepay_enabled'] && 'no' === $googlepay_quickcheckout );
             $show_applepay_quickcheckout  = ( 'yes' === $applePayoptions['applepay_enabled'] && 'no' === $applePay_quickcheckout );
@@ -792,7 +792,7 @@ if (!class_exists('WC_Cardknox')) :
             if ( $show_applepay_quickcheckout ) {
                 $this->handleApplepayCartQuickcheckout( $applePayoptions );
             }
-            /* END PLGN-245 (TICKET RELATED) */
+            
         }
         
         
@@ -806,7 +806,7 @@ if (!class_exists('WC_Cardknox')) :
                 'all'
             );
         
-            /*Start PLGN-245 (TICKET RELATED) */
+            
             // filemtime busts browser cache of .min.js (old cached file caused duplicate cart orders).
             wp_enqueue_script(
                 'woocommerce_cardknox_google_pay',
@@ -815,7 +815,7 @@ if (!class_exists('WC_Cardknox')) :
                 filemtime( WC_CARDKNOX_PLUGIN_PATH . '/assets/js/cardknox-google-pay-cart.min.js' ),
                 true
             );
-            /* END PLGN-245 (TICKET RELATED) */
+            
         
             // Build shipping costs
             $shippingCostsGoogle = [];
@@ -868,11 +868,11 @@ if (!class_exists('WC_Cardknox')) :
         
         private function handleApplepayCartQuickcheckout( array $applePayoptions ): void {
 
-            /*Start PLGN-245 (TICKET RELATED) */
+            
             // Register cart button HTML here (same place cart AP scripts load).
             // Gateway constructor/wp hooks are unreliable for is_cart(), which left #ap-container missing.
             add_action( 'woocommerce_proceed_to_checkout', array( $this, 'render_cart_applepay_button' ), 25 );
-            /* END PLGN-245 (TICKET RELATED) */
+            
 
             wp_enqueue_style(
                 'woocommerce_cardknox_applepay',
@@ -882,7 +882,7 @@ if (!class_exists('WC_Cardknox')) :
                 'all'
             );
         
-            /*Start PLGN-245 (TICKET RELATED) */
+            
             // filemtime busts browser cache of .min.js (old cached file caused duplicate cart orders).
             wp_enqueue_script(
                 'woocommerce_cardknox_apple_pay',
@@ -891,7 +891,7 @@ if (!class_exists('WC_Cardknox')) :
                 filemtime( WC_CARDKNOX_PLUGIN_PATH . '/assets/js/cardknox-apple-pay-cart.min.js' ),
                 true
             );
-            /* END PLGN-245 (TICKET RELATED) */
+            
         
             $shippingCostsApple = [];
             foreach ( WC_Shipping_Zones::get_zones() as $zone ) {
@@ -945,12 +945,12 @@ if (!class_exists('WC_Cardknox')) :
          */
         public function render_cart_applepay_button()
         {
-            /*Start PLGN-245 (TICKET RELATED) */
+            
             echo '<div id="ap-container" class="ap" style="min-height:55px;margin:10px 0;"></div>';
             echo '<div class="messages">';
             echo '<div class="message message-error error applepay-error" style="display: none;"></div>';
             echo '</div>';
-            /* END PLGN-245 (TICKET RELATED) */
+            
         }
 
 
@@ -1000,7 +1000,7 @@ if (!class_exists('WC_Cardknox')) :
 
             return $shipping_methods;
         }
-        /*Start PLGN-245 (TICKET RELATED) */
+        
         /**
          * For Googlepay quick create order.
          */
@@ -1286,7 +1286,7 @@ if (!class_exists('WC_Cardknox')) :
 
             return new WP_Error('payment_failed', __('Payment failed', 'woocommerce'));
         }
-        /* END PLGN-245 (TICKET RELATED) */
+        
         /**
          * 3ds API verificaion
          */

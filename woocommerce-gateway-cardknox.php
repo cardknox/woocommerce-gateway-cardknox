@@ -310,11 +310,9 @@ if (!class_exists('WC_Cardknox')) :
                 include_once(dirname(__FILE__) . '/includes/legacy/class-wc-gateway-cardknox.php');
             }
 
-            /*----Start PLGN-157( ACH ) Task----*/
             if (class_exists('WC_Payment_Gateway')) {
                 include_once(dirname(__FILE__) . '/includes/class-wc-gateway-cardknox-ach.php');
             }
-            /*----End PLGN-157( ACH ) Task----*/
         
             $this->init_gateways();
         
@@ -547,16 +545,12 @@ if (!class_exists('WC_Cardknox')) :
                 $methods[] = 'WC_Gateway_Cardknox_Addons';
                 $methods[] = 'WCCardknoxApplepay';
                 $methods[] = 'WCCardknoxGooglepay';
-                /*----Start PLGN-157( ACH ) Task----*/
                 $methods[] = 'WCCardknoxACH';
-                /*----End PLGN-157( ACH ) Task----*/
             } else {
                 $methods[] = 'WC_Gateway_Cardknox';
                 $methods[] = 'WCCardknoxApplepay';
                 $methods[] = 'WCCardknoxGooglepay';
-                /*----Start PLGN-157( ACH ) Task----*/
                 $methods[] = 'WCCardknoxACH';
-                /*----End PLGN-157( ACH ) Task----*/
             }
             return $methods;
         }

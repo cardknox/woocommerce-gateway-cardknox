@@ -3,7 +3,6 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-/*----Start PLGN-157( ACH ) Task----*/
 include_once 'settings-cardknox-ach.php';
 
 /**
@@ -263,7 +262,9 @@ class WCCardknoxACH extends WC_Payment_Gateway
     {
         $account_type    = isset($_POST['cardknox_ach_account_type']) ? sanitize_text_field(wp_unslash($_POST['cardknox_ach_account_type'])) : '';
         $name_on_account = isset($_POST['cardknox_ach_name_on_account']) ? sanitize_text_field(wp_unslash($_POST['cardknox_ach_name_on_account'])) : '';
-        $routing         = isset($_POST['cardknox_ach_routing_number']) ? preg_replace('/\D/', '', wp_unslash($_POST['cardknox_ach_routing_number'])) : '';
+        $routing = (isset($_POST['cardknox_ach_routing_number']) && is_scalar($_POST['cardknox_ach_routing_number'])) ? preg_replace('/\D/', '', wp_unslash($_POST['cardknox_ach_routing_number'])) : '';
+
+
         $ach_token       = isset($_POST['xACH']) ? sanitize_text_field(wp_unslash($_POST['xACH'])) : '';
         $consent         = !empty($_POST['cardknox_ach_consent']);
 
@@ -334,16 +335,15 @@ class WCCardknoxACH extends WC_Payment_Gateway
      */
     protected function get_client_ip()
     {
-        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-            $ip = sanitize_text_field(wp_unslash($_SERVER['HTTP_CLIENT_IP']));
-        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            $forwarded = explode(',', sanitize_text_field(wp_unslash($_SERVER['HTTP_X_FORWARDED_FOR'])));
-            $ip = trim($forwarded[0]);
-        } else {
-            $ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
+        // Do not trust HTTP_CLIENT_IP / HTTP_X_FORWARDED_FOR for consent audit IP.
+        // Those headers are client-controlled unless a trusted proxy rewrites them.
+        if (class_exists('WC_Geolocation')) {
+            return WC_Geolocation::get_ip_address();
         }
 
-        return $ip;
+        return isset($_SERVER['REMOTE_ADDR'])
+            ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR']))
+            : '';
     }
 
     /**
@@ -525,7 +525,7 @@ class WCCardknoxACH extends WC_Payment_Gateway
                     $gateway_error = $response->get_error_message();
                     $order->add_order_note($gateway_error);
                     $this->log('ACH gateway error: ' . $gateway_error);
-                    throw new Exception($gateway_error);
+                    throw new Exception(__('The ACH transaction was declined, please try again.', 'woo-cardknox-gateway'));
                 }
 
                 $order->set_transaction_id($response['xRefNum']);
@@ -604,7 +604,7 @@ class WCCardknoxACH extends WC_Payment_Gateway
      * @param string $reason
      * @return bool|WP_Error
      */
-    public function process_refund($order_id, $amount = null, $reason = '')
+        public function process_refund($order_id, $amount = null, $reason = '')
     {
         $order = wc_get_order($order_id);
 
@@ -638,6 +638,23 @@ class WCCardknoxACH extends WC_Payment_Gateway
         $response = WC_Cardknox_API::request($body);
 
         if (is_wp_error($response)) {
+            $error_message = strtolower($response->get_error_message());
+
+            // Only fall back to check:void when Cardknox indicates the ACH
+            $should_try_void = (
+                false !== strpos($error_message, 'void')
+                || false !== strpos($error_message, 'unsettled')
+                || false !== strpos($error_message, 'pending')
+                || false !== strpos($error_message, '01151') 
+                || false !== strpos($error_message, '01493') 
+                || false !== strpos($error_message, '01704') 
+            );
+
+            if (!$should_try_void) {
+                $this->log('Error: ' . $response->get_error_message());
+                return $response;
+            }
+
             // Pending ACH transactions may need void instead of refund.
             $void_response = WC_Cardknox_API::request(
                 array(
@@ -694,4 +711,3 @@ class WCCardknoxACH extends WC_Payment_Gateway
         }
     }
 }
-/*----End PLGN-157( ACH ) Task----*/

@@ -958,9 +958,14 @@ if (!class_exists('WC_Cardknox')) :
                 wp_die();
             }
 
-            $shipping_method_slug = $shippingOptionData['id'];
+            $shipping_method_slug = $shippingOptionData['id'] ?? '';
             $shipping_method_details = $this->getShippingMethodDetails($shipping_method_slug);
-
+            if (empty($shipping_method_details[0])) {
+                $this->release_quickcheckout_lock('gpay');
+                wp_send_json_error(__('Invalid shipping method. Please select shipping again.', 'woo-cardknox-gateway'));
+                wp_die();
+            }
+            
             // Create the order
             $order = wc_create_order();
             foreach (WC()->cart->get_cart() as $cart_item) {
@@ -1040,7 +1045,12 @@ if (!class_exists('WC_Cardknox')) :
                 $order->add_product($product, $cart_item['quantity']);
             }
 
-            $shipping_method_details = $this->getShippingMethodDetails($selectedShipping['identifier']);
+            $shipping_method_details = $this->getShippingMethodDetails($selectedShipping['identifier'] ?? '');
+            if (empty($shipping_method_details[0])) {
+                $this->release_quickcheckout_lock('apay');
+                wp_send_json_error(__('Invalid shipping method. Please select shipping again.', 'woo-cardknox-gateway'));
+                wp_die();
+            }
 
             // add shipping options
             $shipping = new WC_Order_Item_Shipping();

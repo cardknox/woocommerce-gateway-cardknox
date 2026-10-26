@@ -3,12 +3,12 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-/*----Start PLGN-157( ACH ) Task----*/
+
 $wc_cardknox_ach_settings = array(
     'ach_info' => array(
         'title'       => __('ACH Settings', 'woo-cardknox-gateway'),
         'type'        => 'title',
-        'description' => __('Please ensure ACH is enabled on your merchant account before activating this feature.', 'woo-cardknox-gateway'),
+        'description' => __('Please ensure ACH is enabled on your Sola Account before activating this feature.', 'woo-cardknox-gateway'),
     ),
     'ach_enabled' => array(
         'title'       => __('Enable ACH', 'woo-cardknox-gateway'),
@@ -33,7 +33,7 @@ $wc_cardknox_ach_settings = array(
         'desc_tip'    => true,
     ),
     'ach_reenter' => array(
-        'title'       => __('Re-enter Routing or Account Number', 'woo-cardknox-gateway'),
+        'title'       => __('Re-enter Routing an Account Number', 'woo-cardknox-gateway'),
         'label'       => __('Require customers to re-enter routing number', 'woo-cardknox-gateway'),
         'type'        => 'checkbox',
         'description' => __('When enabled, customers must confirm the routing number by entering it twice. Account number is collected securely via Sola iFields and does not require re-entry.', 'woo-cardknox-gateway'),
@@ -43,4 +43,4 @@ $wc_cardknox_ach_settings = array(
 );
 
 $GLOBALS['wc_cardknox_ach_settings'] = $wc_cardknox_ach_settings;
-/*----End PLGN-157( ACH ) Task----*/
+

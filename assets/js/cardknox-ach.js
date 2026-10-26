@@ -1,4 +1,3 @@
-/*----Start PLGN-157( ACH ) Task----*/
 jQuery(function ($) {
   "use strict";
 
@@ -296,4 +295,3 @@ jQuery(function ($) {
   // Initial load
   setTimeout(setupWhenVisible, 800);
 });
-/*----End PLGN-157( ACH ) Task----*/

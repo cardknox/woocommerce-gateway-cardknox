@@ -40,9 +40,8 @@ class WCCardknoxACH extends WC_Payment_Gateway
     {
         $this->id                   = 'cardknox-ach';
         $this->method_title         = __('Sola ACH', 'woo-cardknox-gateway');
-        $this->method_description   = __('Please ensure ACH is enabled on your merchant account before activating this feature.', 'woo-cardknox-gateway');
+        $this->method_description   = __('Please ensure ACH is enabled on your Sola Account before activating this feature.', 'woo-cardknox-gateway');
         $this->has_fields           = true;
-        $this->view_transaction_url = 'https://portal.solapayments.com/transactions?referenceNumber=%s';
         $this->supports             = array(
             'products',
             'refunds',
@@ -62,6 +61,8 @@ class WCCardknoxACH extends WC_Payment_Gateway
         $this->wcVersion   = version_compare(WC_VERSION, '3.0.0', '<');
 
         add_action('wp_enqueue_scripts', array($this, 'payment_scripts'));
+        // Save ACH settings from the main Sola gateway ACH tab.
+        add_action('woocommerce_update_options_payment_gateways_cardknox', array($this, 'process_admin_options'));
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
     }
 
@@ -121,9 +122,11 @@ class WCCardknoxACH extends WC_Payment_Gateway
             wp_enqueue_script('cardknox', CARDKNOX_IFIELDS_URL, array(), '3.5.2607.1401', false);
         }
 
+        $suffix = defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? '' : '.min';
+
         wp_enqueue_script(
             'woocommerce_cardknox_ach',
-            plugins_url('assets/js/cardknox-ach.js', WC_CARDKNOX_MAIN_FILE),
+            plugins_url('assets/js/cardknox-ach' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE),
             array('jquery'),
             WC_CARDKNOX_VERSION,
             true

@@ -129,7 +129,8 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
                 left: 158px;
             }
             .woocommerce div#apple-pay-settings  table.form-table  th,
-            .woocommerce div#google-pay-settings  table.form-table  th{
+            .woocommerce div#google-pay-settings  table.form-table  th,
+            .woocommerce div#ach-settings  table.form-table  th{
                 width: 290px;
             }
             .woocommerce table.form-table td small{

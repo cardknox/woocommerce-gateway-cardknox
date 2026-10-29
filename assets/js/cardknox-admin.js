@@ -42,7 +42,47 @@ jQuery(function ($) {
           }
         })
         .change();
+
+          this.initPasswordToggle();
     },
+
+    /**
+     * Add show/hide toggle for the Transaction Key field (WP login-style eye icon).
+     */
+    initPasswordToggle: function () {
+      const $input = $("#woocommerce_cardknox_transaction_key");
+
+      if (!$input.length || $input.parent().hasClass("cardknox-password-wrap")) {
+        return;
+      }
+
+      $input.wrap('<span class="cardknox-password-wrap"></span>');
+
+      const $toggle = $(
+        '<button type="button" class="button button-secondary cardknox-password-toggle" aria-label="Show password">' +
+          '<span class="dashicons dashicons-visibility" aria-hidden="true"></span>' +
+          "</button>"
+      );
+
+      $input.after($toggle);
+
+      $toggle.on("click", function (e) {
+        e.preventDefault();
+
+        const showPlain = $input.attr("type") === "password";
+        $input.attr("type", showPlain ? "text" : "password");
+        $toggle
+          .find(".dashicons")
+          .toggleClass("dashicons-visibility", !showPlain)
+          .toggleClass("dashicons-hidden", showPlain);
+        $toggle.attr(
+          "aria-label",
+          showPlain ? "Hide password" : "Show password"
+        );
+      });
+    },
+
+
   };
 
   wc_cardknox_admin.init();

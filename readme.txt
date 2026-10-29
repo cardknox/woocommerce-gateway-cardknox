@@ -57,6 +57,11 @@ Visit [Sola](https://solapayments.com) to learn more.
 
 == Changelog ==
 
+= 1.2.94 =
+
+- Fixed checkout detection and payment initialization issues in Classic and Block Checkout.
+- Fixed Apple Pay and Google Pay quick checkout errors caused by invalid shipping methods.
+
 = 1.2.92 =
 
 - Improved checkout reliability and CVV autofill validation.

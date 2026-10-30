@@ -8,10 +8,39 @@
     font-weight: 600;
 }
 
-.wc-cardknox-ach-form .input-text,
 .wc-cardknox-ach-form select {
     width: 100%;
     max-width: 100%;
+}
+
+/* Name on Account + Routing Number */
+.wc-cardknox-ach-form #cardknox_ach_name_on_account,
+.wc-cardknox-ach-form #cardknox_ach_routing_number {
+    outline: none;
+    border: 1px solid rgb(195, 195, 195);
+    border-radius: 4px;
+    padding: 0.618047em;
+    width: 93%;
+    height: 30px;
+    background-color: rgb(255, 255, 255);
+    font-weight: inherit;
+    background-size: 32%;
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    box-shadow: none;
+    box-sizing: content-box;
+}
+
+.wc-cardknox-ach-form #cardknox_ach_name_on_account:focus,
+.wc-cardknox-ach-form #cardknox_ach_routing_number:focus {
+    outline: none;
+    border: 1px solid rgb(195, 195, 195);
+    box-shadow: none;
+}
+
+.wc-cardknox-ach-form #cardknox_ach_name_on_account.wc-cardknox-ach-field-invalid,
+.wc-cardknox-ach-form #cardknox_ach_routing_number.wc-cardknox-ach-field-invalid {
+    border-color: #b32d2e;
 }
 
 .wc-cardknox-ach-account-type {

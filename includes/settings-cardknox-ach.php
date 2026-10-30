@@ -32,14 +32,6 @@ $wc_cardknox_ach_settings = array(
         'default'     => __('Pay securely with your bank account (ACH).', 'woo-cardknox-gateway'),
         'desc_tip'    => true,
     ),
-    'ach_reenter' => array(
-        'title'       => __('Re-enter Routing an Account Number', 'woo-cardknox-gateway'),
-        'label'       => __('Require customers to re-enter routing number', 'woo-cardknox-gateway'),
-        'type'        => 'checkbox',
-        'description' => __('When enabled, customers must confirm the routing number by entering it twice. Account number is collected securely via Sola iFields and does not require re-entry.', 'woo-cardknox-gateway'),
-        'default'     => 'yes',
-        'desc_tip'    => true,
-    ),
 );
 
 $GLOBALS['wc_cardknox_ach_settings'] = $wc_cardknox_ach_settings;

@@ -6,22 +6,43 @@ jQuery(function ($) {
   var iFieldsReady = false;
 
   var defaultStyle = {
-    border: "1px solid #c3c3c3",
-    "font-size": "14px",
-    padding: "3px",
-    width: "100%",
-  };
+        outline: "none",
+        border: "1px solid rgb(195, 195, 195)",
+        "border-radius": "4px",
+        padding: "0.618047em",
+        width: "93%",
+        height: "30px",
+        "background-color": "rgb(255, 255, 255)",
+        "font-weight": "inherit",
+        "background-size": "32%",
+        "background-repeat": "no-repeat",
+        "background-position": "right 10px center",
+   };
   var validStyle = {
-    border: "1px solid green",
-    "font-size": "14px",
-    padding: "3px",
-    width: "100%",
+        outline: "none",
+        border: "1px solid rgb(195, 195, 195)",
+        "border-radius": "4px",
+        padding: "0.618047em",
+        width: "93%",
+        height: "30px",
+        "background-color": "rgb(255, 255, 255)",
+        "font-weight": "inherit",
+        "background-size": "32%",
+        "background-repeat": "no-repeat",
+        "background-position": "right 10px center",
   };
   var invalidStyle = {
-    border: "1px solid red",
-    "font-size": "14px",
-    padding: "3px",
-    width: "100%",
+        outline: "none",
+        border: "1px solid rgb(195, 195, 195)",
+        "border-radius": "4px",
+        padding: "0.618047em",
+        width: "93%",
+        height: "30px",
+        "background-color": "rgb(255, 255, 255)",
+        "font-weight": "inherit",
+        "background-size": "32%",
+        "background-repeat": "no-repeat",
+        "background-position": "right 10px center",
   };
 
   function getParams() {

@@ -20,13 +20,6 @@ class WCCardknoxACH extends WC_Payment_Gateway
     public $logging;
 
     /**
-     * Require re-entry of routing/account numbers.
-     *
-     * @var bool
-     */
-    public $reenter;
-
-    /**
      * @var string
      */
     public $token_key;
@@ -55,7 +48,6 @@ class WCCardknoxACH extends WC_Payment_Gateway
         $this->enabled     = $this->get_option('ach_enabled', 'no');
         $this->title       = $this->get_option('ach_title', __('ACH', 'woo-cardknox-gateway'));
         $this->description = $this->get_option('ach_description', __('Pay securely with your bank account (ACH).', 'woo-cardknox-gateway'));
-        $this->reenter     = 'yes' === $this->get_option('ach_reenter', 'yes');
         $this->logging     = 'yes' === (isset($option['logging']) ? $option['logging'] : 'no');
         $this->token_key   = isset($option['token_key']) ? $option['token_key'] : '';
         $this->wcVersion   = version_compare(WC_VERSION, '3.0.0', '<');
@@ -128,7 +120,7 @@ class WCCardknoxACH extends WC_Payment_Gateway
             'woocommerce_cardknox_ach',
             plugins_url('assets/js/cardknox-ach' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE),
             array('jquery'),
-            WC_CARDKNOX_VERSION,
+            wp_rand(),
             true
         );
 
@@ -139,11 +131,9 @@ class WCCardknoxACH extends WC_Payment_Gateway
                 'key'                     => $this->token_key,
                 'software_name'           => 'Wordpress_WooCommerce',
                 'software_version'        => WC_CARDKNOX_VERSION,
-                'reenter'                 => $this->reenter ? 'yes' : 'no',
                 'i18n_account_type'       => __('Please select an account type.', 'woo-cardknox-gateway'),
                 'i18n_name_required'      => __('Name on account is required.', 'woo-cardknox-gateway'),
                 'i18n_routing_invalid'    => __('Please enter a valid 9-digit routing number.', 'woo-cardknox-gateway'),
-                'i18n_routing_mismatch'   => __('Routing numbers do not match.', 'woo-cardknox-gateway'),
                 'i18n_account_required'   => __('Account number is required.', 'woo-cardknox-gateway'),
                 'i18n_account_invalid'    => __('Please enter a valid account number.', 'woo-cardknox-gateway'),
                 'i18n_consent_required'   => __('You must acknowledge and agree to the ACH terms and conditions.', 'woo-cardknox-gateway'),
@@ -205,23 +195,15 @@ class WCCardknoxACH extends WC_Payment_Gateway
 
             <p class="form-row form-row-wide">
                 <label for="cardknox_ach_name_on_account"><?php esc_html_e('Name on Account', 'woo-cardknox-gateway'); ?> <span class="required">*</span></label>
-                <input id="cardknox_ach_name_on_account" name="cardknox_ach_name_on_account" type="text" class="input-text" autocomplete="name" value="<?php echo esc_attr($name_on_account); ?>" />
+                <input id="cardknox_ach_name_on_account" name="cardknox_ach_name_on_account" type="text" class="input-text" autocomplete="name" value="<?php echo esc_attr($name_on_account); ?>" placeholder="<?php esc_attr_e('Name on Account', 'woo-cardknox-gateway'); ?>" />
                 <span class="wc-cardknox-ach-error"></span>
             </p>
 
             <p class="form-row form-row-wide">
                 <label for="cardknox_ach_routing_number"><?php esc_html_e('Routing Number', 'woo-cardknox-gateway'); ?> <span class="required">*</span></label>
-                <input id="cardknox_ach_routing_number" name="cardknox_ach_routing_number" type="text" class="input-text" inputmode="numeric" autocomplete="off" maxlength="9" />
+                <input id="cardknox_ach_routing_number" name="cardknox_ach_routing_number" type="text" class="input-text" inputmode="numeric" autocomplete="off" maxlength="9" placeholder="<?php esc_attr_e('Routing Number', 'woo-cardknox-gateway'); ?>" />
                 <span class="wc-cardknox-ach-error"></span>
             </p>
-
-            <?php if ($this->reenter) : ?>
-                <p class="form-row form-row-wide">
-                    <label for="cardknox_ach_routing_number_confirm"><?php esc_html_e('Re-enter Routing Number', 'woo-cardknox-gateway'); ?> <span class="required">*</span></label>
-                    <input id="cardknox_ach_routing_number_confirm" name="cardknox_ach_routing_number_confirm" type="text" class="input-text" inputmode="numeric" autocomplete="off" maxlength="9" />
-                    <span class="wc-cardknox-ach-error"></span>
-                </p>
-            <?php endif; ?>
 
             <p class="form-row form-row-wide wc-cardknox-ach-account-field">
                 <label><?php esc_html_e('Account Number', 'woo-cardknox-gateway'); ?> <span class="required">*</span></label>
@@ -286,15 +268,6 @@ class WCCardknoxACH extends WC_Payment_Gateway
         if (!$this->is_valid_routing_number($routing)) {
             wc_add_notice(__('Please enter a valid 9-digit routing number.', 'woo-cardknox-gateway'), 'error');
             $valid = false;
-        }
-
-        if ($this->reenter) {
-            $routing_confirm = isset($_POST['cardknox_ach_routing_number_confirm']) ? preg_replace('/\D/', '', wp_unslash($_POST['cardknox_ach_routing_number_confirm'])) : '';
-
-            if ($routing !== $routing_confirm) {
-                wc_add_notice(__('Routing numbers do not match.', 'woo-cardknox-gateway'), 'error');
-                $valid = false;
-            }
         }
 
         // Account number is tokenized via iFields (xACH SUT).

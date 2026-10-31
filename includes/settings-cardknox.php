@@ -48,7 +48,7 @@ $wc_cardknox_settings = array(
     ),
     'transaction_key' => array(
         'title'       => __('Sola API Key (Transaction Key)', 'woo-cardknox-gateway'),
-        'type'        => 'text',
+        'type'        => 'password',
         'description' => __('Get your API keys from The Sola Portal.', 'woo-cardknox-gateway'),
         'default'     => '',
         'desc_tip'    => true,

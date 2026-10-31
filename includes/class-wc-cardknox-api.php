@@ -79,8 +79,9 @@ class WC_Cardknox_API
         $request['xSDKName'] =  'CardknoxWooCommerce';
         $request['xSupports64BitRefnum'] = true;
         
-        self::log(" request: " . print_r($request, true));
-        self::log(" endpoint: " . self::ENDPOINT);
+        // Log a sanitized copy only — never write API keys, tokens, or PII to logs.
+        self::log(' request: ' . print_r(self::sanitize_for_log($request), true));
+        self::log(' endpoint: ' . self::ENDPOINT);
         $response = wp_safe_remote_post(
             self::ENDPOINT,
             array(
@@ -91,13 +92,13 @@ class WC_Cardknox_API
         );
 
         if (is_wp_error($response) || empty($response['body'])) {
-            self::log('Error Response: ' . print_r($response, true));
+            self::log('Error Response: ' . (is_wp_error($response) ? $response->get_error_message() : 'empty response body'));
             return new WP_Error('cardknox_error', __('There was a problem connecting to the payment gateway.', 'woo-cardknox-gateway'));
         }
 
         $parsed_response = [];
         parse_str($response['body'], $parsed_response);
-        self::log(" reponse: " . print_r($parsed_response, true));
+        self::log(' reponse: ' . print_r(self::sanitize_for_log($parsed_response), true));
 
         if (!empty($parsed_response['xResult'])) {
 
@@ -120,6 +121,64 @@ class WC_Cardknox_API
         //		} else {
         //			return $parsed_response;
         //		}
+    }
+
+    /**
+     * Remove API keys, tokens, and customer PII before writing to logs.
+     *
+     * The live request/response arrays are left unchanged; only the logged copy is redacted.
+     *
+     * @param array $data Request or response payload.
+     * @return array
+     */
+    public static function sanitize_for_log($data)
+    {
+        if (!is_array($data)) {
+            return $data;
+        }
+
+        $sensitive_keys = array(
+            'xKey',
+            'xToken',
+            'xCardNum',
+            'xCVV',
+            'xMagstripe',
+            'xAccount',
+            'xRouting',
+            'xEmail',
+            'xIP',
+            'xBillCompany',
+            'xBillFirstName',
+            'xBillLastName',
+            'xBillStreet',
+            'xBillStreet2',
+            'xBillCity',
+            'xBillState',
+            'xBillZip',
+            'xBillCountry',
+            'xBillPhone',
+            'xShipCompany',
+            'xShipFirstName',
+            'xShipLastName',
+            'xShipStreet',
+            'xShipStreet2',
+            'xShipCity',
+            'xShipState',
+            'xShipZip',
+            'xShipCountry',
+            'xName',
+            'xMID',
+            'xTID',
+        );
+
+        $sanitized = $data;
+        foreach ($sensitive_keys as $key) {
+            if (isset($sanitized[$key]) && $sanitized[$key] !== '' && $sanitized[$key] !== null) {
+                $sanitized[$key] = '[REDACTED]';
+            }
+        }
+
+        return $sanitized;
     }
 
     /**

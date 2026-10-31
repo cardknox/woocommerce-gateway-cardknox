@@ -194,16 +194,55 @@ if (!class_exists('WC_Cardknox')) :
             add_action('init', array($this, 'register_block_scripts'));
             add_action('wp_enqueue_scripts', array($this, 'quickChekoutPaymentScripts'));
             add_action('wp_enqueue_scripts', array($this, 'enqueue_block_styles'));
-
-            add_action('wp_ajax_update_cart_total', array($this, 'updateCartTotal'));
-            add_action('wp_ajax_nopriv_update_cart_total', array($this, 'updateCartTotal'));
-
-            add_action('wp_ajax_cardknox_create_order', array($this, 'googlepayCardknoxCreateorder'));
-            add_action('wp_ajax_nopriv_cardknox_create_order', array($this, 'googlepayCardknoxCreateorder'));
-
-            add_action('wp_ajax_applepay_cardknox_create_order', array($this, 'applepayCardknoxCreateorder'));
-            add_action('wp_ajax_nopriv_applepay_cardknox_create_order', array($this, 'applepayCardknoxCreateorder'));
+            
+            add_action('init', array($this, 'register_quickcheckout_ajax_handlers'), 20);
+            
         }
+
+        
+        /**
+         * Register cart quick-checkout AJAX endpoints only when the related
+         * gateway and quick-checkout feature are enabled.
+         */
+        public function register_quickcheckout_ajax_handlers()
+        {
+            $gpay_options = wp_parse_args(
+                (array) get_option('woocommerce_cardknox-googlepay_settings', array()),
+                array(
+                    'googlepay_enabled'       => 'no',
+                    'googlepay_quickcheckout' => 'no',
+                )
+            );
+            $apay_options = wp_parse_args(
+                (array) get_option('woocommerce_cardknox-applepay_settings', array()),
+                array(
+                    'applepay_enabled'       => 'no',
+                    'applepay_quickcheckout' => 'no',
+                )
+            );
+
+            // Option is "Disable Quick Checkout": 'no' = show on cart, 'yes' = disabled.
+            $gpay_quickcheckout_enabled = ('yes' === $gpay_options['googlepay_enabled']
+                && 'no' === $gpay_options['googlepay_quickcheckout']);
+            $apay_quickcheckout_enabled = ('yes' === $apay_options['applepay_enabled']
+                && 'no' === $apay_options['applepay_quickcheckout']);
+
+            if ($gpay_quickcheckout_enabled || $apay_quickcheckout_enabled) {
+                add_action('wp_ajax_update_cart_total', array($this, 'updateCartTotal'));
+                add_action('wp_ajax_nopriv_update_cart_total', array($this, 'updateCartTotal'));
+            }
+
+            if ($gpay_quickcheckout_enabled) {
+                add_action('wp_ajax_cardknox_create_order', array($this, 'googlepayCardknoxCreateorder'));
+                add_action('wp_ajax_nopriv_cardknox_create_order', array($this, 'googlepayCardknoxCreateorder'));
+            }
+
+            if ($apay_quickcheckout_enabled) {
+                add_action('wp_ajax_applepay_cardknox_create_order', array($this, 'applepayCardknoxCreateorder'));
+                add_action('wp_ajax_nopriv_applepay_cardknox_create_order', array($this, 'applepayCardknoxCreateorder'));
+            }
+        }
+        
 
         /**
          * Register scripts for block editor support
@@ -726,7 +765,18 @@ if (!class_exists('WC_Cardknox')) :
                 return;
             }
         
-            // Common iFields script
+            
+            // Option is "Disable Quick Checkout": show when gateway enabled AND disable checkbox is unchecked ('no').
+            $show_googlepay_quickcheckout = ( 'yes' === $options['googlepay_enabled'] && 'no' === $googlepay_quickcheckout );
+            $show_applepay_quickcheckout  = ( 'yes' === $applePayoptions['applepay_enabled'] && 'no' === $applePay_quickcheckout );
+
+            // Do not load iFields on cart when both wallet quick-checkouts are disabled
+            // (avoids "iframe with Google Pay button not found" console error).
+            if ( ! $show_googlepay_quickcheckout && ! $show_applepay_quickcheckout ) {
+                return;
+            }
+
+            // Common iFields script (only when a cart wallet button will render)
             wp_enqueue_script(
                 'cardknox',
                 CARDKNOX_IFIELDS_URL,
@@ -734,16 +784,15 @@ if (!class_exists('WC_Cardknox')) :
                 '3.5.2607.1401',
                 false
             );
-        
-            // Google Pay on cart
-            if ( 'no' === $googlepay_quickcheckout ) {
+
+            if ( $show_googlepay_quickcheckout ) {
                 $this->handleGooglepayCartQuickcheckout( $options );
             }
         
-            // Apple Pay on cart
-            if ( 'no' === $applePay_quickcheckout ) {
+            if ( $show_applepay_quickcheckout ) {
                 $this->handleApplepayCartQuickcheckout( $applePayoptions );
             }
+            
         }
         
         
@@ -757,13 +806,16 @@ if (!class_exists('WC_Cardknox')) :
                 'all'
             );
         
+            
+            // filemtime busts browser cache of .min.js (old cached file caused duplicate cart orders).
             wp_enqueue_script(
                 'woocommerce_cardknox_google_pay',
                 plugins_url( 'assets/js/cardknox-google-pay-cart.min.js', WC_CARDKNOX_MAIN_FILE ),
-                [ 'jquery' ],
-                '1.0',
+                [ 'jquery', 'cardknox' ],
+                filemtime( WC_CARDKNOX_PLUGIN_PATH . '/assets/js/cardknox-google-pay-cart.min.js' ),
                 true
             );
+            
         
             // Build shipping costs
             $shippingCostsGoogle = [];
@@ -816,6 +868,12 @@ if (!class_exists('WC_Cardknox')) :
         
         private function handleApplepayCartQuickcheckout( array $applePayoptions ): void {
 
+            
+            // Register cart button HTML here (same place cart AP scripts load).
+            // Gateway constructor/wp hooks are unreliable for is_cart(), which left #ap-container missing.
+            add_action( 'woocommerce_proceed_to_checkout', array( $this, 'render_cart_applepay_button' ), 25 );
+            
+
             wp_enqueue_style(
                 'woocommerce_cardknox_applepay',
                 plugins_url( '/assets/css/apple-pay.css', WC_CARDKNOX_MAIN_FILE ),
@@ -824,13 +882,16 @@ if (!class_exists('WC_Cardknox')) :
                 'all'
             );
         
+            
+            // filemtime busts browser cache of .min.js (old cached file caused duplicate cart orders).
             wp_enqueue_script(
                 'woocommerce_cardknox_apple_pay',
                 plugins_url( 'assets/js/cardknox-apple-pay-cart.min.js', WC_CARDKNOX_MAIN_FILE ),
-                [ 'jquery' ],
-                '1.0',
+                [ 'jquery', 'cardknox' ],
+                filemtime( WC_CARDKNOX_PLUGIN_PATH . '/assets/js/cardknox-apple-pay-cart.min.js' ),
                 true
             );
+            
         
             $shippingCostsApple = [];
             foreach ( WC_Shipping_Zones::get_zones() as $zone ) {
@@ -877,6 +938,19 @@ if (!class_exists('WC_Cardknox')) :
                 'applePaysettings',
                 $cardknoxApplepaySettings
             );
+        }
+
+        /**
+         * Output Apple Pay button container on the cart page.
+         */
+        public function render_cart_applepay_button()
+        {
+            
+            echo '<div id="ap-container" class="ap" style="min-height:55px;margin:10px 0;"></div>';
+            echo '<div class="messages">';
+            echo '<div class="message message-error error applepay-error" style="display: none;"></div>';
+            echo '</div>';
+            
         }
 
 
@@ -926,6 +1000,7 @@ if (!class_exists('WC_Cardknox')) :
 
             return $shipping_methods;
         }
+        
         /**
          * For Googlepay quick create order.
          */
@@ -935,19 +1010,42 @@ if (!class_exists('WC_Cardknox')) :
             // Verify nonce
             check_ajax_referer('create_order_nonce', 'security');
 
-            // Get and sanitize inputs
-            $google_email = sanitize_text_field($_POST['email']);
-            $phone = sanitize_text_field($_POST['phone']);
-            $shippingOptionData = json_decode(stripslashes($_POST['shippingOptionData']), true);
-            $shippingAddress = json_decode(stripslashes($_POST['shippingAddress']), true);
+            // Prevent duplicate cart quick-checkout orders from parallel requests.
+            if (!$this->acquire_quickcheckout_lock('gpay')) {
+                wp_send_json_error(__('Your order is already being processed. Please wait.', 'woo-cardknox-gateway'));
+                wp_die();
+            }
 
-            if (json_last_error() !== JSON_ERROR_NONE) {
+            $google_pay_token = isset($_POST['google_pay_token'])
+                ? wc_clean(wp_unslash($_POST['google_pay_token']))
+                : '';
+            if (empty($google_pay_token)) {
+                $this->release_quickcheckout_lock('gpay');
+                wp_send_json_error(__('Missing Google Pay token.', 'woo-cardknox-gateway'));
+                wp_die();
+            }
+
+            // Get and sanitize inputs (client amount is intentionally ignored)
+            $google_email = sanitize_text_field(wp_unslash($_POST['email'] ?? ''));
+            $phone = sanitize_text_field(wp_unslash($_POST['phone'] ?? ''));
+            $shippingOptionData = json_decode(stripslashes($_POST['shippingOptionData'] ?? ''), true);
+            $shippingAddress = json_decode(stripslashes($_POST['shippingAddress'] ?? ''), true);
+
+            if (json_last_error() !== JSON_ERROR_NONE || empty($shippingAddress) || empty($shippingOptionData)) {
+                $this->release_quickcheckout_lock('gpay');
                 wp_send_json_error(__('Invalid shipping address format', 'woocommerce'));
                 wp_die();
             }
 
             $shipping_method_slug = $shippingOptionData['id'] ?? '';
             $shipping_method_details = $this->getShippingMethodDetails($shipping_method_slug);
+
+            if (WC()->cart->is_empty()) {
+                $this->release_quickcheckout_lock('gpay');
+                wp_send_json_error(__('Your cart is empty.', 'woo-cardknox-gateway'));
+                wp_die();
+            }
+
             if (empty($shipping_method_details[0])) {
                 $this->release_quickcheckout_lock('gpay');
                 wp_send_json_error(__('Invalid shipping method. Please select shipping again.', 'woo-cardknox-gateway'));
@@ -969,7 +1067,7 @@ if (!class_exists('WC_Cardknox')) :
             $order->add_item($shipping);
 
             // add billing and shipping addresses
-            $full_name = sanitize_text_field($shippingAddress['name']);
+            $full_name = sanitize_text_field($shippingAddress['name'] ?? '');
             $name_parts = explode(' ', $full_name);
             $first_name = array_shift($name_parts);
             $last_name = implode(' ', $name_parts);
@@ -977,12 +1075,12 @@ if (!class_exists('WC_Cardknox')) :
             $address = array(
                 'first_name'    => $first_name,
                 'last_name'     => $last_name,
-                'address_1'     => sanitize_text_field($shippingAddress['address1']),
-                'address_2'     => sanitize_text_field($shippingAddress['address2']),
-                'city'          => sanitize_text_field($shippingAddress['locality']),
-                'state'         => sanitize_text_field($shippingAddress['administrativeArea']),
-                'postcode'      => sanitize_text_field($shippingAddress['postalCode']),
-                'country'       => sanitize_text_field($shippingAddress['countryCode']),
+                'address_1'     => sanitize_text_field($shippingAddress['address1'] ?? ''),
+                'address_2'     => sanitize_text_field($shippingAddress['address2'] ?? ''),
+                'city'          => sanitize_text_field($shippingAddress['locality'] ?? ''),
+                'state'         => sanitize_text_field($shippingAddress['administrativeArea'] ?? ''),
+                'postcode'      => sanitize_text_field($shippingAddress['postalCode'] ?? ''),
+                'country'       => sanitize_text_field($shippingAddress['countryCode'] ?? ''),
                 'email'         => sanitize_email($google_email),
                 'phone'         => $phone,
             );
@@ -996,16 +1094,18 @@ if (!class_exists('WC_Cardknox')) :
             $order->calculate_totals();
             $order->update_status('pending', __('Order pending payment', 'woocommerce'));
 
-            // Process the payment
-            $result = $order->payment_complete();
+            // Map cart wallet token into the field expected by WCCardknoxGooglepay::process_payment()
+            $_POST['xCardNumToken'] = $google_pay_token;
 
-            if ($result) {
-                WC()->cart->empty_cart();
-                wp_send_json_success(['redirect_url' => $order->get_checkout_order_received_url()]);
-            } else {
-                wp_send_json_error(__('Payment failed', 'woocommerce'));
+            $payment_result = $this->process_quickcheckout_payment($order, 'cardknox-googlepay');
+            if (is_wp_error($payment_result)) {
+                $this->release_quickcheckout_lock('gpay');
+                wp_send_json_error($payment_result->get_error_message());
+                wp_die();
             }
 
+            $this->release_quickcheckout_lock('gpay');
+            wp_send_json_success(array('redirect_url' => $payment_result));
             wp_die();
         }
         /**
@@ -1017,12 +1117,42 @@ if (!class_exists('WC_Cardknox')) :
             // Verify nonce
             check_ajax_referer('create_order_nonce', 'security');
 
-            $billingContact = json_decode(stripslashes($_POST['billingContact']), true);
-            $shippingContact = json_decode(stripslashes($_POST['shippingContact']), true);
-            $selectedShipping = json_decode(stripslashes($_POST['selectedShipping']), true);
+            // Prevent duplicate cart quick-checkout orders from parallel requests.
+            if (!$this->acquire_quickcheckout_lock('apay')) {
+                wp_send_json_error(__('Your order is already being processed. Please wait.', 'woo-cardknox-gateway'));
+                wp_die();
+            }
 
-            if (json_last_error() !== JSON_ERROR_NONE) {
+            $apple_pay_token = isset($_POST['apple_pay_token'])
+                ? wc_clean(wp_unslash($_POST['apple_pay_token']))
+                : '';
+            if (empty($apple_pay_token)) {
+                $this->release_quickcheckout_lock('apay');
+                wp_send_json_error(__('Missing Apple Pay token.', 'woo-cardknox-gateway'));
+                wp_die();
+            }
+
+            // Client amount is intentionally ignored
+            $billingContact = json_decode(stripslashes($_POST['billingContact'] ?? ''), true);
+            $shippingContact = json_decode(stripslashes($_POST['shippingContact'] ?? ''), true);
+            $selectedShipping = json_decode(stripslashes($_POST['selectedShipping'] ?? ''), true);
+
+            if (json_last_error() !== JSON_ERROR_NONE || empty($billingContact) || empty($shippingContact) || empty($selectedShipping)) {
+                $this->release_quickcheckout_lock('apay');
                 wp_send_json_error(__('Invalid shipping address format', 'woocommerce'));
+                wp_die();
+            }
+
+            if (WC()->cart->is_empty()) {
+                $this->release_quickcheckout_lock('apay');
+                wp_send_json_error(__('Your cart is empty.', 'woo-cardknox-gateway'));
+                wp_die();
+            }
+
+            $shipping_method_details = $this->getShippingMethodDetails($selectedShipping['identifier'] ?? '');
+            if (empty($shipping_method_details[0])) {
+                $this->release_quickcheckout_lock('apay');
+                wp_send_json_error(__('Invalid shipping method. Please select shipping again.', 'woo-cardknox-gateway'));
                 wp_die();
             }
 
@@ -1031,13 +1161,6 @@ if (!class_exists('WC_Cardknox')) :
             foreach (WC()->cart->get_cart() as $cart_item) {
                 $product = wc_get_product($cart_item['product_id']);
                 $order->add_product($product, $cart_item['quantity']);
-            }
-
-            $shipping_method_details = $this->getShippingMethodDetails($selectedShipping['identifier'] ?? '');
-            if (empty($shipping_method_details[0])) {
-                $this->release_quickcheckout_lock('apay');
-                wp_send_json_error(__('Invalid shipping method. Please select shipping again.', 'woo-cardknox-gateway'));
-                wp_die();
             }
 
             // add shipping options
@@ -1049,33 +1172,33 @@ if (!class_exists('WC_Cardknox')) :
 
             // add billing and shipping addresses
             $billing = array(
-                'first_name'    => $billingContact['firstName'],
-                'last_name'     => $billingContact['billingLastName'],
-                'address_1'     => sanitize_text_field($billingContact['address']),
+                'first_name'    => sanitize_text_field($billingContact['firstName'] ?? ''),
+                'last_name'     => sanitize_text_field($billingContact['lastName'] ?? ''),
+                'address_1'     => sanitize_text_field($billingContact['address'] ?? ''),
                 'address_2'     => '',
-                'city'          => sanitize_text_field($billingContact['city']),
-                'state'         => sanitize_text_field($billingContact['administrativeArea']),
-                'postcode'      => sanitize_text_field($billingContact['postcode']),
-                'country'       => sanitize_text_field($billingContact['country']),
-                'email'         => sanitize_email($billingContact['emailAddress']),
-                'phone'         => sanitize_text_field($shippingContact['phoneNumber'])
+                'city'          => sanitize_text_field($billingContact['city'] ?? ''),
+                'state'         => sanitize_text_field($billingContact['administrativeArea'] ?? ''),
+                'postcode'      => sanitize_text_field($billingContact['postcode'] ?? ''),
+                'country'       => sanitize_text_field($billingContact['country'] ?? ''),
+                'email'         => sanitize_email($billingContact['emailAddress'] ?? ''),
+                'phone'         => sanitize_text_field($shippingContact['phoneNumber'] ?? '')
             );
 
-            $shipping = array(
-                'first_name'    => $shippingContact['firstName'],
-                'last_name'     => $shippingContact['billingLastName'],
-                'address_1'     => sanitize_text_field($shippingContact['address']),
+            $shipping_address = array(
+                'first_name'    => sanitize_text_field($shippingContact['firstName'] ?? ''),
+                'last_name'     => sanitize_text_field($shippingContact['lastName'] ?? ''),
+                'address_1'     => sanitize_text_field($shippingContact['address'] ?? ''),
                 'address_2'     => '',
-                'city'          => sanitize_text_field($shippingContact['city']),
-                'state'         => sanitize_text_field($shippingContact['administrativeArea']),
-                'postcode'      => sanitize_text_field($shippingContact['postcode']),
-                'country'       => sanitize_text_field($shippingContact['country']),
-                'email'         => sanitize_email($shippingContact['emailAddress']),
-                'phone'         => sanitize_text_field($shippingContact['phoneNumber'])
+                'city'          => sanitize_text_field($shippingContact['city'] ?? ''),
+                'state'         => sanitize_text_field($shippingContact['administrativeArea'] ?? ''),
+                'postcode'      => sanitize_text_field($shippingContact['postcode'] ?? ''),
+                'country'       => sanitize_text_field($shippingContact['country'] ?? ''),
+                'email'         => sanitize_email($shippingContact['emailAddress'] ?? ''),
+                'phone'         => sanitize_text_field($shippingContact['phoneNumber'] ?? '')
             );
 
             $order->set_address($billing, 'billing');
-            $order->set_address($shipping, 'shipping');
+            $order->set_address($shipping_address, 'shipping');
 
             // Set payment method and order status
             $order->set_payment_method('cardknox-applepay');
@@ -1083,18 +1206,87 @@ if (!class_exists('WC_Cardknox')) :
             $order->calculate_totals();
             $order->update_status('pending', __('Order pending payment', 'woocommerce'));
 
-            // Process the payment
-            $result = $order->payment_complete();
+            // Map cart wallet token into the field expected by WCCardknoxApplepay::process_payment()
+            $_POST['xCardNumToken'] = $apple_pay_token;
 
-            if ($result) {
-                WC()->cart->empty_cart();
-                wp_send_json_success(['redirect_url' => $order->get_checkout_order_received_url()]);
-            } else {
-                wp_send_json_error(__('Payment failed', 'woocommerce'));
+            $payment_result = $this->process_quickcheckout_payment($order, 'cardknox-applepay');
+            if (is_wp_error($payment_result)) {
+                $this->release_quickcheckout_lock('apay');
+                wp_send_json_error($payment_result->get_error_message());
+                wp_die();
             }
 
+            $this->release_quickcheckout_lock('apay');
+            wp_send_json_success(array('redirect_url' => $payment_result));
             wp_die();
         }
+
+        /**
+         * Acquire a short-lived session lock to prevent duplicate cart quick-checkout orders.
+         *
+         * @param string $wallet gpay|apay
+         * @return bool
+         */
+        private function acquire_quickcheckout_lock($wallet)
+        {
+            if (!function_exists('WC') || !WC()->session) {
+                return true;
+            }
+
+            $key  = 'cardknox_qc_lock_' . $wallet;
+            $lock = WC()->session->get($key);
+            if ($lock && (time() - (int) $lock) < 60) {
+                return false;
+            }
+
+            WC()->session->set($key, time());
+            return true;
+        }
+
+        /**
+         * Release the cart quick-checkout session lock.
+         *
+         * @param string $wallet gpay|apay
+         * @return void
+         */
+        private function release_quickcheckout_lock($wallet)
+        {
+            if (!function_exists('WC') || !WC()->session) {
+                return;
+            }
+            WC()->session->set('cardknox_qc_lock_' . $wallet, null);
+        }
+
+        /**
+         * Charge a cart quick-checkout order via the existing wallet gateway.
+         * Only returns the thank-you URL after a successful Cardknox approval.
+         *
+         * @param WC_Order $order
+         * @param string   $gateway_id
+         * @return string|WP_Error
+         */
+        private function process_quickcheckout_payment($order, $gateway_id)
+        {
+            $gateways = WC()->payment_gateways()->payment_gateways();
+            if (empty($gateways[$gateway_id]) || !is_object($gateways[$gateway_id])) {
+                $order->update_status('failed', __('Payment gateway unavailable.', 'woo-cardknox-gateway'));
+                return new WP_Error('gateway_unavailable', __('Payment gateway unavailable.', 'woo-cardknox-gateway'));
+            }
+
+            $gateway = $gateways[$gateway_id];
+            $result  = $gateway->process_payment($order->get_id());
+
+            if (!empty($result['result']) && 'success' === $result['result'] && !empty($result['redirect'])) {
+                return $result['redirect'];
+            }
+
+            if ($order->has_status(array('pending'))) {
+                $order->update_status('failed', __('Payment failed.', 'woo-cardknox-gateway'));
+            }
+
+            return new WP_Error('payment_failed', __('Payment failed', 'woocommerce'));
+        }
+        
         /**
          * 3ds API verificaion
          */

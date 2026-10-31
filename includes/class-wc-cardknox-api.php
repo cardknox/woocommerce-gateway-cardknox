@@ -78,8 +78,14 @@ class WC_Cardknox_API
         $request['xSDKVersion'] =  WC_CARDKNOX_VERSION;
         $request['xSDKName'] =  'CardknoxWooCommerce';
         $request['xSupports64BitRefnum'] = true;
-        
-        self::log(" request: " . print_r($request, true));
+
+        $log_request = $request;
+        foreach ( array( 'xKey', 'xRouting', 'xAccount', 'xName', 'xCardNum', 'xCVV' ) as $key ) {
+            if ( ! empty( $log_request[ $key ] ) ) {
+                $log_request[ $key ] = '[REDACTED]';
+            }
+        }
+        self::log( ' request: ' . print_r( $log_request, true ) );
         self::log(" endpoint: " . self::ENDPOINT);
         $response = wp_safe_remote_post(
             self::ENDPOINT,

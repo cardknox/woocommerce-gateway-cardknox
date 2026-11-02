@@ -76,14 +76,102 @@ jQuery(function ($) {
     }
   }
 
+  function clearFieldError($field) {
+    $field.removeClass("wc-cardknox-ach-field-invalid");
+    var $error = $field.siblings(".wc-cardknox-ach-error");
+    if (!$error.length) {
+      $error = $field.closest(".form-row").find(".wc-cardknox-ach-error").first();
+    }
+    if ($error.length) {
+      $error.hide().text("");
+    }
+  }
+
   function clearAllErrors() {
     $(".wc-cardknox-ach-form .input-text").removeClass("wc-cardknox-ach-field-invalid");
     $(".wc-cardknox-ach-error").hide().text("");
     $("#cardknox-ach-ifields-error").text("").hide();
   }
 
+  function validateAccountType() {
+    var params = getParams();
+    var accountType = $('input[name="cardknox_ach_account_type"]:checked').val();
+    if (!accountType) {
+      showFieldError(
+        $(".wc-cardknox-ach-account-type").first(),
+        params.i18n_account_type || "Please select an account type."
+      );
+      return false;
+    }
+    return true;
+  }
+
+  function validateName() {
+    var params = getParams();
+    var $field = $("#cardknox_ach_name_on_account");
+    var value = $.trim($field.val() || "");
+    if (!value) {
+      showFieldError(
+        $field,
+        params.i18n_name_required || "Name on account is required."
+      );
+      return false;
+    }
+    return true;
+  }
+
+  function validateRouting() {
+    var params = getParams();
+    var $field = $("#cardknox_ach_routing_number");
+    var routing = $.trim($field.val() || "").replace(/\D/g, "");
+    $field.val(routing);
+    if (!isValidRoutingNumber(routing)) {
+      showFieldError(
+        $field,
+        params.i18n_routing_invalid || "Please enter a valid 9-digit routing number."
+      );
+      return false;
+    }
+    return true;
+  }
+
+  function validateRoutingConfirm() {
+    var params = getParams();
+    if (params.reenter !== "yes") {
+      return true;
+    }
+
+    var routing = $.trim($("#cardknox_ach_routing_number").val() || "").replace(/\D/g, "");
+    var $field = $("#cardknox_ach_routing_number_confirm");
+    var routingConfirm = $.trim($field.val() || "").replace(/\D/g, "");
+    $field.val(routingConfirm);
+
+    if (routing !== routingConfirm) {
+      showFieldError(
+        $field,
+        params.i18n_routing_mismatch || "Routing numbers do not match."
+      );
+      return false;
+    }
+    return true;
+  }
+
+  function validateConsent() {
+    var params = getParams();
+    var $field = $("#cardknox_ach_consent");
+    if (!$field.is(":checked")) {
+      showFieldError(
+        $field,
+        params.i18n_consent_required ||
+          "You must acknowledge and agree to the ACH terms and conditions."
+      );
+      return false;
+    }
+    return true;
+  }
+
   /**
-   * Validate non-sensitive ACH fields (routing, name, consent).
+   * Full validation for submit — shows all errors at once.
    * Account number is validated via iFields (achIsValid / getTokens).
    */
   function validateAchFields() {
@@ -93,66 +181,31 @@ jQuery(function ($) {
       return true;
     }
 
-    var params = getParams();
     var valid = true;
-    var accountType = $('input[name="cardknox_ach_account_type"]:checked').val();
-    var nameOnAccount = $.trim($("#cardknox_ach_name_on_account").val() || "");
-    var routing = $.trim($("#cardknox_ach_routing_number").val() || "").replace(/\D/g, "");
-    var consent = $("#cardknox_ach_consent").is(":checked");
-
-    $("#cardknox_ach_routing_number").val(routing);
-
-    if (!accountType) {
-      showFieldError(
-        $(".wc-cardknox-ach-account-type").first(),
-        params.i18n_account_type || "Please select an account type."
-      );
+    if (!validateAccountType()) {
       valid = false;
     }
-
-    if (!nameOnAccount) {
-      showFieldError(
-        $("#cardknox_ach_name_on_account"),
-        params.i18n_name_required || "Name on account is required."
-      );
+    if (!validateName()) {
       valid = false;
     }
-
-    if (!isValidRoutingNumber(routing)) {
-      showFieldError(
-        $("#cardknox_ach_routing_number"),
-        params.i18n_routing_invalid || "Please enter a valid 9-digit routing number."
-      );
+    if (!validateRouting()) {
       valid = false;
     }
-
-    if (params.reenter === "yes") {
-      var routingConfirm = $.trim($("#cardknox_ach_routing_number_confirm").val() || "").replace(
-        /\D/g,
-        ""
-      );
-      $("#cardknox_ach_routing_number_confirm").val(routingConfirm);
-
-      if (routing !== routingConfirm) {
-        showFieldError(
-          $("#cardknox_ach_routing_number_confirm"),
-          params.i18n_routing_mismatch || "Routing numbers do not match."
-        );
-        valid = false;
-      }
-    }
-
-    if (!consent) {
-      showFieldError(
-        $("#cardknox_ach_consent"),
-        params.i18n_consent_required ||
-          "You must acknowledge and agree to the ACH terms and conditions."
-      );
+    if (!validateRoutingConfirm()) {
       valid = false;
     }
-
+    if (!validateConsent()) {
+      valid = false;
+    }
     return valid;
   }
+
+  // Per-field blur validators (empty fields are skipped by the blur handler).
+  var blurValidators = {
+    cardknox_ach_name_on_account: validateName,
+    cardknox_ach_routing_number: validateRouting,
+    cardknox_ach_routing_number_confirm: validateRoutingConfirm,
+  };
 
   function initIFields() {
     var params = getParams();
@@ -160,28 +213,32 @@ jQuery(function ($) {
       return;
     }
 
-    setAccount(params.key, params.software_name || "Wordpress_WooCommerce", params.software_version || "1.0");
+    // Page-level registrations only once; duplicate callbacks pile up otherwise.
+    if (!iFieldsReady) {
+      setAccount(params.key, params.software_name || "Wordpress_WooCommerce", params.software_version || "1.0");
 
+      if (typeof addIfieldCallback === "function") {
+        addIfieldCallback("input", function (data) {
+          if (!data.ifieldValueChanged || data.lastIfieldChanged !== "ach") {
+            return;
+          }
+          if (typeof setIfieldStyle !== "function") {
+            return;
+          }
+          setIfieldStyle(
+            "ach",
+            data.achLength === 0 ? defaultStyle : data.achIsValid ? validStyle : invalidStyle
+          );
+        });
+      }
+
+      iFieldsReady = true;
+    }
+
+    // Style must re-apply whenever WooCommerce re-renders the iframe.
     if (typeof setIfieldStyle === "function") {
       setIfieldStyle("ach", defaultStyle);
     }
-
-    if (typeof addIfieldCallback === "function") {
-      addIfieldCallback("input", function (data) {
-        if (!data.ifieldValueChanged || data.lastIfieldChanged !== "ach") {
-          return;
-        }
-        if (typeof setIfieldStyle !== "function") {
-          return;
-        }
-        setIfieldStyle(
-          "ach",
-          data.achLength === 0 ? defaultStyle : data.achIsValid ? validStyle : invalidStyle
-        );
-      });
-    }
-
-    iFieldsReady = true;
   }
 
   function blockForm() {
@@ -305,10 +362,15 @@ jQuery(function ($) {
 
   $(document.body).on(
     "blur",
-    "#cardknox_ach_routing_number, #cardknox_ach_name_on_account, #cardknox_ach_routing_number_confirm",
+    "#cardknox_ach_name_on_account, #cardknox_ach_routing_number, #cardknox_ach_routing_number_confirm",
     function () {
-      if (isAchChosen()) {
-        validateAchFields();
+      // Only validate the field that lost focus; skip empty so untouched fields stay quiet.
+      if (!isAchChosen() || !$.trim(this.value)) {
+        return;
+      }
+      clearFieldError($(this));
+      if (blurValidators[this.id]) {
+        blurValidators[this.id]();
       }
     }
   );

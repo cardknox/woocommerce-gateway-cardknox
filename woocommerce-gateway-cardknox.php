@@ -1348,11 +1348,20 @@ if (!class_exists('WC_Cardknox')) :
                 return $result['redirect'];
             }
 
+            // process_payment() stores the real decline/error via wc_add_notice().
+            // Surface that message to the wallet AJAX response and clear session notices
+            // so they do not reappear later on the cart/checkout page.
+            $errors  = wc_get_notices('error');
+            wc_clear_notices();
+            $message = !empty($errors[0]['notice'])
+                ? wp_strip_all_tags($errors[0]['notice'])
+                : __('Payment failed', 'woocommerce');
+
             if ($order->has_status(array('pending'))) {
-                $order->update_status('failed', __('Payment failed.', 'woo-cardknox-gateway'));
+                $order->update_status('failed', $message);
             }
 
-            return new WP_Error('payment_failed', __('Payment failed', 'woocommerce'));
+            return new WP_Error('payment_failed', $message);
         }
         
         /**

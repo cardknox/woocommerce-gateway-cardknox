@@ -798,6 +798,11 @@ if (!class_exists('WC_Cardknox')) :
         
         private function handleGooglepayCartQuickcheckout( array $options ): void {
 
+
+            // Register cart button HTML here (same place cart GP scripts load).
+            // Gateway constructor is_cart() is unreliable and can leave #divGpay missing.
+            add_action( 'woocommerce_proceed_to_checkout', array( $this, 'render_cart_googlepay_button' ), 20 );
+
             wp_enqueue_style(
                 'woocommerce_cardknox_gpay',
                 plugins_url( '/assets/css/google-pay.css', WC_CARDKNOX_MAIN_FILE ),
@@ -939,6 +944,21 @@ if (!class_exists('WC_Cardknox')) :
                 $cardknoxApplepaySettings
             );
         }
+
+
+        /**
+         * Output Google Pay button container on the cart page.
+        */
+        public function render_cart_googlepay_button()
+        {
+            echo '<div class="messages">';
+            echo '<div class="message message-error error gpay-error" style="display: none;"></div>';
+            echo '</div>';
+            echo '<div id="divGpay" class="gp hidden">';
+            echo '<iframe id="igp" class="gp" data-ifields-id="igp" data-ifields-oninit="gpRequest.initGP" src="https://cdn.cardknox.com/ifields/3.5.2607.1401/igp.htm" allowpaymentrequest sandbox="allow-popups allow-modals allow-scripts allow-same-origin allow-forms allow-popups-to-escape-sandbox allow-top-navigation" title="GPay checkout page"></iframe>';
+            echo '</div>';
+        }
+
 
         /**
          * Output Apple Pay button container on the cart page.

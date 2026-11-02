@@ -135,27 +135,6 @@ jQuery(function ($) {
     return true;
   }
 
-  function validateRoutingConfirm() {
-    var params = getParams();
-    if (params.reenter !== "yes") {
-      return true;
-    }
-
-    var routing = $.trim($("#cardknox_ach_routing_number").val() || "").replace(/\D/g, "");
-    var $field = $("#cardknox_ach_routing_number_confirm");
-    var routingConfirm = $.trim($field.val() || "").replace(/\D/g, "");
-    $field.val(routingConfirm);
-
-    if (routing !== routingConfirm) {
-      showFieldError(
-        $field,
-        params.i18n_routing_mismatch || "Routing numbers do not match."
-      );
-      return false;
-    }
-    return true;
-  }
-
   function validateConsent() {
     var params = getParams();
     var $field = $("#cardknox_ach_consent");
@@ -191,9 +170,6 @@ jQuery(function ($) {
     if (!validateRouting()) {
       valid = false;
     }
-    if (!validateRoutingConfirm()) {
-      valid = false;
-    }
     if (!validateConsent()) {
       valid = false;
     }
@@ -204,7 +180,6 @@ jQuery(function ($) {
   var blurValidators = {
     cardknox_ach_name_on_account: validateName,
     cardknox_ach_routing_number: validateRouting,
-    cardknox_ach_routing_number_confirm: validateRoutingConfirm,
   };
 
   function initIFields() {
@@ -362,7 +337,7 @@ jQuery(function ($) {
 
   $(document.body).on(
     "blur",
-    "#cardknox_ach_name_on_account, #cardknox_ach_routing_number, #cardknox_ach_routing_number_confirm",
+    "#cardknox_ach_name_on_account, #cardknox_ach_routing_number",
     function () {
       // Only validate the field that lost focus; skip empty so untouched fields stay quiet.
       if (!isAchChosen() || !$.trim(this.value)) {

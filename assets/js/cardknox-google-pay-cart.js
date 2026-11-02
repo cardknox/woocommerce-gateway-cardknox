@@ -1,4 +1,3 @@
-/*Start PLGN-245 (TICKET RELATED) */
 let subTotal = {
     total: parseFloat(googlePaysettings.total).toFixed(2)
 };
@@ -39,7 +38,6 @@ jQuery(document.body).on("updated_cart_totals", function () {
     // Re-init after cart totals refresh (do not call enableGooglePay on page load twice).
     initCardknoxCartGooglePay();
 });
-/* END PLGN-245 (TICKET RELATED) */
 
 //Google Pay
 window.gpRequest = {
@@ -229,10 +227,9 @@ window.gpRequest = {
   },
 };
 
-/*Start PLGN-245 (TICKET RELATED) */
+
 // Init once after gpRequest is defined (fixes load-order + avoids double enableGooglePay).
 initCardknoxCartGooglePay();
-/* END PLGN-245 (TICKET RELATED) */
 
 function setGPPayload(value) {
   document.getElementById("gp-payload").value = value;
@@ -257,7 +254,6 @@ function getAmount() {
 }
 
 
-/*Start PLGN-245 (TICKET RELATED) */
 var cardknoxGpayOrderSubmitting = false;
 function createWooCommerceOrder(token, amount, telephone, email, shippingAddress, shippingOptionData) {
     // Prevent duplicate AJAX / double order creation from cart quick checkout.
@@ -300,4 +296,3 @@ function createWooCommerceOrder(token, amount, telephone, email, shippingAddress
         }
     });    
 }
-/* END PLGN-245 (TICKET RELATED) */

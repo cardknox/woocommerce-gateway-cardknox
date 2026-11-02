@@ -1,4 +1,3 @@
-/*Start PLGN-245 (TICKET RELATED) */
 let cartTotal = {
   total: parseFloat(applePaysettings.total).toFixed(2),
 };
@@ -52,39 +51,6 @@ function getApButtonType(applePaysettings) {
   return apButtonType;
 }
 
-function ensureCartApplePayContainer() {
-  if (document.getElementById("ap-container")) {
-    return true;
-  }
-
-  // Fallback: theme/PHP may not print #ap-container — create it next to cart checkout buttons.
-  var mount =
-    document.querySelector(".wc-proceed-to-checkout") ||
-    document.querySelector("#divGpay") ||
-    document.querySelector(".cart_totals");
-
-  if (!mount) {
-    console.warn("Apple Pay: no mount point found on cart page.");
-    return false;
-  }
-
-  var wrap = document.createElement("div");
-  wrap.className = "cardknox-applepay-cart-wrap";
-  wrap.innerHTML =
-    '<div id="ap-container" class="ap" style="min-height:55px;margin:10px 0;"></div>' +
-    '<div class="messages"><div class="message message-error error applepay-error" style="display:none;"></div></div>';
-
-  if (mount.classList && mount.classList.contains("wc-proceed-to-checkout")) {
-    mount.appendChild(wrap);
-  } else if (mount.parentNode) {
-    mount.parentNode.insertBefore(wrap, mount.nextSibling);
-  } else {
-    return false;
-  }
-
-  return !!document.getElementById("ap-container");
-}
-
 function initCardknoxCartApplePay() {
   if (
     applePaysettings.merchant_identifier == "" ||
@@ -99,7 +65,9 @@ function initCardknoxCartApplePay() {
     return;
   }
 
-  if (!ensureCartApplePayContainer()) {
+  // Container is printed by render_cart_applepay_button() with the cart scripts.
+  if (!document.getElementById("ap-container")) {
+    console.warn("Apple Pay: #ap-container missing on cart page.");
     return;
   }
 
@@ -148,7 +116,6 @@ jQuery(document.body).on("updated_cart_totals", function () {
   });
   initCardknoxCartApplePay();
 });
-/* END PLGN-245 (TICKET RELATED) */
 
 let lastSelectedShippingMethod = "";
 
@@ -482,7 +449,6 @@ function getAmount() {
   return parseFloat(totals).toFixed(2);
 }
 
-/*Start PLGN-245 (TICKET RELATED) */
 // Init after DOM is ready so cart buttons (.wc-proceed-to-checkout) exist.
 jQuery(function () {
   initCardknoxCartApplePay();
@@ -539,4 +505,3 @@ function applePaycreateWooCommerceOrder(
     },
   });
 }
-/* END PLGN-245 (TICKET RELATED) */

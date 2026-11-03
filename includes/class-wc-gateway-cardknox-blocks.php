@@ -161,6 +161,11 @@ final class WC_Gateway_Cardknox_Blocks_Support extends AbstractPaymentMethodType
             return array();
         }
 
+        $gateway = WC()->payment_gateways->payment_gateways()['cardknox'] ?? null;
+        if ( ! $gateway || $gateway->get_option( 'saved_cards' ) !== 'yes' ) {
+            return array();
+        }
+
         $tokens = WC_Payment_Tokens::get_customer_tokens( get_current_user_id(), 'cardknox' );
         $saved_cards = array();
 

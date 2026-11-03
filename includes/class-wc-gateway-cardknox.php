@@ -76,8 +76,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
     public $appleQuickcheckout;
     public $applePayGateway;
     public $googlePayGateway;
-
-
+    public $achGateway;
 
     /**
      * Constructor
@@ -144,6 +143,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         // Initialize the child gateways
         $this->applePayGateway = new WCCardknoxApplepay();
         $this->googlePayGateway = new WCCardknoxGooglepay();
+        $this->achGateway = new WCCardknoxACH();
 
         // Hooks.
         add_action('wp_enqueue_scripts', array($this, 'payment_scripts'));
@@ -1367,6 +1367,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             <a href="#credit-card-settings" class="nav-tab nav-tab-active"><?php _e('Credit Card', 'woo-cardknox-gateway'); ?></a>
             <a href="#apple-pay-settings" class="nav-tab"><?php _e('Apple Pay', 'woo-cardknox-gateway'); ?></a>
             <a href="#google-pay-settings" class="nav-tab"><?php _e('Google Pay', 'woo-cardknox-gateway'); ?></a>
+            <a href="#ach-settings" class="nav-tab"><?php _e('ACH', 'woo-cardknox-gateway'); ?></a>
         </div>
             <div id="credit-card-settings" class="panel">
                 <table class="form-table" style="width:400px;">
@@ -1436,6 +1437,20 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                 <tbody>
                     <?php
                     $this->googlePayGateway->generate_settings_html();
+                    ?>
+                </tbody>
+            </table>
+        </div>
+        <div id="ach-settings" class="panel">
+            <table class="form-table">
+                <thead>
+                    <tr>
+                        <th style="padding:0;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $this->achGateway->generate_settings_html();
                     ?>
                 </tbody>
             </table>

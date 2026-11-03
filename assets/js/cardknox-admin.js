@@ -70,6 +70,7 @@ jQuery(document).ready(function ($) {
 
   $('tr[data-gateway_id="cardknox-applepay"]').hide();
   $('tr[data-gateway_id="cardknox-googlepay"]').hide();
+  $('tr[data-gateway_id="cardknox-ach"]').hide();
 
   $("#wc-master-gateway-tabs .nav-tab").click(function (e) {
     e.preventDefault();

@@ -230,6 +230,8 @@ if (!class_exists('WC_Cardknox')) :
             if ($gpay_quickcheckout_enabled || $apay_quickcheckout_enabled) {
                 add_action('wp_ajax_update_cart_total', array($this, 'updateCartTotal'));
                 add_action('wp_ajax_nopriv_update_cart_total', array($this, 'updateCartTotal'));
+                add_action('wp_ajax_cardknox_wallet_calculate_totals', array($this, 'cardknoxWalletCalculateTotals'));
+                add_action('wp_ajax_nopriv_cardknox_wallet_calculate_totals', array($this, 'cardknoxWalletCalculateTotals'));
             }
 
             if ($gpay_quickcheckout_enabled) {
@@ -728,6 +730,293 @@ if (!class_exists('WC_Cardknox')) :
         }
 
         /**
+         * Recalculate cart totals for Apple Pay / Google Pay sheet updates when
+         * the shopper changes address or shipping method inside the wallet UI.
+         */
+        public function cardknoxWalletCalculateTotals()
+        {
+            check_ajax_referer('create_order_nonce', 'security');
+
+            if (!WC()->cart || WC()->cart->is_empty()) {
+                wp_send_json_error(__('Your cart is empty.', 'woo-cardknox-gateway'));
+                wp_die();
+            }
+
+            $address_raw = json_decode(stripslashes($_POST['address'] ?? ''), true);
+            if (json_last_error() !== JSON_ERROR_NONE || empty($address_raw) || !is_array($address_raw)) {
+                wp_send_json_error(__('Invalid shipping address format', 'woocommerce'));
+                wp_die();
+            }
+
+            $address = $this->normalize_wallet_shipping_address($address_raw);
+            if (empty($address['country'])) {
+                wp_send_json_error(__('Invalid shipping address format', 'woocommerce'));
+                wp_die();
+            }
+
+            // Optional billing address for tax-based-on-billing stores.
+            // Leave customer billing alone when not provided (e.g. Google Pay sheet updates).
+            $billing = null;
+            $billing_raw = isset($_POST['billing_address']) ? stripslashes($_POST['billing_address']) : '';
+            if ($billing_raw !== '') {
+                $billing_decoded = json_decode($billing_raw, true);
+                if (is_array($billing_decoded) && !empty($billing_decoded)) {
+                    $billing_normalized = $this->normalize_wallet_shipping_address($billing_decoded);
+                    if (!empty($billing_normalized['country'])) {
+                        $billing = $billing_normalized;
+                    }
+                }
+            }
+
+            $shipping_method_slug = sanitize_text_field(wp_unslash($_POST['shipping_method'] ?? ''));
+            $rates = $this->get_shipping_rates_for_address($address, $billing);
+
+            if (empty($rates)) {
+                wp_send_json_error(__('Shipping is not available for the given address.', 'woo-cardknox-gateway'));
+                wp_die();
+            }
+
+            $chosen = null;
+            if (!empty($shipping_method_slug)) {
+                foreach ($rates as $rate) {
+                    // Match only full rate ids (e.g. flat_rate:3), never method types.
+                    if ($rate['method_id'] === $shipping_method_slug) {
+                        $chosen = $rate;
+                        break;
+                    }
+                }
+            }
+            if (!$chosen) {
+                $chosen = $rates[0];
+            }
+
+            $this->apply_chosen_shipping_method($chosen['method_id']);
+
+            $shipping_methods_apple = array();
+            $shipping_methods_google = array();
+            $shipping_costs_google = array();
+
+            foreach ($rates as $rate) {
+                $amount = number_format((float) $rate['method_cost'], 2, '.', '');
+                // Full WooCommerce rate id so Standard vs Express stay distinct.
+                $wallet_id = $rate['method_id'];
+
+                $shipping_methods_apple[] = array(
+                    'identifier' => $wallet_id,
+                    'label'      => $rate['method_title'],
+                    'amount'     => $amount,
+                    'detail'     => '',
+                );
+
+                $shipping_methods_google[] = array(
+                    'id'          => $wallet_id,
+                    'label'       => $rate['method_title'],
+                    'description' => '',
+                );
+                $shipping_costs_google[$wallet_id] = (float) $rate['method_cost'];
+            }
+
+            wp_send_json_success(
+                array(
+                    'total'                  => number_format((float) WC()->cart->get_total('edit'), 2, '.', ''),
+                    'subtotal'               => number_format((float) WC()->cart->get_subtotal(), 2, '.', ''),
+                    'shipping_total'         => number_format((float) WC()->cart->get_shipping_total(), 2, '.', ''),
+                    'tax_total'              => number_format((float) WC()->cart->get_total_tax(), 2, '.', ''),
+                    'chosen_shipping_method' => $chosen['method_id'],
+                    'shipping_methods_apple' => $shipping_methods_apple,
+                    'shipping_methods_google'=> $shipping_methods_google,
+                    'shipping_costs_google'  => $shipping_costs_google,
+                    'currency'               => get_woocommerce_currency(),
+                )
+            );
+            wp_die();
+        }
+
+        /**
+         * Normalize Apple Pay / Google Pay address payloads into WC-style keys.
+         *
+         * @param array $address_raw Raw address from the wallet sheet.
+         * @return array
+         */
+        private function normalize_wallet_shipping_address(array $address_raw)
+        {
+            $address1 = $address_raw['address_1']
+                ?? $address_raw['address1']
+                ?? $address_raw['address']
+                ?? '';
+            if (is_array($address1)) {
+                $address1 = implode(' ', array_filter($address1));
+            }
+
+            $first_name = sanitize_text_field($address_raw['first_name'] ?? $address_raw['firstName'] ?? '');
+            $last_name  = sanitize_text_field($address_raw['last_name'] ?? $address_raw['lastName'] ?? '');
+            if ($first_name === '' && $last_name === '' && !empty($address_raw['name'])) {
+                $name_parts = preg_split('/\s+/', trim(sanitize_text_field($address_raw['name'])), 2);
+                $first_name = $name_parts[0] ?? '';
+                $last_name  = $name_parts[1] ?? '';
+            }
+
+            $phone = sanitize_text_field(
+                $address_raw['phone']
+                    ?? $address_raw['phoneNumber']
+                    ?? ''
+            );
+
+            return array(
+                'first_name' => $first_name,
+                'last_name'  => $last_name,
+                'address_1'  => sanitize_text_field($address1),
+                'address_2'  => sanitize_text_field($address_raw['address_2'] ?? $address_raw['address2'] ?? ''),
+                'city'       => sanitize_text_field($address_raw['city'] ?? $address_raw['locality'] ?? ''),
+                'state'      => sanitize_text_field($address_raw['state'] ?? $address_raw['administrativeArea'] ?? ''),
+                'postcode'   => sanitize_text_field($address_raw['postcode'] ?? $address_raw['postalCode'] ?? ''),
+                'country'    => sanitize_text_field($address_raw['country'] ?? $address_raw['countryCode'] ?? ''),
+                'phone'      => $phone,
+            );
+        }
+
+        /**
+         * Get live shipping rates for a wallet shipping address.
+         *
+         * @param array $address Normalized address.
+         * @param array      $address Shipping address.
+         * @param array|null $billing Optional billing address for tax calculation.
+         * @return array[] List of { method_id, method_title, method_cost }
+         */
+        private function get_shipping_rates_for_address(array $address, $billing = null)
+        {
+            if (empty($address['country']) || !WC()->customer || !WC()->cart) {
+                return array();
+            }
+
+            $this->apply_wallet_customer_locations($address, $billing);
+
+            WC()->shipping()->reset_shipping();
+            WC()->cart->calculate_shipping();
+            WC()->cart->calculate_totals();
+
+            $rates = array();
+            $packages = WC()->shipping()->get_packages();
+            foreach ($packages as $package) {
+                if (empty($package['rates']) || !is_array($package['rates'])) {
+                    continue;
+                }
+                foreach ($package['rates'] as $rate_id => $rate) {
+                    if (!is_object($rate)) {
+                        continue;
+                    }
+                    $rates[] = array(
+                        'method_id'    => $rate_id,
+                        'method_title' => $rate->get_label(),
+                        'method_cost'  => (float) $rate->get_cost(),
+                    );
+                }
+            }
+
+            return $rates;
+        }
+
+        /**
+         * Collect enabled shipping method instances as wallet options.
+         *
+         * Uses full rate ids (method_id:instance_id) so multiple flat_rate
+         * instances stay distinct. Costs here are a page-load fallback; the
+         * wallet recalculates from the shopper's package via AJAX.
+         *
+         * @return array{google_methods: array, google_costs: array, apple_methods: array}
+         */
+        private function get_wallet_shipping_method_catalog()
+        {
+            $google_methods = array();
+            $google_costs   = array();
+            $apple_methods  = array();
+            $seen           = array();
+
+            $zones = WC_Shipping_Zones::get_zones();
+            $zones[0] = array(
+                'shipping_methods' => WC_Shipping_Zones::get_zone(0)->get_shipping_methods(true),
+            );
+
+            foreach ($zones as $zone) {
+                if (empty($zone['shipping_methods']) || !is_array($zone['shipping_methods'])) {
+                    continue;
+                }
+
+                foreach ($zone['shipping_methods'] as $shipping_method) {
+                    if (!($shipping_method instanceof WC_Shipping_Method) || !$shipping_method->is_enabled()) {
+                        continue;
+                    }
+
+                    $rate_id = method_exists($shipping_method, 'get_rate_id')
+                        ? $shipping_method->get_rate_id()
+                        : $shipping_method->id . ':' . (int) $shipping_method->instance_id;
+
+                    if (isset($seen[$rate_id])) {
+                        continue;
+                    }
+                    $seen[$rate_id] = true;
+
+                    $method_cost = ($shipping_method instanceof WC_Shipping_Free_Shipping)
+                        ? 0.00
+                        : (float) ($shipping_method->cost ?? 0);
+                    $label = $shipping_method->get_method_title();
+                    $detail = str_replace(
+                        array("\n", "\r"),
+                        '',
+                        wp_strip_all_tags($shipping_method->get_method_description())
+                    );
+
+                    $google_methods[] = array(
+                        'id'          => $rate_id,
+                        'label'       => $label,
+                        'description' => $detail,
+                    );
+                    $google_costs[$rate_id] = $method_cost;
+
+                    $apple_methods[] = array(
+                        'identifier' => $rate_id,
+                        'label'      => $label,
+                        'amount'     => number_format($method_cost, 2, '.', ''),
+                        'detail'     => $detail,
+                    );
+                }
+            }
+
+            return array(
+                'google_methods' => $google_methods,
+                'google_costs'   => $google_costs,
+                'apple_methods'  => $apple_methods,
+            );
+        }
+
+        /**
+         * Reject wallet checkout when the amount shown to the shopper does not
+         * match the server-calculated order total.
+         *
+         * @param WC_Order $order         Order created from the cart.
+         * @param string   $client_amount Amount posted from the wallet sheet.
+         * @return true|WP_Error
+         */
+        private function validate_wallet_client_amount($order, $client_amount)
+        {
+            if ($client_amount === '' || $client_amount === null) {
+                return true;
+            }
+
+            $client = (float) wc_format_decimal($client_amount);
+            $server = (float) $order->get_total();
+
+            if (abs($client - $server) > 0.01) {
+                return new WP_Error(
+                    'wallet_total_mismatch',
+                    __('Your total has changed, please try again.', 'woo-cardknox-gateway')
+                );
+            }
+
+            return true;
+        }
+
+        /**
          * For cart page load gpay button.
          */
         public function quickChekoutPaymentScripts() {
@@ -828,29 +1117,8 @@ if (!class_exists('WC_Cardknox')) :
             );
             
         
-            // Build shipping costs
-            $shippingCostsGoogle = [];
-            foreach ( WC_Shipping_Zones::get_zones() as $zone ) {
-                foreach ( $zone['shipping_methods'] as $shipping_method ) {
-                    if ( $shipping_method instanceof WC_Shipping_Method ) {
-                        $method_id   = $shipping_method->id;
-                        $method_cost = ( $shipping_method instanceof WC_Shipping_Free_Shipping )
-                            ? 0.00
-                            : (float) $shipping_method->cost;
-                        $shippingCostsGoogle[ $method_id ] = $method_cost;
-                    }
-                }
-            }
-        
-            // Method labels
-            $methods = [];
-            foreach ( WC()->shipping()->get_shipping_methods() as $method ) {
-                $methods[] = [
-                    'id'          => $method->id,
-                    'label'       => $method->method_title,
-                    'description' => $method->method_description,
-                ];
-            }
+            // Rate ids (method_id:instance_id) + instance costs for the wallet sheet.
+            $shipping_catalog = $this->get_wallet_shipping_method_catalog();
         
             // Read normalized values
             $cardknoxGooglepaySettings = [
@@ -864,8 +1132,8 @@ if (!class_exists('WC_Cardknox')) :
                 'specific_countries'    => (array) $options['googlepay_specific_countries'],
                 'total'                 => (float) WC()->cart->total,
                 'currencyCode'          => get_woocommerce_currency(),
-                'shippingMethods'       => $methods,
-                'shippingCosts'         => $shippingCostsGoogle,
+                'shippingMethods'       => $shipping_catalog['google_methods'],
+                'shippingCosts'         => $shipping_catalog['google_costs'],
                 'ajax_url'              => admin_url( 'admin-ajax.php' ),
                 'create_order_nonce'    => wp_create_nonce( 'create_order_nonce' ),
             ];
@@ -904,29 +1172,8 @@ if (!class_exists('WC_Cardknox')) :
             );
             
         
-            $shippingCostsApple = [];
-            foreach ( WC_Shipping_Zones::get_zones() as $zone ) {
-                foreach ( $zone['shipping_methods'] as $shipping_method ) {
-                    if ( $shipping_method instanceof WC_Shipping_Method ) {
-                        $method_id   = $shipping_method->id;
-                        $method_cost = ( $shipping_method instanceof WC_Shipping_Free_Shipping )
-                            ? 0.00
-                            : (float) $shipping_method->cost;
-                        $detail      = str_replace(
-                            [ "\n", "\r" ],
-                            '',
-                            strip_tags( $shipping_method->get_method_description() )
-                        );
-        
-                        $shippingCostsApple[] = [
-                            'identifier' => $method_id,
-                            'label'      => $shipping_method->get_method_title(),
-                            'amount'     => number_format( $method_cost, 2, '.', '' ),
-                            'detail'     => $detail,
-                        ];
-                    }
-                }
-            }
+            // Rate ids (method_id:instance_id) + instance costs for the wallet sheet.
+            $shipping_catalog = $this->get_wallet_shipping_method_catalog();
         
             $cardknoxApplepaySettings = [
                 'enabled'               => $applePayoptions['applepay_enabled'],
@@ -939,7 +1186,7 @@ if (!class_exists('WC_Cardknox')) :
                 'applicable_countries'  => $applePayoptions['applepay_applicable_countries'],
                 'specific_countries'    => (array) $applePayoptions['applepay_specific_countries'],
                 'total'                 => (float) WC()->cart->total,
-                'shippingMethods'       => $shippingCostsApple,
+                'shippingMethods'       => $shipping_catalog['apple_methods'],
                 'ajax_url'              => admin_url( 'admin-ajax.php' ),
                 'create_order_nonce'    => wp_create_nonce( 'create_order_nonce' ),
             ];
@@ -971,8 +1218,8 @@ if (!class_exists('WC_Cardknox')) :
          */
         public function render_cart_applepay_button()
         {
-            
-            echo '<div id="ap-container" class="ap" style="min-height:55px;margin:10px 0;"></div>';
+            // Start hidden; apButtonLoaded reveals it only when Apple Pay actually loads.
+            echo '<div id="ap-container" class="ap hidden" style="min-height:55px;margin:10px 0;"></div>';
             echo '<div class="messages">';
             echo '<div class="message message-error error applepay-error" style="display: none;"></div>';
             echo '</div>';
@@ -981,36 +1228,60 @@ if (!class_exists('WC_Cardknox')) :
 
 
         /**
+         * Apply wallet shipping (and optional billing) to the WC customer session.
+         *
+         * Billing location is only updated when a real billing address is provided,
+         * so tax-based-on-billing stores are not forced onto the shipping address.
+         *
+         * @param array      $shipping Normalized shipping address.
+         * @param array|null $billing  Optional normalized billing address.
+         * @return void
+         */
+        private function apply_wallet_customer_locations(array $shipping, $billing = null)
+        {
+            if (!WC()->customer) {
+                return;
+            }
+
+            WC()->customer->set_shipping_location(
+                $shipping['country'] ?? '',
+                $shipping['state'] ?? '',
+                $shipping['postcode'] ?? '',
+                $shipping['city'] ?? ''
+            );
+            WC()->customer->set_shipping_address($shipping['address_1'] ?? '');
+            WC()->customer->set_shipping_address_2($shipping['address_2'] ?? '');
+
+            if (is_array($billing) && !empty($billing['country'])) {
+                WC()->customer->set_billing_location(
+                    $billing['country'],
+                    $billing['state'] ?? '',
+                    $billing['postcode'] ?? '',
+                    $billing['city'] ?? ''
+                );
+                WC()->customer->set_billing_address($billing['address_1'] ?? '');
+                WC()->customer->set_billing_address_2($billing['address_2'] ?? '');
+            }
+        }
+
+        /**
          * Resolve a wallet-selected shipping method against live rates for an address.
          *
-         * Matches by full rate id (e.g. flat_rate:3) or method id (e.g. flat_rate)
-         * within the shipping zone that applies to the given address.
+         * Matches only on full rate id (e.g. flat_rate:3). Method types like
+         * "flat_rate" are ambiguous when a zone has multiple instances.
          *
-         * @param string $shipping_method_slug Method id or rate id from the wallet UI.
-         * @param array  $address              Normalized address keys: country, state, postcode, city, address_1, address_2.
+         * @param string     $shipping_method_slug Rate id from the wallet UI.
+         * @param array      $address              Normalized shipping address.
+         * @param array|null $billing              Optional billing address for tax calculation.
          * @return array|null { method_id, method_title, method_cost }
          */
-        private function resolve_shipping_method_for_address($shipping_method_slug, array $address)
+        private function resolve_shipping_method_for_address($shipping_method_slug, array $address, $billing = null)
         {
             if (empty($shipping_method_slug) || empty($address['country']) || !WC()->customer || !WC()->cart) {
                 return null;
             }
 
-            WC()->customer->set_shipping_location(
-                $address['country'],
-                $address['state'] ?? '',
-                $address['postcode'] ?? '',
-                $address['city'] ?? ''
-            );
-            WC()->customer->set_shipping_address($address['address_1'] ?? '');
-            WC()->customer->set_shipping_address_2($address['address_2'] ?? '');
-
-            WC()->customer->set_billing_location(
-                $address['country'],
-                $address['state'] ?? '',
-                $address['postcode'] ?? '',
-                $address['city'] ?? ''
-            );
+            $this->apply_wallet_customer_locations($address, $billing);
 
             WC()->shipping()->reset_shipping();
             WC()->cart->calculate_shipping();
@@ -1026,7 +1297,7 @@ if (!class_exists('WC_Cardknox')) :
                         continue;
                     }
 
-                    if ($rate_id === $shipping_method_slug || $rate->get_method_id() === $shipping_method_slug) {
+                    if ($rate_id === $shipping_method_slug) {
                         return array(
                             'method_id'    => $rate_id,
                             'method_title' => $rate->get_label(),
@@ -1057,11 +1328,20 @@ if (!class_exists('WC_Cardknox')) :
          * Create an order from the current cart via WooCommerce checkout.
          * Copies variations, coupons, fees, taxes, and shipping from the cart.
          *
+         * Runs the same cart-item checks as regular checkout (stock, coupons,
+         * usage limits) before create_order(), since wallet quick-checkout
+         * bypasses WC_Checkout::process_checkout().
+         *
          * @param array $order_data Checkout field data including payment_method and addresses.
          * @return WC_Order|WP_Error
          */
         private function create_quickcheckout_order_from_cart(array $order_data)
         {
+            $cart_check = $this->validate_quickcheckout_cart_items();
+            if (is_wp_error($cart_check)) {
+                return $cart_check;
+            }
+
             $order_id = WC()->checkout()->create_order($order_data);
 
             if (is_wp_error($order_id)) {
@@ -1077,6 +1357,40 @@ if (!class_exists('WC_Cardknox')) :
             }
 
             return $order;
+        }
+
+        /**
+         * Mirror WC_Checkout cart validation for wallet quick-checkout.
+         *
+         * @return true|WP_Error
+         */
+        private function validate_quickcheckout_cart_items()
+        {
+            if (!WC()->cart || WC()->cart->is_empty()) {
+                return new WP_Error(
+                    'cart_empty',
+                    __('Your cart is empty.', 'woo-cardknox-gateway')
+                );
+            }
+
+            // Clears prior notices so we only surface failures from this check.
+            wc_clear_notices();
+
+            // Fires woocommerce_check_cart_items — stock, coupons, limits, etc.
+            WC()->cart->check_cart_items();
+
+            if (wc_notice_count('error') > 0) {
+                $errors = wc_get_notices('error');
+                wc_clear_notices();
+                $message = __('There was a problem with your cart. Please review it and try again.', 'woo-cardknox-gateway');
+                if (!empty($errors[0]['notice'])) {
+                    $message = wp_strip_all_tags($errors[0]['notice']);
+                }
+                return new WP_Error('cart_item_check_failed', $message);
+            }
+
+            wc_clear_notices();
+            return true;
         }
 
         /**
@@ -1126,13 +1440,24 @@ if (!class_exists('WC_Cardknox')) :
                 wp_die();
             }
 
-            // Get and sanitize inputs (client amount is intentionally ignored)
+            // Client amount is used only to detect wallet-sheet / server mismatches.
+            $client_amount = isset($_POST['amount']) ? wc_clean(wp_unslash($_POST['amount'])) : '';
             $google_email = sanitize_email(wp_unslash($_POST['email'] ?? ''));
             $phone = sanitize_text_field(wp_unslash($_POST['phone'] ?? ''));
             $shippingOptionData = json_decode(stripslashes($_POST['shippingOptionData'] ?? ''), true);
+            $shipping_json_ok = (json_last_error() === JSON_ERROR_NONE);
             $shippingAddress = json_decode(stripslashes($_POST['shippingAddress'] ?? ''), true);
+            $shipping_json_ok = $shipping_json_ok && (json_last_error() === JSON_ERROR_NONE);
 
-            if (json_last_error() !== JSON_ERROR_NONE || empty($shippingAddress) || empty($shippingOptionData)) {
+            $billing_raw = isset($_POST['billingAddress']) ? stripslashes($_POST['billingAddress']) : '';
+            $billingAddress = ($billing_raw !== '')
+                ? json_decode($billing_raw, true)
+                : array();
+            if (!is_array($billingAddress)) {
+                $billingAddress = array();
+            }
+
+            if (!$shipping_json_ok || empty($shippingAddress) || empty($shippingOptionData)) {
                 $this->release_quickcheckout_lock('gpay');
                 wp_send_json_error(__('Invalid shipping address format', 'woocommerce'));
                 wp_die();
@@ -1144,26 +1469,32 @@ if (!class_exists('WC_Cardknox')) :
                 wp_die();
             }
 
-            $full_name = sanitize_text_field($shippingAddress['name'] ?? '');
-            $name_parts = preg_split('/\s+/', trim($full_name), 2);
-            $first_name = $name_parts[0] ?? '';
-            $last_name = $name_parts[1] ?? '';
+            $shipping = $this->normalize_wallet_shipping_address($shippingAddress);
+            $shipping['email'] = $google_email;
+            if ($phone !== '') {
+                $shipping['phone'] = $phone;
+            }
 
-            $address = array(
-                'first_name' => $first_name,
-                'last_name'  => $last_name,
-                'address_1'  => sanitize_text_field($shippingAddress['address1'] ?? ''),
-                'address_2'  => sanitize_text_field($shippingAddress['address2'] ?? ''),
-                'city'       => sanitize_text_field($shippingAddress['locality'] ?? ''),
-                'state'      => sanitize_text_field($shippingAddress['administrativeArea'] ?? ''),
-                'postcode'   => sanitize_text_field($shippingAddress['postalCode'] ?? ''),
-                'country'    => sanitize_text_field($shippingAddress['countryCode'] ?? ''),
-                'email'      => $google_email,
-                'phone'      => $phone,
-            );
+            // Use Google Pay billing address for AVS / order billing when present
+            // (gift ship-to-elsewhere must not overwrite cardholder billing).
+            $billing = !empty($billingAddress)
+                ? $this->normalize_wallet_shipping_address($billingAddress)
+                : $shipping;
+            $billing['email'] = $google_email;
+            if ($phone !== '') {
+                $billing['phone'] = $phone;
+            } elseif (empty($billing['phone']) && !empty($shipping['phone'])) {
+                $billing['phone'] = $shipping['phone'];
+            }
 
             $shipping_method_slug = $shippingOptionData['id'] ?? '';
-            $shipping_method = $this->resolve_shipping_method_for_address($shipping_method_slug, $address);
+            // Pass real billing when present so tax-based-on-billing uses cardholder location.
+            $billing_for_tax = (!empty($billingAddress) && !empty($billing['country'])) ? $billing : null;
+            $shipping_method = $this->resolve_shipping_method_for_address(
+                $shipping_method_slug,
+                $shipping,
+                $billing_for_tax
+            );
             if (empty($shipping_method)) {
                 $this->release_quickcheckout_lock('gpay');
                 wp_send_json_error(__('Invalid shipping method. Please select shipping again.', 'woo-cardknox-gateway'));
@@ -1174,14 +1505,22 @@ if (!class_exists('WC_Cardknox')) :
 
             $order_data = array_merge(
                 array('payment_method' => 'cardknox-googlepay'),
-                $this->build_checkout_address_fields($address, 'billing'),
-                $this->build_checkout_address_fields($address, 'shipping')
+                $this->build_checkout_address_fields($billing, 'billing'),
+                $this->build_checkout_address_fields($shipping, 'shipping')
             );
 
             $order = $this->create_quickcheckout_order_from_cart($order_data);
             if (is_wp_error($order)) {
                 $this->release_quickcheckout_lock('gpay');
                 wp_send_json_error($order->get_error_message());
+                wp_die();
+            }
+
+            $amount_check = $this->validate_wallet_client_amount($order, $client_amount);
+            if (is_wp_error($amount_check)) {
+                $order->update_status('cancelled', $amount_check->get_error_message());
+                $this->release_quickcheckout_lock('gpay');
+                wp_send_json_error($amount_check->get_error_message());
                 wp_die();
             }
 
@@ -1227,7 +1566,8 @@ if (!class_exists('WC_Cardknox')) :
                 wp_die();
             }
 
-            // Client amount is intentionally ignored
+            // Client amount is used only to detect wallet-sheet / server mismatches.
+            $client_amount = isset($_POST['amount']) ? wc_clean(wp_unslash($_POST['amount'])) : '';
             $billingContact = json_decode(stripslashes($_POST['billingContact'] ?? ''), true);
             $shippingContact = json_decode(stripslashes($_POST['shippingContact'] ?? ''), true);
             $selectedShipping = json_decode(stripslashes($_POST['selectedShipping'] ?? ''), true);
@@ -1272,9 +1612,11 @@ if (!class_exists('WC_Cardknox')) :
                 'phone'      => $phone,
             );
 
+            // Apple Pay always has a billing contact here — use it for tax location.
             $shipping_method = $this->resolve_shipping_method_for_address(
                 $selectedShipping['identifier'] ?? '',
-                $shipping_address
+                $shipping_address,
+                $billing
             );
             if (empty($shipping_method)) {
                 $this->release_quickcheckout_lock('apay');
@@ -1294,6 +1636,14 @@ if (!class_exists('WC_Cardknox')) :
             if (is_wp_error($order)) {
                 $this->release_quickcheckout_lock('apay');
                 wp_send_json_error($order->get_error_message());
+                wp_die();
+            }
+
+            $amount_check = $this->validate_wallet_client_amount($order, $client_amount);
+            if (is_wp_error($amount_check)) {
+                $order->update_status('cancelled', $amount_check->get_error_message());
+                $this->release_quickcheckout_lock('apay');
+                wp_send_json_error($amount_check->get_error_message());
                 wp_die();
             }
 

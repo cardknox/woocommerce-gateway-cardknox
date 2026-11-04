@@ -118,6 +118,64 @@ jQuery(document.body).on("updated_cart_totals", function () {
 });
 
 let lastSelectedShippingMethod = "";
+let lastApplePayShippingContact = null;
+
+/**
+ * Ask the server for cart totals + shipping rates for the wallet address.
+ * Pass billingAddress when available so tax-based-on-billing stores are correct.
+ */
+function fetchApplePayWalletTotals(address, shippingMethodId, billingAddress) {
+  const data = {
+    action: "cardknox_wallet_calculate_totals",
+    security: applePaysettings.create_order_nonce,
+    address: JSON.stringify(address || {}),
+    shipping_method: shippingMethodId || "",
+  };
+  if (billingAddress && (billingAddress.countryCode || billingAddress.country)) {
+    data.billing_address = JSON.stringify(billingAddress);
+  }
+
+  return new Promise(function (resolve, reject) {
+    jQuery.ajax({
+      url: applePaysettings.ajax_url,
+      type: "POST",
+      data: data,
+      success: function (response) {
+        if (response && response.success && response.data) {
+          resolve(response.data);
+        } else {
+          reject(
+            (response && response.data) ||
+              "Unable to calculate shipping for this address."
+          );
+        }
+      },
+      error: function (xhr) {
+        reject(xhr.responseText || "Unable to calculate shipping.");
+      },
+    });
+  });
+}
+
+function applePayContactToAddress(contact) {
+  if (!contact) {
+    return {};
+  }
+  const lines = contact.addressLines;
+  const address1 = Array.isArray(lines)
+    ? lines.filter(Boolean).join(" ")
+    : contact.address || "";
+
+  return {
+    administrativeArea: contact.administrativeArea || "",
+    locality: contact.locality || "",
+    postalCode: contact.postalCode || "",
+    countryCode: contact.countryCode || contact.country || "",
+    address: address1,
+    firstName: contact.givenName || contact.firstName || "",
+    lastName: contact.familyName || contact.lastName || "",
+  };
+}
 
 // Same as checkout cardknox-apple-pay.js — must be on window for ifields initFunction paths.
 window.apRequest = {
@@ -163,21 +221,38 @@ window.apRequest = {
           data: JSON.stringify(shippingContact),
         });
 
-        const hasShippingApplepay = shippingContact?.administrativeArea;
+        lastApplePayShippingContact = shippingContact;
+        const address = applePayContactToAddress(shippingContact);
 
-        let taxAmt = 0.1;
-        const newShippingMethods = applePaysettings.shippingMethods;
+        fetchApplePayWalletTotals(address, "")
+          .then(function (data) {
+            cartTotal.total = parseFloat(data.total).toFixed(2);
+            if (
+              data.shipping_methods_apple &&
+              data.shipping_methods_apple.length
+            ) {
+              applePaysettings.shippingMethods = data.shipping_methods_apple;
+              lastSelectedShippingMethod = data.shipping_methods_apple[0];
+            }
 
-        let resp = self.getTransactionInfo(taxAmt, newShippingMethods[0]);
-        resp.shippingMethods = newShippingMethods;
-        if (hasShippingApplepay && shippingContact.administrativeArea == "HI") {
-          resp.error = {
-            code: APErrorCode.addressUnserviceable,
-            contactField: APErrorContactField.administrativeArea,
-            message: "Shipping is not available for the given address",
-          };
-        }
-        resolve(resp);
+            const resp = self.getTransactionInfo();
+            resp.shippingMethods = applePaysettings.shippingMethods;
+            resolve(resp);
+          })
+          .catch(function (err) {
+            resolve({
+              total: self.getTransactionInfo().total,
+              shippingMethods: applePaysettings.shippingMethods,
+              error: {
+                code: APErrorCode.addressUnserviceable,
+                contactField: APErrorContactField.postalAddress,
+                message:
+                  typeof err === "string"
+                    ? err
+                    : "Shipping is not available for the given address",
+              },
+            });
+          });
       } catch (err) {
         logError("onShippingContactSelected error.", err);
         reject({ errors: [err] });
@@ -193,8 +268,30 @@ window.apRequest = {
           data: JSON.stringify(shippingMethod),
         });
         lastSelectedShippingMethod = shippingMethod;
-        const resp = self.getTransactionInfo(null, shippingMethod);
-        resolve(resp);
+        const address = applePayContactToAddress(
+          lastApplePayShippingContact || {}
+        );
+        const methodId =
+          shippingMethod && shippingMethod.identifier
+            ? shippingMethod.identifier
+            : "";
+
+        fetchApplePayWalletTotals(address, methodId)
+          .then(function (data) {
+            cartTotal.total = parseFloat(data.total).toFixed(2);
+            if (
+              data.shipping_methods_apple &&
+              data.shipping_methods_apple.length
+            ) {
+              applePaysettings.shippingMethods = data.shipping_methods_apple;
+            }
+            resolve(self.getTransactionInfo());
+          })
+          .catch(function (err) {
+            logError("onShippingMethodSelected calculate error.", err);
+            // Fall back to stale total rather than hard-failing the sheet.
+            resolve(self.getTransactionInfo());
+          });
       } catch (err) {
         logError("onShippingMethodSelected error.", err);
         reject({ errors: [err] });
@@ -206,7 +303,7 @@ window.apRequest = {
     return new Promise((resolve, reject) => {
       try {
         console.log("paymentMethod", JSON.stringify(paymentMethod));
-        const resp = self.getTransactionInfo(null, null, paymentMethod.type);
+        const resp = self.getTransactionInfo();
         resolve(resp);
       } catch (err) {        
         console.error("onPaymentMethodSelected error.", exMsg(err));
@@ -353,30 +450,35 @@ window.apRequest = {
     }
   },
   onPaymentAuthorize: function (applePayload) {
-    const amtAppleQuick = parseFloat(cartTotal.total).toFixed(2);
+    const self = this;
+    // Recalculate with real billing contact before charge (tax-based-on-billing).
+    const shippingAddr = applePayContactToAddress(applePayload.shippingContact);
+    const billingAddr = applePayContactToAddress(applePayload.billingContact);
+    const methodId =
+      lastSelectedShippingMethod && lastSelectedShippingMethod.identifier
+        ? lastSelectedShippingMethod.identifier
+        : "";
 
     return new Promise((resolve, reject) => {
-        this.authorize(applePayload, amtAppleQuick.toString())
-            .then((response) => {
-                try {
-                    console.log(response);
-                    const respQuick = JSON.parse(response);
-                    if (!respQuick) {
-                        throw new Error("Invalid response: " + response);
-                    }
-                    if (respQuick.xError) {
-                        throw respQuick;
-                    }
-                    resolve(response);
-                } catch (err) {
-                    reject(err);
-                }
-            })
-            .catch((err) => {
-                console.error("authorizeAPay error.", JSON.stringify(err));
-                apRequest.handleAPError(err);
-                reject(err);
-            });
+      fetchApplePayWalletTotals(shippingAddr, methodId, billingAddr)
+        .then(function (data) {
+          cartTotal.total = parseFloat(data.total).toFixed(2);
+        })
+        .catch(function () {
+          // Keep prior sheet total if recalc fails; server still validates.
+        })
+        .then(function () {
+          const amtAppleQuick = parseFloat(cartTotal.total).toFixed(2);
+          try {
+            self.authorize(applePayload, amtAppleQuick.toString());
+            // authorize() posts the Woo order asynchronously (redirect on success).
+            resolve("{}");
+          } catch (err) {
+            console.error("authorizeAPay error.", JSON.stringify(err));
+            apRequest.handleAPError(err);
+            reject(err);
+          }
+        });
     });
   },
   handleAPError: function (err) {

@@ -1,6 +1,108 @@
 let subTotal = {
-    total: parseFloat(googlePaysettings.total).toFixed(2)
+    total: parseFloat(googlePaysettings.total).toFixed(2),
+    subtotal: null,
+    shipping_total: null,
+    tax_total: null,
 };
+
+let lastGooglePayShippingAddress = null;
+
+/**
+ * Ask the server for cart totals + shipping rates for the wallet address.
+ * Pass billingAddress when available so tax-based-on-billing stores are correct.
+ */
+function fetchGooglePayWalletTotals(address, shippingMethodId, billingAddress) {
+  const data = {
+    action: "cardknox_wallet_calculate_totals",
+    security: googlePaysettings.create_order_nonce,
+    address: JSON.stringify(address || {}),
+    shipping_method: shippingMethodId || "",
+  };
+  if (billingAddress && (billingAddress.countryCode || billingAddress.country)) {
+    data.billing_address = JSON.stringify(billingAddress);
+  }
+
+  return new Promise(function (resolve, reject) {
+    jQuery.ajax({
+      url: googlePaysettings.ajax_url,
+      type: "POST",
+      data: data,
+      success: function (response) {
+        if (response && response.success && response.data) {
+          resolve(response.data);
+        } else {
+          reject(
+            (response && response.data) ||
+              "Unable to calculate shipping for this address."
+          );
+        }
+      },
+      error: function (xhr) {
+        reject(xhr.responseText || "Unable to calculate shipping.");
+      },
+    });
+  });
+}
+
+function applyGooglePayTotalsData(data) {
+  if (!data) {
+    return;
+  }
+  subTotal.total = parseFloat(data.total).toFixed(2);
+  subTotal.subtotal = data.subtotal;
+  subTotal.shipping_total = data.shipping_total;
+  subTotal.tax_total = data.tax_total;
+  if (data.shipping_methods_google && data.shipping_methods_google.length) {
+    googlePaysettings.shippingMethods = data.shipping_methods_google;
+  }
+  if (data.shipping_costs_google) {
+    googlePaysettings.shippingCosts = data.shipping_costs_google;
+  }
+}
+
+function buildGooglePayTransactionInfo(countryCode) {
+  const amtQuick = parseFloat(subTotal.total).toFixed(2);
+  const displayItems = [];
+
+  if (subTotal.subtotal != null) {
+    displayItems.push({
+      label: "Subtotal",
+      type: "SUBTOTAL",
+      price: parseFloat(subTotal.subtotal).toFixed(2),
+    });
+  } else {
+    displayItems.push({
+      label: "Subtotal",
+      type: "SUBTOTAL",
+      price: amtQuick.toString(),
+    });
+  }
+
+  if (subTotal.shipping_total != null && parseFloat(subTotal.shipping_total) > 0) {
+    displayItems.push({
+      label: "Shipping",
+      type: "LINE_ITEM",
+      price: parseFloat(subTotal.shipping_total).toFixed(2),
+    });
+  }
+
+  if (subTotal.tax_total != null && parseFloat(subTotal.tax_total) > 0) {
+    displayItems.push({
+      label: "Tax",
+      type: "TAX",
+      price: parseFloat(subTotal.tax_total).toFixed(2),
+    });
+  }
+
+  return {
+    displayItems: displayItems,
+    countryCode: countryCode || "US",
+    currencyCode: googlePaysettings.currencyCode,
+    totalPriceStatus: "FINAL",
+    totalPrice: amtQuick.toString(),
+    totalPriceLabel: "Total",
+  };
+}
 
 function initCardknoxCartGooglePay() {
   if (
@@ -32,6 +134,9 @@ jQuery(document.body).on("updated_cart_totals", function () {
             if (response.success) {
                 // Update the global variable with the new total
                 subTotal.total = response.data.total;
+                subTotal.subtotal = null;
+                subTotal.shipping_total = null;
+                subTotal.tax_total = null;
             }
         }
     });
@@ -62,9 +167,9 @@ window.gpRequest = {
     onGetShippingCosts: function (shippingData) {
       logDebug({
         label: "onGetShippingCosts",
-        data: googlePaysettings.shippingData,
+        data: googlePaysettings.shippingCosts,
       });
-      return googlePaysettings.shippingCosts;
+      return googlePaysettings.shippingCosts || {};
     },
     onGetShippingOptions: function (shippingData) {
       logDebug({
@@ -73,30 +178,54 @@ window.gpRequest = {
       });
 
       const hasShippingGpay = shippingData?.shippingAddress;
-      
-      if (
-        hasShippingGpay &&
-        shippingData.shippingAddress.administrativeArea == "HI"
-      ) {
+      const firstMethodId =
+        (googlePaysettings.shippingMethods[0] &&
+          googlePaysettings.shippingMethods[0].id) ||
+        "";
+      if (!hasShippingGpay) {
         return {
-          error: {
-            reason: "SHIPPING_ADDRESS_UNSERVICEABLE",
-            message: "This shipping option is invalid for the given address",
-            intent: "SHIPPING_ADDRESS",
-          },
+          defaultSelectedOptionId: firstMethodId,
+          shippingOptions: googlePaysettings.shippingMethods,
         };
       }
-      let selectedOptionid = "free_shipping";
+
+      lastGooglePayShippingAddress = shippingData.shippingAddress;
+      let selectedOptionid = firstMethodId;
       if (
-        hasShippingGpay &&
+        shippingData.shippingOptionData &&
         shippingData.shippingOptionData.id !== "shipping_option_unselected"
       ) {
         selectedOptionid = shippingData.shippingOptionData.id;
       }
-      return {
-        defaultSelectedOptionId: selectedOptionid,
-        shippingOptions: googlePaysettings.shippingMethods,
-      };
+
+      return fetchGooglePayWalletTotals(
+        shippingData.shippingAddress,
+        selectedOptionid
+      )
+        .then(function (data) {
+          applyGooglePayTotalsData(data);
+          const defaultId =
+            data.chosen_shipping_method ||
+            (data.shipping_methods_google[0] &&
+              data.shipping_methods_google[0].id) ||
+            selectedOptionid;
+          return {
+            defaultSelectedOptionId: defaultId,
+            shippingOptions: googlePaysettings.shippingMethods,
+          };
+        })
+        .catch(function (err) {
+          return {
+            error: {
+              reason: "SHIPPING_ADDRESS_UNSERVICEABLE",
+              message:
+                typeof err === "string"
+                  ? err
+                  : "This shipping option is invalid for the given address",
+              intent: "SHIPPING_ADDRESS",
+            },
+          };
+        });
     },
   },
   onGetTransactionInfo: function (shippingData) {
@@ -105,31 +234,43 @@ window.gpRequest = {
       data: shippingData,
     });
 
-    const amtQuick = parseFloat(subTotal.total).toFixed(2);
-    let countryCodeQuick = null;
-
+    let countryCodeQuick = "US";
     if (
       jQuery("#billing_country").val() !== null &&
       jQuery("#billing_country").val() !== undefined
     ) {
       countryCodeQuick = jQuery("#billing_country").val();
-    } else {
-      countryCodeQuick = "US";
+    } else if (shippingData?.shippingAddress?.countryCode) {
+      countryCodeQuick = shippingData.shippingAddress.countryCode;
     }
-    return {
-      displayItems: [
-        {
-          label: "Subtotal",
-          type: "SUBTOTAL",
-          price: amtQuick.toString(),
-        },
-      ],
-      countryCode: countryCodeQuick,
-      currencyCode: googlePaysettings.currencyCode,
-      totalPriceStatus: "FINAL",
-      totalPrice: amtQuick.toString(),
-      totalPriceLabel: "Total",
-    };
+
+    const hasAddress = shippingData?.shippingAddress;
+    if (!hasAddress) {
+      return buildGooglePayTransactionInfo(countryCodeQuick);
+    }
+
+    lastGooglePayShippingAddress = shippingData.shippingAddress;
+    let selectedOptionid = "";
+    if (
+      shippingData.shippingOptionData &&
+      shippingData.shippingOptionData.id !== "shipping_option_unselected"
+    ) {
+      selectedOptionid = shippingData.shippingOptionData.id;
+    }
+
+    return fetchGooglePayWalletTotals(
+      shippingData.shippingAddress,
+      selectedOptionid
+    )
+      .then(function (data) {
+        applyGooglePayTotalsData(data);
+        return buildGooglePayTransactionInfo(
+          shippingData.shippingAddress.countryCode || countryCodeQuick
+        );
+      })
+      .catch(function () {
+        return buildGooglePayTransactionInfo(countryCodeQuick);
+      });
   },
   onBeforeProcessPayment: function () {
     return new Promise(function (resolve, reject) {
@@ -145,9 +286,18 @@ window.gpRequest = {
 
     let xAmount = paymentResponse.transactionInfo.totalPrice;
 
-    // Remove country code from telephone
-    let telephone = paymentResponse.paymentData.paymentMethodData.info.billingAddress.phoneNumber;
-    telephone = telephone.substring(telephone.indexOf(" ") + 1);
+    let billingAddress =
+      paymentResponse.paymentData.paymentMethodData.info.billingAddress || null;
+
+    // Prefer billing phone for AVS / order contact; fall back to shipping.
+    let telephone =
+      (billingAddress && billingAddress.phoneNumber) ||
+      (paymentResponse.paymentData.shippingAddress &&
+        paymentResponse.paymentData.shippingAddress.phoneNumber) ||
+      "";
+    if (telephone && telephone.indexOf(" ") !== -1) {
+      telephone = telephone.substring(telephone.indexOf(" ") + 1);
+    }
 
     let shippingOptionData = paymentResponse.paymentData.shippingOptionData;
 
@@ -168,7 +318,30 @@ window.gpRequest = {
         paymentResponse.paymentData.paymentMethodData.tokenizationData.token
       );
 
-      createWooCommerceOrder(token, xAmount, telephone, paymentResponse.paymentData.email, paymentResponse.paymentData.shippingAddress, shippingOptionData);
+      const shippingAddress = paymentResponse.paymentData.shippingAddress;
+      const selectedOptionId =
+        (shippingOptionData && shippingOptionData.id) || "";
+
+      // Recalculate with real billing before charge (tax-based-on-billing).
+      fetchGooglePayWalletTotals(shippingAddress, selectedOptionId, billingAddress)
+        .then(function (data) {
+          applyGooglePayTotalsData(data);
+          xAmount = subTotal.total;
+        })
+        .catch(function () {
+          // Keep sheet amount if recalc fails; server still validates.
+        })
+        .then(function () {
+          createWooCommerceOrder(
+            token,
+            xAmount,
+            telephone,
+            paymentResponse.paymentData.email,
+            shippingAddress,
+            shippingOptionData,
+            billingAddress
+          );
+        });
     }
   },
   onPaymentCanceled: function (respCanceled) {
@@ -255,7 +428,7 @@ function getAmount() {
 
 
 var cardknoxGpayOrderSubmitting = false;
-function createWooCommerceOrder(token, amount, telephone, email, shippingAddress, shippingOptionData) {
+function createWooCommerceOrder(token, amount, telephone, email, shippingAddress, shippingOptionData, billingAddress) {
     // Prevent duplicate AJAX / double order creation from cart quick checkout.
     if (cardknoxGpayOrderSubmitting) {
         return;
@@ -271,6 +444,7 @@ function createWooCommerceOrder(token, amount, telephone, email, shippingAddress
             amount: amount,
             phone: telephone,
             email: email,
+            billingAddress: JSON.stringify(billingAddress || {}),
             shippingAddress: JSON.stringify(shippingAddress),
             shippingOptionData: JSON.stringify(shippingOptionData),
             security: googlePaysettings.create_order_nonce  // Include nonce

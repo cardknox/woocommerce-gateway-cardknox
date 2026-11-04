@@ -1,8 +1,28 @@
+/*Start PLGN-245 (TICKET RELATED) */
 let subTotal = {
     total: parseFloat(googlePaysettings.total).toFixed(2)
 };
-jQuery(document.body).on("updated_cart_totals", function () {
 
+function initCardknoxCartGooglePay() {
+  if (
+    googlePaysettings.merchant_name == "" ||
+    googlePaysettings.merchant_name == null ||
+    googlePaysettings.merchant_name.length == 0
+  ) {
+    jQuery(".googlepay-error")
+      .html(
+        "<div class='woocommerce-error' role='alert'>Please contact support. Failed to initialize Google Pay. </div>"
+      )
+      .show();
+    return;
+  }
+  ckGooglePay.enableGooglePay({
+    initFunction: "gpRequest.initGP",
+    amountField: "amount",
+  });
+}
+
+jQuery(document.body).on("updated_cart_totals", function () {
     jQuery.ajax({
         url: googlePaysettings.ajax_url,
         type: 'POST',
@@ -16,29 +36,10 @@ jQuery(document.body).on("updated_cart_totals", function () {
             }
         }
     });
-
-  if (
-    googlePaysettings.merchant_name == "" ||
-    googlePaysettings.merchant_name == null ||
-    googlePaysettings.merchant_name.length == 0
-  ) {
-    jQuery(".googlepay-error")
-      .html(
-        "<div class='woocommerce-error' role='alert'>Please contact support. Failed to initialize Google Pay. </div>"
-      )
-      .show();
-  } else {
-    ckGooglePay.enableGooglePay({
-      initFunction: "gpRequest.initGP",
-      amountField: "amount",
-    });
-  }
+    // Re-init after cart totals refresh (do not call enableGooglePay on page load twice).
+    initCardknoxCartGooglePay();
 });
-
-ckGooglePay.enableGooglePay({
-    initFunction: "gpRequest.initGP",
-    amountField: "amount",
-});
+/* END PLGN-245 (TICKET RELATED) */
 
 //Google Pay
 window.gpRequest = {
@@ -128,7 +129,7 @@ window.gpRequest = {
       countryCode: countryCodeQuick,
       currencyCode: googlePaysettings.currencyCode,
       totalPriceStatus: "FINAL",
-      totalPrice: amt.toString(),
+      totalPrice: amtQuick.toString(),
       totalPriceLabel: "Total",
     };
   },
@@ -228,6 +229,11 @@ window.gpRequest = {
   },
 };
 
+/*Start PLGN-245 (TICKET RELATED) */
+// Init once after gpRequest is defined (fixes load-order + avoids double enableGooglePay).
+initCardknoxCartGooglePay();
+/* END PLGN-245 (TICKET RELATED) */
+
 function setGPPayload(value) {
   document.getElementById("gp-payload").value = value;
   showHide("divGPPayload", value);
@@ -251,7 +257,15 @@ function getAmount() {
 }
 
 
+/*Start PLGN-245 (TICKET RELATED) */
+var cardknoxGpayOrderSubmitting = false;
 function createWooCommerceOrder(token, amount, telephone, email, shippingAddress, shippingOptionData) {
+    // Prevent duplicate AJAX / double order creation from cart quick checkout.
+    if (cardknoxGpayOrderSubmitting) {
+        return;
+    }
+    cardknoxGpayOrderSubmitting = true;
+
     jQuery.ajax({
         url: googlePaysettings.ajax_url,
         type: 'POST',
@@ -269,6 +283,7 @@ function createWooCommerceOrder(token, amount, telephone, email, shippingAddress
             if (response.success) {
                 window.location.href = response.data.redirect_url;
             } else {
+                cardknoxGpayOrderSubmitting = false;
                 jQuery(".gpay-error").html("<div> " + response.data + " </div>").show();
                 setTimeout(function () {
                     jQuery(".gpay-error").html("").hide();
@@ -276,6 +291,7 @@ function createWooCommerceOrder(token, amount, telephone, email, shippingAddress
             }
         },
         error: function (error) {
+            cardknoxGpayOrderSubmitting = false;
             console.log(error);  // Log the full error response
             jQuery(".gpay-error").html("<div> " + error.responseText + " </div>").show();
             setTimeout(function () {
@@ -284,3 +300,4 @@ function createWooCommerceOrder(token, amount, telephone, email, shippingAddress
         }
     });    
 }
+/* END PLGN-245 (TICKET RELATED) */

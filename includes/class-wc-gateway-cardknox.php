@@ -407,9 +407,10 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
         $suffix = defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? '' : '.min';
 
-        wp_enqueue_style('woocommerce_cardknox_admin_style', plugins_url('/assets/css/cardknox-admin-style.css',WC_CARDKNOX_MAIN_FILE), false, WC_CARDKNOX_VERSION,'all' );
+        wp_enqueue_style('dashicons');
+        wp_enqueue_style('woocommerce_cardknox_admin_style', plugins_url('/assets/css/cardknox-admin-style.css',WC_CARDKNOX_MAIN_FILE), array('dashicons'), WC_CARDKNOX_VERSION,'all' );
 
-        wp_enqueue_script('woocommerce_cardknox_admin', plugins_url('assets/js/cardknox-admin' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE), array(), WC_CARDKNOX_VERSION, true);
+        wp_enqueue_script('woocommerce_cardknox_admin', plugins_url('assets/js/cardknox-admin' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE), array('jquery'), WC_CARDKNOX_VERSION, true);
 
         $cardknox_admin_params = array(
             'localized_messages' => array(

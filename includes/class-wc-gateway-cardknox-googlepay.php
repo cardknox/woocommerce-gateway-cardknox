@@ -79,10 +79,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
 
         add_action('woocommerce_review_order_after_submit', array($this, 'cardknox_gpay_order_after_submit'));
         add_filter('woocommerce_available_payment_gateways', array($this, 'cardknox_allow_gpay_method_by_country'));
-
-        if (is_cart() && $this->googlepayQuickCheckout == 'no') {
-            add_action('woocommerce_proceed_to_checkout', array($this, 'cardknox_gpay_order_after_submit'), 20);
-        }
+        
     }
 
     /**
@@ -171,6 +168,12 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
             return;
         }
 
+        // Cart quick-checkout uses cardknox-google-pay-cart.js — skip checkout GP script on cart
+        // to avoid double handlers / duplicate orders.
+        if (is_cart() && 'no' === $this->googlepayQuickCheckout) {
+            return;
+        }
+
         // Avoid loading Google Pay legacy assets on the Block Checkout to prevent
         // duplicate event handlers and render loops in React Blocks.
         if (class_exists('WC_Cardknox') && method_exists('WC_Cardknox', 'is_block_checkout')) {
@@ -197,6 +200,9 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
             filemtime(plugin_dir_path(dirname(__FILE__)) . 'assets/js/cardknox-google-pay.min.js'),
             true
         );
+
+
+        
 
         $cardknoxGooglepaySettings = array(
             'enabled'                 => $this->enabled,
@@ -267,10 +273,9 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
     public function get_payment_gdata($postData)
     {
         if (isset($_POST['xCardNumToken'])) {
-
-            $postData['xCardNum']               = wc_clean($_POST['xCardNumToken']);
-            $postData['xAmount']                = WC()->cart->total;
-            $postData['xDigitalWalletType']     = 'googlepay';
+            // Keep xAmount from the order (set in get_order_gdata); never trust client amount.
+            $postData['xCardNum']           = wc_clean(wp_unslash($_POST['xCardNumToken']));
+            $postData['xDigitalWalletType'] = 'googlepay';
         }
         return $postData;
     }

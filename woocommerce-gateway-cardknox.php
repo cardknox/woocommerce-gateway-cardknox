@@ -1106,8 +1106,8 @@ if (!class_exists('WC_Cardknox')) :
                 'all'
             );
         
-            
-            // filemtime busts browser cache of .min.js (old cached file caused duplicate cart orders).
+
+
             wp_enqueue_script(
                 'woocommerce_cardknox_google_pay',
                 plugins_url( 'assets/js/cardknox-google-pay-cart.min.js', WC_CARDKNOX_MAIN_FILE ),

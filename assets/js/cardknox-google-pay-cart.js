@@ -6,12 +6,9 @@ let subTotal = {
 };
 
 let lastGooglePayShippingAddress = null;
+let googlePayTotalsCache = { key: "", data: null, ts: 0 };
 
-/**
- * Ask the server for cart totals + shipping rates for the wallet address.
- * Pass billingAddress when available so tax-based-on-billing stores are correct.
- */
-function fetchGooglePayWalletTotals(address, shippingMethodId, billingAddress) {
+function buildGooglePayTotalsRequestData(address, shippingMethodId, billingAddress) {
   const data = {
     action: "cardknox_wallet_calculate_totals",
     security: googlePaysettings.create_order_nonce,
@@ -21,12 +18,75 @@ function fetchGooglePayWalletTotals(address, shippingMethodId, billingAddress) {
   if (billingAddress && (billingAddress.countryCode || billingAddress.country)) {
     data.billing_address = JSON.stringify(billingAddress);
   }
+  return data;
+}
 
+/**
+ * Sync totals fetch for Google Pay sheet callbacks.
+ * Cardknox/Google Pay shipping callbacks do NOT await Promises — returning a
+ * Promise hangs the pay.google.com sheet (infinite spinner). Checkout works
+ * because it returns plain objects synchronously.
+ */
+function fetchGooglePayWalletTotalsSync(address, shippingMethodId, billingAddress) {
+  const cacheKey = JSON.stringify([
+    address || {},
+    shippingMethodId || "",
+    billingAddress || null,
+  ]);
+  if (
+    googlePayTotalsCache.key === cacheKey &&
+    googlePayTotalsCache.data &&
+    Date.now() - googlePayTotalsCache.ts < 2500
+  ) {
+    return googlePayTotalsCache.data;
+  }
+
+  let result = null;
+  let errorMsg = null;
+  jQuery.ajax({
+    url: googlePaysettings.ajax_url,
+    type: "POST",
+    async: false,
+    data: buildGooglePayTotalsRequestData(
+      address,
+      shippingMethodId,
+      billingAddress
+    ),
+    success: function (response) {
+      if (response && response.success && response.data) {
+        result = response.data;
+      } else {
+        errorMsg =
+          (response && response.data) ||
+          "Unable to calculate shipping for this address.";
+      }
+    },
+    error: function (xhr) {
+      errorMsg = xhr.responseText || "Unable to calculate shipping.";
+    },
+  });
+
+  if (!result) {
+    throw errorMsg || "Unable to calculate shipping.";
+  }
+
+  googlePayTotalsCache = { key: cacheKey, data: result, ts: Date.now() };
+  return result;
+}
+
+/**
+ * Async totals fetch — only for post-authorize order creation.
+ */
+function fetchGooglePayWalletTotals(address, shippingMethodId, billingAddress) {
   return new Promise(function (resolve, reject) {
     jQuery.ajax({
       url: googlePaysettings.ajax_url,
       type: "POST",
-      data: data,
+      data: buildGooglePayTotalsRequestData(
+        address,
+        shippingMethodId,
+        billingAddress
+      ),
       success: function (response) {
         if (response && response.success && response.data) {
           resolve(response.data);
@@ -198,34 +258,34 @@ window.gpRequest = {
         selectedOptionid = shippingData.shippingOptionData.id;
       }
 
-      return fetchGooglePayWalletTotals(
-        shippingData.shippingAddress,
-        selectedOptionid
-      )
-        .then(function (data) {
-          applyGooglePayTotalsData(data);
-          const defaultId =
-            data.chosen_shipping_method ||
-            (data.shipping_methods_google[0] &&
-              data.shipping_methods_google[0].id) ||
-            selectedOptionid;
-          return {
-            defaultSelectedOptionId: defaultId,
-            shippingOptions: googlePaysettings.shippingMethods,
-          };
-        })
-        .catch(function (err) {
-          return {
-            error: {
-              reason: "SHIPPING_ADDRESS_UNSERVICEABLE",
-              message:
-                typeof err === "string"
-                  ? err
-                  : "This shipping option is invalid for the given address",
-              intent: "SHIPPING_ADDRESS",
-            },
-          };
-        });
+      // Must return a plain object (not a Promise) or the sheet spins forever.
+      try {
+        const data = fetchGooglePayWalletTotalsSync(
+          shippingData.shippingAddress,
+          selectedOptionid
+        );
+        applyGooglePayTotalsData(data);
+        const defaultId =
+          data.chosen_shipping_method ||
+          (data.shipping_methods_google[0] &&
+            data.shipping_methods_google[0].id) ||
+          selectedOptionid;
+        return {
+          defaultSelectedOptionId: defaultId,
+          shippingOptions: googlePaysettings.shippingMethods,
+        };
+      } catch (err) {
+        return {
+          error: {
+            reason: "SHIPPING_ADDRESS_UNSERVICEABLE",
+            message:
+              typeof err === "string"
+                ? err
+                : "This shipping option is invalid for the given address",
+            intent: "SHIPPING_ADDRESS",
+          },
+        };
+      }
     },
   },
   onGetTransactionInfo: function (shippingData) {
@@ -258,19 +318,19 @@ window.gpRequest = {
       selectedOptionid = shippingData.shippingOptionData.id;
     }
 
-    return fetchGooglePayWalletTotals(
-      shippingData.shippingAddress,
-      selectedOptionid
-    )
-      .then(function (data) {
-        applyGooglePayTotalsData(data);
-        return buildGooglePayTransactionInfo(
-          shippingData.shippingAddress.countryCode || countryCodeQuick
-        );
-      })
-      .catch(function () {
-        return buildGooglePayTransactionInfo(countryCodeQuick);
-      });
+    // Must return a plain object (not a Promise) or the sheet spins forever.
+    try {
+      const data = fetchGooglePayWalletTotalsSync(
+        shippingData.shippingAddress,
+        selectedOptionid
+      );
+      applyGooglePayTotalsData(data);
+      return buildGooglePayTransactionInfo(
+        shippingData.shippingAddress.countryCode || countryCodeQuick
+      );
+    } catch (err) {
+      return buildGooglePayTransactionInfo(countryCodeQuick);
+    }
   },
   onBeforeProcessPayment: function () {
     return new Promise(function (resolve, reject) {

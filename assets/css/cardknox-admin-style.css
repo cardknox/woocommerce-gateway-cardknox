@@ -1,3 +1,6 @@
 div#credit-card-settings .form-table th{
   width: 240px;
 }
+div#ach-settings .form-table th{
+  width: 290px;
+}

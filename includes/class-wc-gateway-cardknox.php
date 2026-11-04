@@ -76,8 +76,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
     public $appleQuickcheckout;
     public $applePayGateway;
     public $googlePayGateway;
-
-
+    public $achGateway;
 
     /**
      * Constructor
@@ -144,6 +143,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         // Initialize the child gateways
         $this->applePayGateway = new WCCardknoxApplepay();
         $this->googlePayGateway = new WCCardknoxGooglepay();
+        $this->achGateway = new WCCardknoxACH();
 
         // Hooks.
         add_action('wp_enqueue_scripts', array($this, 'payment_scripts'));
@@ -571,19 +571,13 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             return $postData;
         }
         
-        // Original code for classic checkout and Blocks saved token support
-        // Support classic field name
+        // Classic checkout + Blocks saved token - only charge tokens owned by the current user.
         if (!empty($req['wc-cardknox-payment-token']) && 'new' !== $req['wc-cardknox-payment-token']) {
-            $token_id = $req['wc-cardknox-payment-token'];
-            $token = WC_Payment_Tokens::get($token_id);
+            $token = $this->get_owned_payment_token($req['wc-cardknox-payment-token']);
             $postData['xToken'] = $token->get_token();
-        // Support WooCommerce Blocks saved token param name
         } elseif (!empty($req['wc_token']) && 'new' !== $req['wc_token']) {
-            $token_id = $req['wc_token'];
-            $token = WC_Payment_Tokens::get($token_id);
-            if ($token && $token->get_id()) {
-                $postData['xToken'] = $token->get_token();
-            }
+            $token = $this->get_owned_payment_token($req['wc_token']);
+            $postData['xToken'] = $token->get_token();
         } elseif (!empty($req['xToken'])) {
             //token came in (recurring charge)
         } else {
@@ -615,6 +609,70 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             }
         }
     }
+
+    /**
+     * Return a saved payment token only when it belongs to the current user and this gateway.
+     *
+     * @param int|string $token_id Client-supplied token ID.
+     * @return WC_Payment_Token
+     * @throws WC_Data_Exception When the token is missing, invalid, or not owned by the shopper.
+     */
+    protected function get_owned_payment_token($token_id)
+    {
+        if (!is_user_logged_in()) {
+            throw new WC_Data_Exception(
+                'wc_gateway_cardknox_invalid_token',
+                __('Invalid payment method. Please log in and try again.', 'woo-cardknox-gateway'),
+                403
+            );
+        }
+
+        if (!$this->saved_cards) {
+            throw new WC_Data_Exception(
+                'wc_gateway_cardknox_invalid_token',
+                __('Saved cards are not enabled.', 'woo-cardknox-gateway'),
+                403
+            );
+        }
+
+        $token_id = absint($token_id);
+        if (!$token_id) {
+            throw new WC_Data_Exception(
+                'wc_gateway_cardknox_invalid_token',
+                __('Invalid payment method.', 'woo-cardknox-gateway'),
+                400
+            );
+        }
+
+        $token = WC_Payment_Tokens::get($token_id);
+        if (!$token || !$token->get_id()) {
+            throw new WC_Data_Exception(
+                'wc_gateway_cardknox_invalid_token',
+                __('Invalid payment method.', 'woo-cardknox-gateway'),
+                400
+            );
+        }
+
+        if ((int) $token->get_user_id() !== get_current_user_id()) {
+            throw new WC_Data_Exception(
+                'wc_gateway_cardknox_invalid_token',
+                __('Invalid payment method.', 'woo-cardknox-gateway'),
+                403
+            );
+        }
+
+        if ($token->get_gateway_id() !== $this->id) {
+            throw new WC_Data_Exception(
+                'wc_gateway_cardknox_invalid_token',
+                __('Invalid payment method.', 'woo-cardknox-gateway'),
+                403
+            );
+        }
+
+        return $token;
+    }
+
+
     private function is_unset_or_empty($s)
     {
         return !isset($s) || $s === '';
@@ -1367,6 +1425,7 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             <a href="#credit-card-settings" class="nav-tab nav-tab-active"><?php _e('Credit Card', 'woo-cardknox-gateway'); ?></a>
             <a href="#apple-pay-settings" class="nav-tab"><?php _e('Apple Pay', 'woo-cardknox-gateway'); ?></a>
             <a href="#google-pay-settings" class="nav-tab"><?php _e('Google Pay', 'woo-cardknox-gateway'); ?></a>
+            <a href="#ach-settings" class="nav-tab"><?php _e('ACH', 'woo-cardknox-gateway'); ?></a>
         </div>
             <div id="credit-card-settings" class="panel">
                 <table class="form-table" style="width:400px;">
@@ -1436,6 +1495,20 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                 <tbody>
                     <?php
                     $this->googlePayGateway->generate_settings_html();
+                    ?>
+                </tbody>
+            </table>
+        </div>
+        <div id="ach-settings" class="panel">
+            <table class="form-table">
+                <thead>
+                    <tr>
+                        <th style="padding:0;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $this->achGateway->generate_settings_html();
                     ?>
                 </tbody>
             </table>

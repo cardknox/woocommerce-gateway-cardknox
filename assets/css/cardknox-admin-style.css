@@ -41,3 +41,7 @@ div#credit-card-settings .form-table th{
   font-size: 24px;
   line-height: 1;
 }
+
+div#ach-settings .form-table th{
+  width: 290px;
+}

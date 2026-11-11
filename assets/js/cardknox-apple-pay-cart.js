@@ -378,76 +378,82 @@ window.apRequest = {
     });
   },  
   authorize: function (applePayload, totalAmount) {
-    let appToken = applePayload.token.paymentData.data;
-    if (appToken) {
-      let xcardnum = btoa(JSON.stringify(applePayload.token.paymentData));
-      jQuery("#applePaytoken").val(xcardnum);
-
-      let billingFirstName = applePayload.billingContact.givenName;
-      let billingLastName = applePayload.billingContact.familyName;
-
-      let billingAddress = applePayload.billingContact.addressLines
-        .filter(function (line) {
-          return line; // This will remove any falsy values: undefined, null, "", 0, false, NaN
-        })
-        .join(" ");
-
-      let billingState = applePayload.billingContact.administrativeArea;
-      let billingCountry = applePayload.billingContact.countryCode;
-      let billingPostcode = applePayload.billingContact.postalCode;
-      let billingCity = applePayload.billingContact.locality;
-
-      let shippingFirstName = applePayload.shippingContact.givenName;
-      let shippingLastName = applePayload.shippingContact.familyName;
-      let shippingEmail = applePayload.shippingContact.emailAddress;
-      let shippingTelephone = applePayload.shippingContact.phoneNumber;
-      shippingTelephone = shippingTelephone.substring(
-        shippingTelephone.indexOf(" ") + 1
-      );
-
-      let shippingAddress = applePayload.shippingContact.addressLines
-        .filter(function (line) {
-          return line; // This will remove any falsy values: undefined, null, "", 0, false, NaN
-        })
-        .join(" ");
-
-      let shippingState = applePayload.shippingContact.administrativeArea;
-      let shippingCountry = applePayload.shippingContact.countryCode;
-      let shippingPostcode = applePayload.shippingContact.postalCode;
-      let shippingCity = applePayload.shippingContact.locality;
-
-      let billingContact = {
-        firstName: billingFirstName,
-        lastName: billingLastName,
-        emailAddress: shippingEmail,
-        phoneNumber: shippingTelephone,
-        address: billingAddress,
-        administrativeArea: billingState,
-        country: billingCountry,
-        postcode: billingPostcode,
-        city: billingCity,
-      };
-
-      let shippingContact = {
-        firstName: shippingFirstName,
-        lastName: shippingLastName,
-        emailAddress: shippingEmail,
-        phoneNumber: shippingTelephone,
-        address: shippingAddress,
-        administrativeArea: shippingState,
-        country: shippingCountry,
-        postcode: shippingPostcode,
-        city: shippingCity,
-      };
-
-      applePaycreateWooCommerceOrder(
-        xcardnum,
-        totalAmount,
-        billingContact,
-        shippingContact,
-        lastSelectedShippingMethod
-      );
+    let appToken = applePayload.token && applePayload.token.paymentData
+      ? applePayload.token.paymentData.data
+      : null;
+    if (!appToken) {
+      return Promise.reject(new Error("Apple Pay token data is missing"));
     }
+
+    let xcardnum = btoa(JSON.stringify(applePayload.token.paymentData));
+    jQuery("#applePaytoken").val(xcardnum);
+
+    let billingFirstName = applePayload.billingContact.givenName;
+    let billingLastName = applePayload.billingContact.familyName;
+
+    let billingAddress = applePayload.billingContact.addressLines
+      .filter(function (line) {
+        return line; // This will remove any falsy values: undefined, null, "", 0, false, NaN
+      })
+      .join(" ");
+
+    let billingState = applePayload.billingContact.administrativeArea;
+    let billingCountry = applePayload.billingContact.countryCode;
+    let billingPostcode = applePayload.billingContact.postalCode;
+    let billingCity = applePayload.billingContact.locality;
+
+    let shippingFirstName = applePayload.shippingContact.givenName;
+    let shippingLastName = applePayload.shippingContact.familyName;
+    let shippingEmail = applePayload.shippingContact.emailAddress;
+    let shippingTelephone = applePayload.shippingContact.phoneNumber;
+    shippingTelephone = shippingTelephone.substring(
+      shippingTelephone.indexOf(" ") + 1
+    );
+
+    let shippingAddress = applePayload.shippingContact.addressLines
+      .filter(function (line) {
+        return line; // This will remove any falsy values: undefined, null, "", 0, false, NaN
+      })
+      .join(" ");
+
+    let shippingState = applePayload.shippingContact.administrativeArea;
+    let shippingCountry = applePayload.shippingContact.countryCode;
+    let shippingPostcode = applePayload.shippingContact.postalCode;
+    let shippingCity = applePayload.shippingContact.locality;
+
+    let billingContact = {
+      firstName: billingFirstName,
+      lastName: billingLastName,
+      emailAddress: shippingEmail,
+      phoneNumber: shippingTelephone,
+      address: billingAddress,
+      administrativeArea: billingState,
+      country: billingCountry,
+      postcode: billingPostcode,
+      city: billingCity,
+    };
+
+    let shippingContact = {
+      firstName: shippingFirstName,
+      lastName: shippingLastName,
+      emailAddress: shippingEmail,
+      phoneNumber: shippingTelephone,
+      address: shippingAddress,
+      administrativeArea: shippingState,
+      country: shippingCountry,
+      postcode: shippingPostcode,
+      city: shippingCity,
+    };
+
+    // Return the order AJAX promise so onPaymentAuthorize can resolve/reject
+    // the Apple Pay sheet only after the server responds.
+    return applePaycreateWooCommerceOrder(
+      xcardnum,
+      totalAmount,
+      billingContact,
+      shippingContact,
+      lastSelectedShippingMethod
+    );
   },
   onPaymentAuthorize: function (applePayload) {
     const self = this;
@@ -455,18 +461,20 @@ window.apRequest = {
     // overwrite here — that would make validate_wallet_client_amount() compare
     // the server total to itself. Server rejects mismatches (e.g. tax changed
     // after billing address) with "Your total has changed, please try again."
-    return new Promise((resolve, reject) => {
-      const amtAppleQuick = parseFloat(cartTotal.total).toFixed(2);
-      try {
-        self.authorize(applePayload, amtAppleQuick.toString());
-        // authorize() posts the Woo order asynchronously (redirect on success).
-        resolve("{}");
-      } catch (err) {
+    //
+    // Wait for Woo order + charge to finish before resolving the sheet.
+    // Early resolve("{}") made Apple Pay show Done while AJAX was still running.
+    const amtAppleQuick = parseFloat(cartTotal.total).toFixed(2);
+    return self
+      .authorize(applePayload, amtAppleQuick.toString())
+      .then(function () {
+        return "{}";
+      })
+      .catch(function (err) {
         console.error("authorizeAPay error.", JSON.stringify(err));
         apRequest.handleAPError(err);
-        reject(err);
-      }
-    });
+        return Promise.reject(err);
+      });
   },
   handleAPError: function (err) {
     if (err?.xRefNum) {
@@ -551,46 +559,64 @@ function applePaycreateWooCommerceOrder(
   shippingContact,
   lastSelectedShippingMethod
 ) {
-  // Prevent duplicate AJAX / double order creation from cart quick checkout.
-  if (cardknoxApayOrderSubmitting) {
-    return;
-  }
-  cardknoxApayOrderSubmitting = true;
+  return new Promise(function (resolve, reject) {
+    // Prevent duplicate AJAX / double order creation from cart quick checkout.
+    if (cardknoxApayOrderSubmitting) {
+      reject(
+        new Error("Your order is already being processed. Please wait.")
+      );
+      return;
+    }
+    cardknoxApayOrderSubmitting = true;
 
-  jQuery.ajax({
-    url: applePaysettings.ajax_url,
-    type: "POST",
-    data: {
-      action: "applepay_cardknox_create_order",
-      apple_pay_token: token,
-      amount: amount,
-      billingContact: JSON.stringify(billingContact),
-      shippingContact: JSON.stringify(shippingContact),
-      selectedShipping: JSON.stringify(lastSelectedShippingMethod),
-      security: applePaysettings.create_order_nonce, // Include nonce
-    },
-    success: function (response) {
-      if (response.success) {
-        window.location.href = response.data.redirect_url;
-      } else {
+    jQuery.ajax({
+      url: applePaysettings.ajax_url,
+      type: "POST",
+      data: {
+        action: "applepay_cardknox_create_order",
+        apple_pay_token: token,
+        amount: amount,
+        billingContact: JSON.stringify(billingContact),
+        shippingContact: JSON.stringify(shippingContact),
+        selectedShipping: JSON.stringify(lastSelectedShippingMethod),
+        security: applePaysettings.create_order_nonce, // Include nonce
+      },
+      success: function (response) {
+        if (response.success) {
+          // Resolve first so the Apple Pay sheet can complete, then redirect.
+          resolve(response);
+          window.location.href = response.data.redirect_url;
+        } else {
+          cardknoxApayOrderSubmitting = false;
+          var msg =
+            (response && response.data) ||
+            "There was a problem with your order.";
+          if (typeof msg !== "string") {
+            msg = "There was a problem with your order.";
+          }
+          jQuery(".applepay-error")
+            .html("<div> " + msg + " </div>")
+            .show();
+          setTimeout(function () {
+            jQuery(".applepay-error").html("").hide();
+          }, 3000);
+          reject(new Error(msg));
+        }
+      },
+      error: function (error) {
         cardknoxApayOrderSubmitting = false;
+        console.log(error); // Log the full error response
+        var msg =
+          (error && error.responseText) ||
+          "There was a problem with your order.";
         jQuery(".applepay-error")
-          .html("<div> " + response.data + " </div>")
+          .html("<div> " + msg + " </div>")
           .show();
         setTimeout(function () {
           jQuery(".applepay-error").html("").hide();
         }, 3000);
-      }
-    },
-    error: function (error) {
-      cardknoxApayOrderSubmitting = false;
-      console.log(error); // Log the full error response
-      jQuery(".applepay-error")
-        .html("<div> " + error.responseText + " </div>")
-        .show();
-      setTimeout(function () {
-        jQuery(".applepay-error").html("").hide();
-      }, 3000);
-    },
+        reject(new Error(msg));
+      },
+    });
   });
 }

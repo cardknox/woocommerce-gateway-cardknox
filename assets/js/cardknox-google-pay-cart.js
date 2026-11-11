@@ -312,38 +312,46 @@ window.gpRequest = {
     });
   },
   onProcessPayment: function (paymentResponse) {
-    paymentResponse = JSON.parse(JSON.stringify(paymentResponse));
+    // Wait for Woo order + charge before resolving the Google Pay sheet.
+    // Fire-and-forget AJAX made the sheet complete while the server was still running.
+    return new Promise(function (resolve, reject) {
+      paymentResponse = JSON.parse(JSON.stringify(paymentResponse));
 
-    let xAmount = paymentResponse.transactionInfo.totalPrice;
+      let xAmount = paymentResponse.transactionInfo.totalPrice;
 
-    let billingAddress =
-      paymentResponse.paymentData.paymentMethodData.info.billingAddress || null;
+      let billingAddress =
+        paymentResponse.paymentData.paymentMethodData.info.billingAddress ||
+        null;
 
-    // Prefer billing phone for AVS / order contact; fall back to shipping.
-    let telephone =
-      (billingAddress && billingAddress.phoneNumber) ||
-      (paymentResponse.paymentData.shippingAddress &&
-        paymentResponse.paymentData.shippingAddress.phoneNumber) ||
-      "";
-    if (telephone && telephone.indexOf(" ") !== -1) {
-      telephone = telephone.substring(telephone.indexOf(" ") + 1);
-    }
+      // Prefer billing phone for AVS / order contact; fall back to shipping.
+      let telephone =
+        (billingAddress && billingAddress.phoneNumber) ||
+        (paymentResponse.paymentData.shippingAddress &&
+          paymentResponse.paymentData.shippingAddress.phoneNumber) ||
+        "";
+      if (telephone && telephone.indexOf(" ") !== -1) {
+        telephone = telephone.substring(telephone.indexOf(" ") + 1);
+      }
 
-    let shippingOptionData = paymentResponse.paymentData.shippingOptionData;
+      let shippingOptionData = paymentResponse.paymentData.shippingOptionData;
 
-    if (xAmount <= 0) {
-      jQuery(".gpay-error")
-        .html(
-          "<div> Payment is not authorized. Amount must be greater than 0 </div>"
-        )
-        .show();
-      setTimeout(function () {
-        jQuery(".gpay-error").html("").hide();
-      }, 3000);
-      throw new Error(
-        "Payment is not authorized. Amount must be greater than 0"
-      );
-    } else {
+      if (xAmount <= 0) {
+        jQuery(".gpay-error")
+          .html(
+            "<div> Payment is not authorized. Amount must be greater than 0 </div>"
+          )
+          .show();
+        setTimeout(function () {
+          jQuery(".gpay-error").html("").hide();
+        }, 3000);
+        reject(
+          new Error(
+            "Payment is not authorized. Amount must be greater than 0"
+          )
+        );
+        return;
+      }
+
       let token = btoa(
         paymentResponse.paymentData.paymentMethodData.tokenizationData.token
       );
@@ -361,8 +369,14 @@ window.gpRequest = {
         shippingAddress,
         shippingOptionData,
         billingAddress
-      );
-    }
+      )
+        .then(function () {
+          resolve({ status: iStatus.success });
+        })
+        .catch(function (err) {
+          reject(err);
+        });
+    });
   },
   onPaymentCanceled: function (respCanceled) {
     jQuery(".gpay-error").html("<div> Payment was canceled </div>").show();
@@ -449,44 +463,62 @@ function getAmount() {
 
 var cardknoxGpayOrderSubmitting = false;
 function createWooCommerceOrder(token, amount, telephone, email, shippingAddress, shippingOptionData, billingAddress) {
-    // Prevent duplicate AJAX / double order creation from cart quick checkout.
-    if (cardknoxGpayOrderSubmitting) {
-        return;
-    }
-    cardknoxGpayOrderSubmitting = true;
+    return new Promise(function (resolve, reject) {
+        // Prevent duplicate AJAX / double order creation from cart quick checkout.
+        if (cardknoxGpayOrderSubmitting) {
+            reject(
+                new Error("Your order is already being processed. Please wait.")
+            );
+            return;
+        }
+        cardknoxGpayOrderSubmitting = true;
 
-    jQuery.ajax({
-        url: googlePaysettings.ajax_url,
-        type: 'POST',
-        data: {
-            action: 'cardknox_create_order',
-            google_pay_token: token,
-            amount: amount,
-            phone: telephone,
-            email: email,
-            billingAddress: JSON.stringify(billingAddress || {}),
-            shippingAddress: JSON.stringify(shippingAddress),
-            shippingOptionData: JSON.stringify(shippingOptionData),
-            security: googlePaysettings.create_order_nonce  // Include nonce
-        },
-        success: function (response) {            
-            if (response.success) {
-                window.location.href = response.data.redirect_url;
-            } else {
+        jQuery.ajax({
+            url: googlePaysettings.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'cardknox_create_order',
+                google_pay_token: token,
+                amount: amount,
+                phone: telephone,
+                email: email,
+                billingAddress: JSON.stringify(billingAddress || {}),
+                shippingAddress: JSON.stringify(shippingAddress),
+                shippingOptionData: JSON.stringify(shippingOptionData),
+                security: googlePaysettings.create_order_nonce  // Include nonce
+            },
+            success: function (response) {
+                if (response.success) {
+                    // Resolve first so the Google Pay sheet can complete, then redirect.
+                    resolve(response);
+                    window.location.href = response.data.redirect_url;
+                } else {
+                    cardknoxGpayOrderSubmitting = false;
+                    var msg =
+                        (response && response.data) ||
+                        "There was a problem with your order.";
+                    if (typeof msg !== "string") {
+                        msg = "There was a problem with your order.";
+                    }
+                    jQuery(".gpay-error").html("<div> " + msg + " </div>").show();
+                    setTimeout(function () {
+                        jQuery(".gpay-error").html("").hide();
+                    }, 3000);
+                    reject(new Error(msg));
+                }
+            },
+            error: function (error) {
                 cardknoxGpayOrderSubmitting = false;
-                jQuery(".gpay-error").html("<div> " + response.data + " </div>").show();
+                console.log(error);  // Log the full error response
+                var msg =
+                    (error && error.responseText) ||
+                    "There was a problem with your order.";
+                jQuery(".gpay-error").html("<div> " + msg + " </div>").show();
                 setTimeout(function () {
                     jQuery(".gpay-error").html("").hide();
                 }, 3000);
+                reject(new Error(msg));
             }
-        },
-        error: function (error) {
-            cardknoxGpayOrderSubmitting = false;
-            console.log(error);  // Log the full error response
-            jQuery(".gpay-error").html("<div> " + error.responseText + " </div>").show();
-            setTimeout(function () {
-                jQuery(".gpay-error").html("").hide();
-            }, 3000);
-        }
-    });    
+        });
+    });
 }

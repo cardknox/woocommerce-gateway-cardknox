@@ -92,7 +92,13 @@ class WC_Cardknox_API
         );
 
         if (is_wp_error($response) || empty($response['body'])) {
-            self::log('Error Response: ' . (is_wp_error($response) ? $response->get_error_message() : 'empty response body'));
+            self::log(
+                'Error Response: ' . (
+                    is_wp_error($response)
+                        ? $response->get_error_message()
+                        : 'empty response body (HTTP ' . wp_remote_retrieve_response_code($response) . ')'
+                )
+            );
             return new WP_Error('cardknox_error', __('There was a problem connecting to the payment gateway.', 'woo-cardknox-gateway'));
         }
 

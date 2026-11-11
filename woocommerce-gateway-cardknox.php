@@ -1225,39 +1225,68 @@ if (!class_exists('WC_Cardknox')) :
         }
 
         /**
-         * Acquire a short-lived session lock to prevent duplicate cart quick-checkout orders.
+         * Option key for an atomic quick-checkout lock tied to the WC session.
+         *
+         * @param string $wallet gpay|apay
+         * @return string|null
+         */
+        private function get_quickcheckout_lock_key($wallet)
+        {
+            if (!function_exists('WC') || !WC()->session) {
+                return null;
+            }
+
+            $customer_id = WC()->session->get_customer_id();
+            if ('' === $customer_id || null === $customer_id) {
+                return null;
+            }
+
+            return 'cardknox_qc_lock_' . $wallet . '_' . sanitize_key((string) $customer_id);
+        }
+
+        /**
+         * Acquire a short-lived atomic lock to prevent duplicate cart quick-checkout charges.
+         * Uses add_option() so two parallel requests cannot both win the lock.
          *
          * @param string $wallet gpay|apay
          * @return bool
          */
         private function acquire_quickcheckout_lock($wallet)
         {
-            if (!function_exists('WC') || !WC()->session) {
+            $key = $this->get_quickcheckout_lock_key($wallet);
+            if (!$key) {
                 return true;
             }
 
-            $key  = 'cardknox_qc_lock_' . $wallet;
-            $lock = WC()->session->get($key);
-            if ($lock && (time() - (int) $lock) < 60) {
+            $now = time();
+
+            // add_option is atomic (INSERT); returns false if the option already exists.
+            if (add_option($key, $now, '', 'no')) {
+                return true;
+            }
+
+            $existing = (int) get_option($key, 0);
+            if ($existing && ($now - $existing) < 60) {
                 return false;
             }
 
-            WC()->session->set($key, time());
-            return true;
+            // Stale lock: delete and retry atomically so only one waiter can re-acquire.
+            delete_option($key);
+            return (bool) add_option($key, $now, '', 'no');
         }
 
         /**
-         * Release the cart quick-checkout session lock.
+         * Release the cart quick-checkout atomic lock.
          *
          * @param string $wallet gpay|apay
          * @return void
          */
         private function release_quickcheckout_lock($wallet)
         {
-            if (!function_exists('WC') || !WC()->session) {
-                return;
+            $key = $this->get_quickcheckout_lock_key($wallet);
+            if ($key) {
+                delete_option($key);
             }
-            WC()->session->set('cardknox_qc_lock_' . $wallet, null);
         }
 
         /**

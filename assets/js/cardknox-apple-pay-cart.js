@@ -451,34 +451,21 @@ window.apRequest = {
   },
   onPaymentAuthorize: function (applePayload) {
     const self = this;
-    // Recalculate with real billing contact before charge (tax-based-on-billing).
-    const shippingAddr = applePayContactToAddress(applePayload.shippingContact);
-    const billingAddr = applePayContactToAddress(applePayload.billingContact);
-    const methodId =
-      lastSelectedShippingMethod && lastSelectedShippingMethod.identifier
-        ? lastSelectedShippingMethod.identifier
-        : "";
-
+    // Always post the amount shown on the Apple Pay sheet. Do not re-fetch and
+    // overwrite here — that would make validate_wallet_client_amount() compare
+    // the server total to itself. Server rejects mismatches (e.g. tax changed
+    // after billing address) with "Your total has changed, please try again."
     return new Promise((resolve, reject) => {
-      fetchApplePayWalletTotals(shippingAddr, methodId, billingAddr)
-        .then(function (data) {
-          cartTotal.total = parseFloat(data.total).toFixed(2);
-        })
-        .catch(function () {
-          // Keep prior sheet total if recalc fails; server still validates.
-        })
-        .then(function () {
-          const amtAppleQuick = parseFloat(cartTotal.total).toFixed(2);
-          try {
-            self.authorize(applePayload, amtAppleQuick.toString());
-            // authorize() posts the Woo order asynchronously (redirect on success).
-            resolve("{}");
-          } catch (err) {
-            console.error("authorizeAPay error.", JSON.stringify(err));
-            apRequest.handleAPError(err);
-            reject(err);
-          }
-        });
+      const amtAppleQuick = parseFloat(cartTotal.total).toFixed(2);
+      try {
+        self.authorize(applePayload, amtAppleQuick.toString());
+        // authorize() posts the Woo order asynchronously (redirect on success).
+        resolve("{}");
+      } catch (err) {
+        console.error("authorizeAPay error.", JSON.stringify(err));
+        apRequest.handleAPError(err);
+        reject(err);
+      }
     });
   },
   handleAPError: function (err) {

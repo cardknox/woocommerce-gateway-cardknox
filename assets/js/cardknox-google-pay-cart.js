@@ -74,36 +74,6 @@ function fetchGooglePayWalletTotalsSync(address, shippingMethodId, billingAddres
   return result;
 }
 
-/**
- * Async totals fetch — only for post-authorize order creation.
- */
-function fetchGooglePayWalletTotals(address, shippingMethodId, billingAddress) {
-  return new Promise(function (resolve, reject) {
-    jQuery.ajax({
-      url: googlePaysettings.ajax_url,
-      type: "POST",
-      data: buildGooglePayTotalsRequestData(
-        address,
-        shippingMethodId,
-        billingAddress
-      ),
-      success: function (response) {
-        if (response && response.success && response.data) {
-          resolve(response.data);
-        } else {
-          reject(
-            (response && response.data) ||
-              "Unable to calculate shipping for this address."
-          );
-        }
-      },
-      error: function (xhr) {
-        reject(xhr.responseText || "Unable to calculate shipping.");
-      },
-    });
-  });
-}
-
 function applyGooglePayTotalsData(data) {
   if (!data) {
     return;
@@ -379,29 +349,19 @@ window.gpRequest = {
       );
 
       const shippingAddress = paymentResponse.paymentData.shippingAddress;
-      const selectedOptionId =
-        (shippingOptionData && shippingOptionData.id) || "";
 
-      // Recalculate with real billing before charge (tax-based-on-billing).
-      fetchGooglePayWalletTotals(shippingAddress, selectedOptionId, billingAddress)
-        .then(function (data) {
-          applyGooglePayTotalsData(data);
-          xAmount = subTotal.total;
-        })
-        .catch(function () {
-          // Keep sheet amount if recalc fails; server still validates.
-        })
-        .then(function () {
-          createWooCommerceOrder(
-            token,
-            xAmount,
-            telephone,
-            paymentResponse.paymentData.email,
-            shippingAddress,
-            shippingOptionData,
-            billingAddress
-          );
-        });
+      // Always post paymentResponse.transactionInfo.totalPrice (sheet amount).
+      // Do not re-fetch/overwrite — that defeats validate_wallet_client_amount().
+      // Server rejects mismatches with "Your total has changed, please try again."
+      createWooCommerceOrder(
+        token,
+        xAmount,
+        telephone,
+        paymentResponse.paymentData.email,
+        shippingAddress,
+        shippingOptionData,
+        billingAddress
+      );
     }
   },
   onPaymentCanceled: function (respCanceled) {

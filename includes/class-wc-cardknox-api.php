@@ -178,8 +178,9 @@ class WC_Cardknox_API
         );
 
         $sanitized = $data;
-        foreach ($sensitive_keys as $key) {
-            if (isset($sanitized[$key]) && $sanitized[$key] !== '' && $sanitized[$key] !== null) {
+        $lookup    = array_flip(array_map('strtolower', $sensitive_keys));
+        foreach ($sanitized as $key => $value) {
+            if (isset($lookup[strtolower($key)]) && $value !== '' && $value !== null) {
                 $sanitized[$key] = '[REDACTED]';
             }
         }

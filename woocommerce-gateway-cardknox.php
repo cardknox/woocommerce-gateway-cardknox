@@ -991,20 +991,23 @@ if (!class_exists('WC_Cardknox')) :
 
         /**
          * Reject wallet checkout when the amount shown to the shopper does not
-         * match the server-calculated order total.
+         * match the server-calculated cart total.
          *
-         * @param WC_Order $order         Order created from the cart.
-         * @param string   $client_amount Amount posted from the wallet sheet.
+         * Call this after shipping/totals are applied and before create_order(),
+         * so a mismatch does not leave a cancelled order or churn coupon holds.
+         *
+         * @param float|string $server_total  Cart total (e.g. WC()->cart->get_total( 'edit' )).
+         * @param string       $client_amount Amount posted from the wallet sheet.
          * @return true|WP_Error
          */
-        private function validate_wallet_client_amount($order, $client_amount)
+        private function validate_wallet_client_amount($server_total, $client_amount)
         {
             if ($client_amount === '' || $client_amount === null) {
                 return true;
             }
 
             $client = (float) wc_format_decimal($client_amount);
-            $server = (float) $order->get_total();
+            $server = (float) wc_format_decimal($server_total);
 
             if (abs($client - $server) > 0.01) {
                 return new WP_Error(
@@ -1014,6 +1017,29 @@ if (!class_exists('WC_Cardknox')) :
             }
 
             return true;
+        }
+
+        /**
+         * Validate cart items/coupons then compare wallet sheet amount to cart total.
+         * Must run after apply_chosen_shipping_method() and before create_order().
+         *
+         * @param string $client_amount Amount posted from the wallet sheet.
+         * @return true|WP_Error
+         */
+        private function validate_quickcheckout_before_create_order($client_amount)
+        {
+            $cart_check = $this->validate_quickcheckout_cart_items();
+            if (is_wp_error($cart_check)) {
+                return $cart_check;
+            }
+
+            // Coupon removal during cart checks can change totals.
+            WC()->cart->calculate_totals();
+
+            return $this->validate_wallet_client_amount(
+                WC()->cart->get_total('edit'),
+                $client_amount
+            );
         }
 
         /**
@@ -1504,6 +1530,15 @@ if (!class_exists('WC_Cardknox')) :
 
             $this->apply_chosen_shipping_method($shipping_method['method_id']);
 
+            // Validate cart + sheet amount before create_order() so mismatches do not
+            // leave cancelled orders or churn coupon holds/usage counts.
+            $pre_create_check = $this->validate_quickcheckout_before_create_order($client_amount);
+            if (is_wp_error($pre_create_check)) {
+                $this->release_quickcheckout_lock('gpay');
+                wp_send_json_error($pre_create_check->get_error_message());
+                wp_die();
+            }
+
             $order_data = array_merge(
                 array('payment_method' => 'cardknox-googlepay'),
                 $this->build_checkout_address_fields($billing, 'billing'),
@@ -1514,14 +1549,6 @@ if (!class_exists('WC_Cardknox')) :
             if (is_wp_error($order)) {
                 $this->release_quickcheckout_lock('gpay');
                 wp_send_json_error($order->get_error_message());
-                wp_die();
-            }
-
-            $amount_check = $this->validate_wallet_client_amount($order, $client_amount);
-            if (is_wp_error($amount_check)) {
-                $order->update_status('cancelled', $amount_check->get_error_message());
-                $this->release_quickcheckout_lock('gpay');
-                wp_send_json_error($amount_check->get_error_message());
                 wp_die();
             }
 
@@ -1627,6 +1654,15 @@ if (!class_exists('WC_Cardknox')) :
 
             $this->apply_chosen_shipping_method($shipping_method['method_id']);
 
+            // Validate cart + sheet amount before create_order() so mismatches do not
+            // leave cancelled orders or churn coupon holds/usage counts.
+            $pre_create_check = $this->validate_quickcheckout_before_create_order($client_amount);
+            if (is_wp_error($pre_create_check)) {
+                $this->release_quickcheckout_lock('apay');
+                wp_send_json_error($pre_create_check->get_error_message());
+                wp_die();
+            }
+
             $order_data = array_merge(
                 array('payment_method' => 'cardknox-applepay'),
                 $this->build_checkout_address_fields($billing, 'billing'),
@@ -1637,14 +1673,6 @@ if (!class_exists('WC_Cardknox')) :
             if (is_wp_error($order)) {
                 $this->release_quickcheckout_lock('apay');
                 wp_send_json_error($order->get_error_message());
-                wp_die();
-            }
-
-            $amount_check = $this->validate_wallet_client_amount($order, $client_amount);
-            if (is_wp_error($amount_check)) {
-                $order->update_status('cancelled', $amount_check->get_error_message());
-                $this->release_quickcheckout_lock('apay');
-                wp_send_json_error($amount_check->get_error_message());
                 wp_die();
             }
 

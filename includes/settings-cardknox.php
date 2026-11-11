@@ -52,6 +52,11 @@ $wc_cardknox_settings = array(
         'description' => __('Get your API keys from The Sola Portal.', 'woo-cardknox-gateway'),
         'default'     => '',
         'desc_tip'    => true,
+        'custom_attributes' => array(
+            'autocomplete'   => 'new-password',
+            'data-lpignore'  => 'true',
+            'data-1p-ignore' => 'true',
+        ),
     ),
     'token_key' => array(
         'title'       => __('Sola iFields Key (Token Key)', 'woo-cardknox-gateway'),

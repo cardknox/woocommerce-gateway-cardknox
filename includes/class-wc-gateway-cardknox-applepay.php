@@ -499,13 +499,11 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             return;
         }
 
-        /*Start PLGN-245 (TICKET RELATED) */
         // Cart quick-checkout uses cardknox-apple-pay-cart.js — skip checkout AP script on cart
         // to avoid double handlers / duplicate orders.
         if (is_cart() && 'no' === $this->appleQuickCheckout) {
             return;
         }
-        /* END PLGN-245 (TICKET RELATED) */
 
         wp_enqueue_script(
             'woocommerce_cardknox_apple_pay',
@@ -583,13 +581,11 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
 
     public function get_payment_data($postData)
     {
-        /*Start PLGN-245 (TICKET RELATED) */
         if (isset($_POST['xCardNumToken'])) {
             // Keep xAmount from the order (set in get_order_data); never trust client amount.
             $postData['xCardNum']           = wc_clean(wp_unslash($_POST['xCardNumToken']));
             $postData['xDigitalWalletType'] = 'applepay';
         }
-        /* END PLGN-245 (TICKET RELATED) */
         return $postData;
     }
 

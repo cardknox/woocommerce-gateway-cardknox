@@ -1403,11 +1403,25 @@ if (!class_exists('WC_Cardknox')) :
                 return $result['redirect'];
             }
 
+            // process_payment() queues the real decline via wc_add_notice(); surface it
+            // now and clear so it does not reappear on the next page load.
+            $error_message = __('Payment failed', 'woocommerce');
+            $error_notices = wc_get_notices('error');
+            if (!empty($error_notices) && is_array($error_notices)) {
+                $first = reset($error_notices);
+                if (is_array($first) && !empty($first['notice'])) {
+                    $error_message = wp_strip_all_tags($first['notice']);
+                } elseif (is_string($first) && '' !== $first) {
+                    $error_message = wp_strip_all_tags($first);
+                }
+            }
+            wc_clear_notices();
+
             if ($order->has_status(array('pending'))) {
-                $order->update_status('failed', __('Payment failed.', 'woo-cardknox-gateway'));
+                $order->update_status('failed', $error_message);
             }
 
-            return new WP_Error('payment_failed', __('Payment failed', 'woocommerce'));
+            return new WP_Error('payment_failed', $error_message);
         }
         
         /**

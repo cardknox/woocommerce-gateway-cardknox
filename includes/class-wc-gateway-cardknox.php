@@ -760,9 +760,11 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                     } else {
                         if ($response['xResult'] === 'V' && $paymentName === 'cardknox') {
                             $this->store_pending_3ds_verification($order, $response, $forceCustomer);
+                            // Refresh after account creation at checkout so verify uses the logged-in user nonce.
                             return array(
-                                'result'   => 'success',
-                                'response' => $response
+                                'result'        => 'success',
+                                'response'      => $response,
+                                'threeds_nonce' => wp_create_nonce('cardknox_3ds_verify'),
                             );
                         }
                     }

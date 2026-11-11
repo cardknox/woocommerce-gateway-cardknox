@@ -355,6 +355,11 @@ jQuery(function ($) {
                     jsonResp.xVerifyURL &&
                     jsonResp.xVerifyURL !== ""
                     ) {
+                    // Account creation at checkout logs the shopper in before this
+                    // response; use the refreshed nonce so 3DS verify passes.
+                    if (response.threeds_nonce && wc_cardknox_params.threeds_object) {
+                      wc_cardknox_params.threeds_object.nonce = response.threeds_nonce;
+                    }
                     verify3DS(jsonResp);
                     return;
                     }

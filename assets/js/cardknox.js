@@ -109,7 +109,8 @@ jQuery(function ($) {
     xSignatureVerification
   ) {
     const postData = {
-      action: "get_data", 
+      action: "cardknox_3ds_verify",
+      security: wc_cardknox_params.threeds_object.nonce,
       xRefNum: xRefNum,
       xCavv: xCavv,
       xEci: xEciFlag,
@@ -117,10 +118,19 @@ jQuery(function ($) {
       x3dsSignatureVerificationStatus: xSignatureVerification,
       x3dsActionCode: actionCode,
       x3dsError: ck3DS.error,
-      xVersion: wc_cardknox_params.xVersion,
-      xSoftwareName: wc_cardknox_params.xSoftwareName,
-      xSoftwareVersion: wc_cardknox_params.xSoftwareVersion,
     };
+
+
+    function showThreedsError(message) {
+      $(".woocommerce-error, .woocommerce-message").remove();
+      $("form.checkout")
+        .prev(".woocommerce-notices-wrapper")
+        .append(
+          '<ul class="woocommerce-error" role="alert"><li>' +
+            message +
+            "</li></ul>"
+        );
+    }
 
     $.ajax({
       type: "post",
@@ -129,21 +139,18 @@ jQuery(function ($) {
       data: postData,
       success: function (resp) {
         if (resp.xResult == "E" || resp.xResult == "D") {
-          //   $("#wc-cardknox-cc-form").after(
-          //     '<p style="color: red;">' + resp.xError + "</p>"
-          //   );
-          $(".woocommerce-error, .woocommerce-message").remove();
-          $("form.checkout")
-            .prev(".woocommerce-notices-wrapper")
-            .append(
-              '<ul class="woocommerce-error" role="alert"><li>' +
-                resp.xError +
-                "</li></ul>"
-            );
+          showThreedsError(resp.xError || "3D Secure verification failed.");
         }
-        if (resp.xResult == "A") {
+        if (resp.xResult == "A" && resp.redirect) {
           window.location.href = resp.redirect;
         }
+      },
+      error: function (jqXHR) {
+        var message = "3D Secure verification failed. Please try again.";
+        if (jqXHR.responseJSON && jqXHR.responseJSON.xError) {
+          message = jqXHR.responseJSON.xError;
+        }
+        showThreedsError(message);
       },
     });
   }
@@ -348,6 +355,11 @@ jQuery(function ($) {
                     jsonResp.xVerifyURL &&
                     jsonResp.xVerifyURL !== ""
                     ) {
+                    // Account creation at checkout logs the shopper in before this
+                    // response; use the refreshed nonce so 3DS verify passes.
+                    if (response.threeds_nonce && wc_cardknox_params.threeds_object) {
+                      wc_cardknox_params.threeds_object.nonce = response.threeds_nonce;
+                    }
                     verify3DS(jsonResp);
                     return;
                     }

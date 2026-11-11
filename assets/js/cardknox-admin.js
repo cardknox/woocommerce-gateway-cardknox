@@ -51,6 +51,12 @@ jQuery(function ($) {
      */
     initPasswordToggle: function () {
       const $input = $("#woocommerce_cardknox_transaction_key");
+      const messages =
+        (typeof wc_cardknox_admin_params !== "undefined" &&
+          wc_cardknox_admin_params.localized_messages) ||
+        {};
+      const showPasswordLabel = messages.show_password || "Show password";
+      const hidePasswordLabel = messages.hide_password || "Hide password";
 
       if (!$input.length || $input.parent().hasClass("cardknox-password-wrap")) {
         return;
@@ -59,7 +65,9 @@ jQuery(function ($) {
       $input.wrap('<span class="cardknox-password-wrap"></span>');
 
       const $toggle = $(
-        '<button type="button" class="button button-secondary cardknox-password-toggle" aria-label="Show password">' +
+        '<button type="button" class="button button-secondary cardknox-password-toggle" aria-label="' +
+          showPasswordLabel +
+          '">' +
           '<span class="dashicons dashicons-visibility" aria-hidden="true"></span>' +
           "</button>"
       );
@@ -77,7 +85,7 @@ jQuery(function ($) {
           .toggleClass("dashicons-hidden", showPlain);
         $toggle.attr(
           "aria-label",
-          showPlain ? "Hide password" : "Show password"
+          showPlain ? hidePasswordLabel : showPasswordLabel
         );
       });
     },

@@ -415,6 +415,8 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
         $cardknox_admin_params = array(
             'localized_messages' => array(
                 'missing_transaction_key' => __('Missing Trasnaction Key. Please set the trasnaction key field above and re-try.', 'woo-cardknox-gateway'),
+                'show_password'           => __('Show password', 'woo-cardknox-gateway'),
+                'hide_password'           => __('Hide password', 'woo-cardknox-gateway'),
             ),
             'ajaxurl' => admin_url('admin-ajax.php')
         );

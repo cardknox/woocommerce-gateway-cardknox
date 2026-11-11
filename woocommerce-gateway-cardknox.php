@@ -1610,6 +1610,10 @@ if (!class_exists('WC_Cardknox')) :
                 $this->log('Info: save_payment');
                 $payment_info->save_payment($force_customer, $parsed_response);
 
+                if ($force_customer) {
+                    $payment_info->save_payment_for_subscription($order->get_id(), $parsed_response);
+                }
+
                 $this->log('Info: process_response');
                 $payment_info->process_response($parsed_response, $order);
 

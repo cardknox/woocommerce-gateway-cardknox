@@ -43,7 +43,7 @@ jQuery(function ($) {
         })
         .change();
 
-          this.initPasswordToggle();
+      this.initPasswordToggle();
     },
 
     /**
@@ -81,8 +81,6 @@ jQuery(function ($) {
         );
       });
     },
-
-
   };
 
   wc_cardknox_admin.init();

@@ -1376,8 +1376,9 @@ if (!class_exists('WC_Cardknox')) :
             // Clears prior notices so we only surface failures from this check.
             wc_clear_notices();
 
-            // Fires woocommerce_check_cart_items — stock, coupons, limits, etc.
-            WC()->cart->check_cart_items();
+            // Same as classic checkout/cart: runs check_cart_items, check_cart_coupons,
+            // and any third-party callbacks hooked to this action.
+            do_action( 'woocommerce_check_cart_items' );
 
             if (wc_notice_count('error') > 0) {
                 $errors = wc_get_notices('error');

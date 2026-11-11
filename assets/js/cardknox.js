@@ -109,7 +109,8 @@ jQuery(function ($) {
     xSignatureVerification
   ) {
     const postData = {
-      action: "cardknox_3ds_verify", 
+      action: "cardknox_3ds_verify",
+      security: wc_cardknox_params.threeds_object.nonce,
       xRefNum: xRefNum,
       xCavv: xCavv,
       xEci: xEciFlag,

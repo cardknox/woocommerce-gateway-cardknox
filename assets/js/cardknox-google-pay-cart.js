@@ -1,22 +1,140 @@
 let subTotal = {
-    total: parseFloat(googlePaysettings.total).toFixed(2)
+    total: parseFloat(googlePaysettings.total).toFixed(2),
+    subtotal: null,
+    shipping_total: null,
+    tax_total: null,
 };
-jQuery(document.body).on("updated_cart_totals", function () {
 
-    jQuery.ajax({
-        url: googlePaysettings.ajax_url,
-        type: 'POST',
-        data: {
-            action: 'update_cart_total'
-        },
-        success: function(response) {
-            if (response.success) {
-                // Update the global variable with the new total
-                subTotal.total = response.data.total;
-            }
-        }
+let lastGooglePayShippingAddress = null;
+let googlePayTotalsCache = { key: "", data: null, ts: 0 };
+
+function buildGooglePayTotalsRequestData(address, shippingMethodId, billingAddress) {
+  const data = {
+    action: "cardknox_wallet_calculate_totals",
+    security: googlePaysettings.create_order_nonce,
+    address: JSON.stringify(address || {}),
+    shipping_method: shippingMethodId || "",
+  };
+  if (billingAddress && (billingAddress.countryCode || billingAddress.country)) {
+    data.billing_address = JSON.stringify(billingAddress);
+  }
+  return data;
+}
+
+/**
+ * Sync totals fetch for Google Pay sheet callbacks.
+ * Cardknox/Google Pay shipping callbacks do NOT await Promises — returning a
+ * Promise hangs the pay.google.com sheet (infinite spinner). Checkout works
+ * because it returns plain objects synchronously.
+ */
+function fetchGooglePayWalletTotalsSync(address, shippingMethodId, billingAddress) {
+  const cacheKey = JSON.stringify([
+    address || {},
+    shippingMethodId || "",
+    billingAddress || null,
+  ]);
+  if (
+    googlePayTotalsCache.key === cacheKey &&
+    googlePayTotalsCache.data &&
+    Date.now() - googlePayTotalsCache.ts < 2500
+  ) {
+    return googlePayTotalsCache.data;
+  }
+
+  let result = null;
+  let errorMsg = null;
+  jQuery.ajax({
+    url: googlePaysettings.ajax_url,
+    type: "POST",
+    async: false,
+    data: buildGooglePayTotalsRequestData(
+      address,
+      shippingMethodId,
+      billingAddress
+    ),
+    success: function (response) {
+      if (response && response.success && response.data) {
+        result = response.data;
+      } else {
+        errorMsg =
+          (response && response.data) ||
+          "Unable to calculate shipping for this address.";
+      }
+    },
+    error: function (xhr) {
+      errorMsg = xhr.responseText || "Unable to calculate shipping.";
+    },
+  });
+
+  if (!result) {
+    throw errorMsg || "Unable to calculate shipping.";
+  }
+
+  googlePayTotalsCache = { key: cacheKey, data: result, ts: Date.now() };
+  return result;
+}
+
+function applyGooglePayTotalsData(data) {
+  if (!data) {
+    return;
+  }
+  subTotal.total = parseFloat(data.total).toFixed(2);
+  subTotal.subtotal = data.subtotal;
+  subTotal.shipping_total = data.shipping_total;
+  subTotal.tax_total = data.tax_total;
+  if (data.shipping_methods_google && data.shipping_methods_google.length) {
+    googlePaysettings.shippingMethods = data.shipping_methods_google;
+  }
+  if (data.shipping_costs_google) {
+    googlePaysettings.shippingCosts = data.shipping_costs_google;
+  }
+}
+
+function buildGooglePayTransactionInfo(countryCode) {
+  const amtQuick = parseFloat(subTotal.total).toFixed(2);
+  const displayItems = [];
+
+  if (subTotal.subtotal != null) {
+    displayItems.push({
+      label: "Subtotal",
+      type: "SUBTOTAL",
+      price: parseFloat(subTotal.subtotal).toFixed(2),
     });
+  } else {
+    displayItems.push({
+      label: "Subtotal",
+      type: "SUBTOTAL",
+      price: amtQuick.toString(),
+    });
+  }
 
+  if (subTotal.shipping_total != null && parseFloat(subTotal.shipping_total) > 0) {
+    displayItems.push({
+      label: "Shipping",
+      type: "LINE_ITEM",
+      price: parseFloat(subTotal.shipping_total).toFixed(2),
+    });
+  }
+
+  if (subTotal.tax_total != null && parseFloat(subTotal.tax_total) > 0) {
+    displayItems.push({
+      label: "Tax",
+      type: "TAX",
+      price: parseFloat(subTotal.tax_total).toFixed(2),
+    });
+  }
+
+  return {
+    displayItems: displayItems,
+    countryCode: countryCode || "US",
+    currencyCode: googlePaysettings.currencyCode,
+    totalPriceStatus: "FINAL",
+    totalPrice: amtQuick.toString(),
+    totalPriceLabel: "Total",
+  };
+}
+
+function initCardknoxCartGooglePay() {
   if (
     googlePaysettings.merchant_name == "" ||
     googlePaysettings.merchant_name == null ||
@@ -27,17 +145,33 @@ jQuery(document.body).on("updated_cart_totals", function () {
         "<div class='woocommerce-error' role='alert'>Please contact support. Failed to initialize Google Pay. </div>"
       )
       .show();
-  } else {
-    ckGooglePay.enableGooglePay({
-      initFunction: "gpRequest.initGP",
-      amountField: "amount",
-    });
+    return;
   }
-});
-
-ckGooglePay.enableGooglePay({
+  ckGooglePay.enableGooglePay({
     initFunction: "gpRequest.initGP",
     amountField: "amount",
+  });
+}
+
+jQuery(document.body).on("updated_cart_totals", function () {
+    jQuery.ajax({
+        url: googlePaysettings.ajax_url,
+        type: 'POST',
+        data: {
+            action: 'update_cart_total'
+        },
+        success: function(response) {
+            if (response.success) {
+                // Update the global variable with the new total
+                subTotal.total = response.data.total;
+                subTotal.subtotal = null;
+                subTotal.shipping_total = null;
+                subTotal.tax_total = null;
+            }
+        }
+    });
+    // Re-init after cart totals refresh (do not call enableGooglePay on page load twice).
+    initCardknoxCartGooglePay();
 });
 
 //Google Pay
@@ -63,9 +197,9 @@ window.gpRequest = {
     onGetShippingCosts: function (shippingData) {
       logDebug({
         label: "onGetShippingCosts",
-        data: googlePaysettings.shippingData,
+        data: googlePaysettings.shippingCosts,
       });
-      return googlePaysettings.shippingCosts;
+      return googlePaysettings.shippingCosts || {};
     },
     onGetShippingOptions: function (shippingData) {
       logDebug({
@@ -74,30 +208,54 @@ window.gpRequest = {
       });
 
       const hasShippingGpay = shippingData?.shippingAddress;
-      
-      if (
-        hasShippingGpay &&
-        shippingData.shippingAddress.administrativeArea == "HI"
-      ) {
+      const firstMethodId =
+        (googlePaysettings.shippingMethods[0] &&
+          googlePaysettings.shippingMethods[0].id) ||
+        "";
+      if (!hasShippingGpay) {
         return {
-          error: {
-            reason: "SHIPPING_ADDRESS_UNSERVICEABLE",
-            message: "This shipping option is invalid for the given address",
-            intent: "SHIPPING_ADDRESS",
-          },
+          defaultSelectedOptionId: firstMethodId,
+          shippingOptions: googlePaysettings.shippingMethods,
         };
       }
-      let selectedOptionid = "free_shipping";
+
+      lastGooglePayShippingAddress = shippingData.shippingAddress;
+      let selectedOptionid = firstMethodId;
       if (
-        hasShippingGpay &&
+        shippingData.shippingOptionData &&
         shippingData.shippingOptionData.id !== "shipping_option_unselected"
       ) {
         selectedOptionid = shippingData.shippingOptionData.id;
       }
-      return {
-        defaultSelectedOptionId: selectedOptionid,
-        shippingOptions: googlePaysettings.shippingMethods,
-      };
+
+      // Must return a plain object (not a Promise) or the sheet spins forever.
+      try {
+        const data = fetchGooglePayWalletTotalsSync(
+          shippingData.shippingAddress,
+          selectedOptionid
+        );
+        applyGooglePayTotalsData(data);
+        const defaultId =
+          data.chosen_shipping_method ||
+          (data.shipping_methods_google[0] &&
+            data.shipping_methods_google[0].id) ||
+          selectedOptionid;
+        return {
+          defaultSelectedOptionId: defaultId,
+          shippingOptions: googlePaysettings.shippingMethods,
+        };
+      } catch (err) {
+        return {
+          error: {
+            reason: "SHIPPING_ADDRESS_UNSERVICEABLE",
+            message:
+              typeof err === "string"
+                ? err
+                : "This shipping option is invalid for the given address",
+            intent: "SHIPPING_ADDRESS",
+          },
+        };
+      }
     },
   },
   onGetTransactionInfo: function (shippingData) {
@@ -106,31 +264,43 @@ window.gpRequest = {
       data: shippingData,
     });
 
-    const amtQuick = parseFloat(subTotal.total).toFixed(2);
-    let countryCodeQuick = null;
-
+    let countryCodeQuick = "US";
     if (
       jQuery("#billing_country").val() !== null &&
       jQuery("#billing_country").val() !== undefined
     ) {
       countryCodeQuick = jQuery("#billing_country").val();
-    } else {
-      countryCodeQuick = "US";
+    } else if (shippingData?.shippingAddress?.countryCode) {
+      countryCodeQuick = shippingData.shippingAddress.countryCode;
     }
-    return {
-      displayItems: [
-        {
-          label: "Subtotal",
-          type: "SUBTOTAL",
-          price: amtQuick.toString(),
-        },
-      ],
-      countryCode: countryCodeQuick,
-      currencyCode: googlePaysettings.currencyCode,
-      totalPriceStatus: "FINAL",
-      totalPrice: amt.toString(),
-      totalPriceLabel: "Total",
-    };
+
+    const hasAddress = shippingData?.shippingAddress;
+    if (!hasAddress) {
+      return buildGooglePayTransactionInfo(countryCodeQuick);
+    }
+
+    lastGooglePayShippingAddress = shippingData.shippingAddress;
+    let selectedOptionid = "";
+    if (
+      shippingData.shippingOptionData &&
+      shippingData.shippingOptionData.id !== "shipping_option_unselected"
+    ) {
+      selectedOptionid = shippingData.shippingOptionData.id;
+    }
+
+    // Must return a plain object (not a Promise) or the sheet spins forever.
+    try {
+      const data = fetchGooglePayWalletTotalsSync(
+        shippingData.shippingAddress,
+        selectedOptionid
+      );
+      applyGooglePayTotalsData(data);
+      return buildGooglePayTransactionInfo(
+        shippingData.shippingAddress.countryCode || countryCodeQuick
+      );
+    } catch (err) {
+      return buildGooglePayTransactionInfo(countryCodeQuick);
+    }
   },
   onBeforeProcessPayment: function () {
     return new Promise(function (resolve, reject) {
@@ -142,35 +312,71 @@ window.gpRequest = {
     });
   },
   onProcessPayment: function (paymentResponse) {
-    paymentResponse = JSON.parse(JSON.stringify(paymentResponse));
+    // Wait for Woo order + charge before resolving the Google Pay sheet.
+    // Fire-and-forget AJAX made the sheet complete while the server was still running.
+    return new Promise(function (resolve, reject) {
+      paymentResponse = JSON.parse(JSON.stringify(paymentResponse));
 
-    let xAmount = paymentResponse.transactionInfo.totalPrice;
+      let xAmount = paymentResponse.transactionInfo.totalPrice;
 
-    // Remove country code from telephone
-    let telephone = paymentResponse.paymentData.paymentMethodData.info.billingAddress.phoneNumber;
-    telephone = telephone.substring(telephone.indexOf(" ") + 1);
+      let billingAddress =
+        paymentResponse.paymentData.paymentMethodData.info.billingAddress ||
+        null;
 
-    let shippingOptionData = paymentResponse.paymentData.shippingOptionData;
+      // Prefer billing phone for AVS / order contact; fall back to shipping.
+      let telephone =
+        (billingAddress && billingAddress.phoneNumber) ||
+        (paymentResponse.paymentData.shippingAddress &&
+          paymentResponse.paymentData.shippingAddress.phoneNumber) ||
+        "";
+      if (telephone && telephone.indexOf(" ") !== -1) {
+        telephone = telephone.substring(telephone.indexOf(" ") + 1);
+      }
 
-    if (xAmount <= 0) {
-      jQuery(".gpay-error")
-        .html(
-          "<div> Payment is not authorized. Amount must be greater than 0 </div>"
-        )
-        .show();
-      setTimeout(function () {
-        jQuery(".gpay-error").html("").hide();
-      }, 3000);
-      throw new Error(
-        "Payment is not authorized. Amount must be greater than 0"
-      );
-    } else {
+      let shippingOptionData = paymentResponse.paymentData.shippingOptionData;
+
+      if (xAmount <= 0) {
+        jQuery(".gpay-error")
+          .html(
+            "<div> Payment is not authorized. Amount must be greater than 0 </div>"
+          )
+          .show();
+        setTimeout(function () {
+          jQuery(".gpay-error").html("").hide();
+        }, 3000);
+        reject(
+          new Error(
+            "Payment is not authorized. Amount must be greater than 0"
+          )
+        );
+        return;
+      }
+
       let token = btoa(
         paymentResponse.paymentData.paymentMethodData.tokenizationData.token
       );
 
-      createWooCommerceOrder(token, xAmount, telephone, paymentResponse.paymentData.email, paymentResponse.paymentData.shippingAddress, shippingOptionData);
-    }
+      const shippingAddress = paymentResponse.paymentData.shippingAddress;
+
+      // Always post paymentResponse.transactionInfo.totalPrice (sheet amount).
+      // Do not re-fetch/overwrite — that defeats validate_wallet_client_amount().
+      // Server rejects mismatches with "Your total has changed, please try again."
+      createWooCommerceOrder(
+        token,
+        xAmount,
+        telephone,
+        paymentResponse.paymentData.email,
+        shippingAddress,
+        shippingOptionData,
+        billingAddress
+      )
+        .then(function () {
+          resolve({ status: iStatus.success });
+        })
+        .catch(function (err) {
+          reject(err);
+        });
+    });
   },
   onPaymentCanceled: function (respCanceled) {
     jQuery(".gpay-error").html("<div> Payment was canceled </div>").show();
@@ -228,6 +434,10 @@ window.gpRequest = {
   },
 };
 
+
+// Init once after gpRequest is defined (fixes load-order + avoids double enableGooglePay).
+initCardknoxCartGooglePay();
+
 function setGPPayload(value) {
   document.getElementById("gp-payload").value = value;
   showHide("divGPPayload", value);
@@ -251,36 +461,64 @@ function getAmount() {
 }
 
 
-function createWooCommerceOrder(token, amount, telephone, email, shippingAddress, shippingOptionData) {
-    jQuery.ajax({
-        url: googlePaysettings.ajax_url,
-        type: 'POST',
-        data: {
-            action: 'cardknox_create_order',
-            google_pay_token: token,
-            amount: amount,
-            phone: telephone,
-            email: email,
-            shippingAddress: JSON.stringify(shippingAddress),
-            shippingOptionData: JSON.stringify(shippingOptionData),
-            security: googlePaysettings.create_order_nonce  // Include nonce
-        },
-        success: function (response) {            
-            if (response.success) {
-                window.location.href = response.data.redirect_url;
-            } else {
-                jQuery(".gpay-error").html("<div> " + response.data + " </div>").show();
+var cardknoxGpayOrderSubmitting = false;
+function createWooCommerceOrder(token, amount, telephone, email, shippingAddress, shippingOptionData, billingAddress) {
+    return new Promise(function (resolve, reject) {
+        // Prevent duplicate AJAX / double order creation from cart quick checkout.
+        if (cardknoxGpayOrderSubmitting) {
+            reject(
+                new Error("Your order is already being processed. Please wait.")
+            );
+            return;
+        }
+        cardknoxGpayOrderSubmitting = true;
+
+        jQuery.ajax({
+            url: googlePaysettings.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'cardknox_create_order',
+                google_pay_token: token,
+                amount: amount,
+                phone: telephone,
+                email: email,
+                billingAddress: JSON.stringify(billingAddress || {}),
+                shippingAddress: JSON.stringify(shippingAddress),
+                shippingOptionData: JSON.stringify(shippingOptionData),
+                security: googlePaysettings.create_order_nonce  // Include nonce
+            },
+            success: function (response) {
+                if (response.success) {
+                    // Resolve first so the Google Pay sheet can complete, then redirect.
+                    resolve(response);
+                    window.location.href = response.data.redirect_url;
+                } else {
+                    cardknoxGpayOrderSubmitting = false;
+                    var msg =
+                        (response && response.data) ||
+                        "There was a problem with your order.";
+                    if (typeof msg !== "string") {
+                        msg = "There was a problem with your order.";
+                    }
+                    jQuery(".gpay-error").html("<div> " + msg + " </div>").show();
+                    setTimeout(function () {
+                        jQuery(".gpay-error").html("").hide();
+                    }, 3000);
+                    reject(new Error(msg));
+                }
+            },
+            error: function (error) {
+                cardknoxGpayOrderSubmitting = false;
+                console.log(error);  // Log the full error response
+                var msg =
+                    (error && error.responseText) ||
+                    "There was a problem with your order.";
+                jQuery(".gpay-error").html("<div> " + msg + " </div>").show();
                 setTimeout(function () {
                     jQuery(".gpay-error").html("").hide();
                 }, 3000);
+                reject(new Error(msg));
             }
-        },
-        error: function (error) {
-            console.log(error);  // Log the full error response
-            jQuery(".gpay-error").html("<div> " + error.responseText + " </div>").show();
-            setTimeout(function () {
-                jQuery(".gpay-error").html("").hide();
-            }, 3000);
-        }
-    });    
+        });
+    });
 }

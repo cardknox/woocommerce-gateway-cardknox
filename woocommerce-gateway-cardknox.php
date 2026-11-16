@@ -1746,13 +1746,18 @@ if (!class_exists('WC_Cardknox')) :
 
         /**
          * Acquire a short-lived atomic lock to prevent duplicate cart quick-checkout charges.
-         * Uses add_option() so two parallel requests cannot both win the lock.
+         *
+         * Uses INSERT IGNORE (not add_option) so only one parallel request can win the lock.
+         * add_option() does a get_option check then INSERT ... ON DUPLICATE KEY UPDATE, which
+         * can let two requests both succeed when their timestamps differ.
          *
          * @param string $wallet gpay|apay
          * @return bool
          */
         private function acquire_quickcheckout_lock($wallet)
         {
+            global $wpdb;
+
             $key = $this->get_quickcheckout_lock_key($wallet);
             if (!$key) {
                 return true;
@@ -1760,19 +1765,62 @@ if (!class_exists('WC_Cardknox')) :
 
             $now = time();
 
-            // add_option is atomic (INSERT); returns false if the option already exists.
-            if (add_option($key, $now, '', 'no')) {
+            // INSERT IGNORE is atomic: only the first writer gets rows_affected = 1.
+            $inserted = $wpdb->query(
+                $wpdb->prepare(
+                    "INSERT IGNORE INTO {$wpdb->options} (option_name, option_value, autoload) VALUES (%s, %s, 'no')",
+                    $key,
+                    (string) $now
+                )
+            );
+
+            if (1 === (int) $inserted) {
+                wp_cache_delete($key, 'options');
                 return true;
             }
 
-            $existing = (int) get_option($key, 0);
+            $existing = (int) $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s LIMIT 1",
+                    $key
+                )
+            );
+
             if ($existing && ($now - $existing) < 60) {
                 return false;
             }
 
-            // Stale lock: delete and retry atomically so only one waiter can re-acquire.
-            delete_option($key);
-            return (bool) add_option($key, $now, '', 'no');
+            // Stale lock: only delete if still older than the TTL, then INSERT IGNORE again.
+            // Conditional DELETE prevents a second waiter from removing a freshly acquired lock.
+            $stale_before = $now - 60;
+            $deleted = $wpdb->query(
+                $wpdb->prepare(
+                    "DELETE FROM {$wpdb->options} WHERE option_name = %s AND CAST(option_value AS UNSIGNED) < %d",
+                    $key,
+                    $stale_before
+                )
+            );
+
+            if (1 !== (int) $deleted) {
+                return false;
+            }
+
+            wp_cache_delete($key, 'options');
+
+            $reinserted = $wpdb->query(
+                $wpdb->prepare(
+                    "INSERT IGNORE INTO {$wpdb->options} (option_name, option_value, autoload) VALUES (%s, %s, 'no')",
+                    $key,
+                    (string) $now
+                )
+            );
+
+            if (1 === (int) $reinserted) {
+                wp_cache_delete($key, 'options');
+                return true;
+            }
+
+            return false;
         }
 
         /**

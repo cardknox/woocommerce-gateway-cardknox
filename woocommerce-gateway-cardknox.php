@@ -1241,19 +1241,6 @@ if (!class_exists('WC_Cardknox')) :
             );
         }
 
-        /**
-         * Output Apple Pay button container on the cart page.
-         */
-        public function render_cart_applepay_button()
-        {
-            
-            echo '<div id="ap-container" class="ap" style="min-height:55px;margin:10px 0;"></div>';
-            echo '<div class="messages">';
-            echo '<div class="message message-error error applepay-error" style="display: none;"></div>';
-            echo '</div>';
-            
-        }
-
 
         /**
          * Output Google Pay button container on the cart page.

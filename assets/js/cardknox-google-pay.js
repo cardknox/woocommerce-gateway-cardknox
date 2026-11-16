@@ -92,7 +92,19 @@ window.gpRequest = {
       let token = btoa(
         paymentResponse.paymentData.paymentMethodData.tokenizationData.token
       );
-      jQuery("#googlePaytoken").val(token);
+      // Apple Pay and Google Pay both render name="xCardNumToken". Leaving the
+      // empty Apple Pay field in the form overwrites the Google Pay token in
+      // $_POST (last value wins) and Cardknox declines the charge. Remove all
+      // copies and append a single token field, same pattern as Apple Pay.
+      jQuery("input[name='xCardNumToken']").remove();
+      jQuery("<input>")
+        .attr({
+          type: "hidden",
+          name: "xCardNumToken",
+          id: "googlePaytoken",
+          value: token,
+        })
+        .appendTo("form.checkout");
       jQuery("#place_order").trigger("click");
     }
   },
@@ -149,10 +161,22 @@ window.gpRequest = {
 };
 
 function setGPPayload(value) {
-  document.getElementById("gp-payload").value = value;
+  var gpPayload = document.getElementById("gp-payload");
+  if (gpPayload) {
+    gpPayload.value = value;
+  }
   showHide("divGPPayload", value);
-  if (value) {
+  if (value && typeof divGPPayload !== "undefined" && divGPPayload) {
     divGPPayload.scrollIntoView(false);
+  }
+}
+
+function showHide(elem, toShow) {
+  if (typeof elem === "string") {
+    elem = document.getElementById(elem);
+  }
+  if (elem) {
+    toShow ? elem.classList.remove("hidden") : elem.classList.add("hidden");
   }
 }
 

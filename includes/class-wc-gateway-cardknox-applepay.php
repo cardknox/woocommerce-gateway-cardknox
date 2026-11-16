@@ -100,8 +100,8 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
         add_action('woocommerce_review_order_after_submit', array($this, 'cardknox_review_order_after_submit'));
         add_filter('woocommerce_available_payment_gateways', array($this, 'cardknox_allow_payment_method_by_country'));
 
-        // Cart quick-checkout markup is rendered once by WC_Cardknox::render_cart_applepay_button().
-        // Do not also hook cardknox_review_order_after_submit on cart — that duplicates #ap-container.
+        // Cart Apple Pay button is rendered from handleApplepayCartQuickcheckout() via
+        // render_cart_applepay_button() when cart scripts are enqueued — avoid a second #ap-container.
 
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
         add_action('admin_enqueue_scripts',  array($this, 'custom_admin_upload_btn_css'));
@@ -586,6 +586,7 @@ class WCCardknoxApplepay extends WC_Payment_Gateway_CC
             $postData['xCardNum']           = wc_clean(wp_unslash($_POST['xCardNumToken']));
             $postData['xDigitalWalletType'] = 'applepay';
         }
+        
         return $postData;
     }
 

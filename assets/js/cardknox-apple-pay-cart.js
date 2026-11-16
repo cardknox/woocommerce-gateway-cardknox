@@ -51,39 +51,6 @@ function getApButtonType(applePaysettings) {
   return apButtonType;
 }
 
-function ensureCartApplePayContainer() {
-  if (document.getElementById("ap-container")) {
-    return true;
-  }
-
-  // Fallback: theme/PHP may not print #ap-container — create it next to cart checkout buttons.
-  var mount =
-    document.querySelector(".wc-proceed-to-checkout") ||
-    document.querySelector("#divGpay") ||
-    document.querySelector(".cart_totals");
-
-  if (!mount) {
-    console.warn("Apple Pay: no mount point found on cart page.");
-    return false;
-  }
-
-  var wrap = document.createElement("div");
-  wrap.className = "cardknox-applepay-cart-wrap";
-  wrap.innerHTML =
-    '<div id="ap-container" class="ap" style="min-height:55px;margin:10px 0;"></div>' +
-    '<div class="messages"><div class="message message-error error applepay-error" style="display:none;"></div></div>';
-
-  if (mount.classList && mount.classList.contains("wc-proceed-to-checkout")) {
-    mount.appendChild(wrap);
-  } else if (mount.parentNode) {
-    mount.parentNode.insertBefore(wrap, mount.nextSibling);
-  } else {
-    return false;
-  }
-
-  return !!document.getElementById("ap-container");
-}
-
 function initCardknoxCartApplePay() {
   if (
     applePaysettings.merchant_identifier == "" ||
@@ -98,7 +65,9 @@ function initCardknoxCartApplePay() {
     return;
   }
 
-  if (!ensureCartApplePayContainer()) {
+  // Container is printed by render_cart_applepay_button() with the cart scripts.
+  if (!document.getElementById("ap-container")) {
+    console.warn("Apple Pay: #ap-container missing on cart page.");
     return;
   }
 
@@ -149,6 +118,64 @@ jQuery(document.body).on("updated_cart_totals", function () {
 });
 
 let lastSelectedShippingMethod = "";
+let lastApplePayShippingContact = null;
+
+/**
+ * Ask the server for cart totals + shipping rates for the wallet address.
+ * Pass billingAddress when available so tax-based-on-billing stores are correct.
+ */
+function fetchApplePayWalletTotals(address, shippingMethodId, billingAddress) {
+  const data = {
+    action: "cardknox_wallet_calculate_totals",
+    security: applePaysettings.create_order_nonce,
+    address: JSON.stringify(address || {}),
+    shipping_method: shippingMethodId || "",
+  };
+  if (billingAddress && (billingAddress.countryCode || billingAddress.country)) {
+    data.billing_address = JSON.stringify(billingAddress);
+  }
+
+  return new Promise(function (resolve, reject) {
+    jQuery.ajax({
+      url: applePaysettings.ajax_url,
+      type: "POST",
+      data: data,
+      success: function (response) {
+        if (response && response.success && response.data) {
+          resolve(response.data);
+        } else {
+          reject(
+            (response && response.data) ||
+              "Unable to calculate shipping for this address."
+          );
+        }
+      },
+      error: function (xhr) {
+        reject(xhr.responseText || "Unable to calculate shipping.");
+      },
+    });
+  });
+}
+
+function applePayContactToAddress(contact) {
+  if (!contact) {
+    return {};
+  }
+  const lines = contact.addressLines;
+  const address1 = Array.isArray(lines)
+    ? lines.filter(Boolean).join(" ")
+    : contact.address || "";
+
+  return {
+    administrativeArea: contact.administrativeArea || "",
+    locality: contact.locality || "",
+    postalCode: contact.postalCode || "",
+    countryCode: contact.countryCode || contact.country || "",
+    address: address1,
+    firstName: contact.givenName || contact.firstName || "",
+    lastName: contact.familyName || contact.lastName || "",
+  };
+}
 
 // Same as checkout cardknox-apple-pay.js — must be on window for ifields initFunction paths.
 window.apRequest = {
@@ -194,21 +221,38 @@ window.apRequest = {
           data: JSON.stringify(shippingContact),
         });
 
-        const hasShippingApplepay = shippingContact?.administrativeArea;
+        lastApplePayShippingContact = shippingContact;
+        const address = applePayContactToAddress(shippingContact);
 
-        let taxAmt = 0.1;
-        const newShippingMethods = applePaysettings.shippingMethods;
+        fetchApplePayWalletTotals(address, "")
+          .then(function (data) {
+            cartTotal.total = parseFloat(data.total).toFixed(2);
+            if (
+              data.shipping_methods_apple &&
+              data.shipping_methods_apple.length
+            ) {
+              applePaysettings.shippingMethods = data.shipping_methods_apple;
+              lastSelectedShippingMethod = data.shipping_methods_apple[0];
+            }
 
-        let resp = self.getTransactionInfo(taxAmt, newShippingMethods[0]);
-        resp.shippingMethods = newShippingMethods;
-        if (hasShippingApplepay && shippingContact.administrativeArea == "HI") {
-          resp.error = {
-            code: APErrorCode.addressUnserviceable,
-            contactField: APErrorContactField.administrativeArea,
-            message: "Shipping is not available for the given address",
-          };
-        }
-        resolve(resp);
+            const resp = self.getTransactionInfo();
+            resp.shippingMethods = applePaysettings.shippingMethods;
+            resolve(resp);
+          })
+          .catch(function (err) {
+            resolve({
+              total: self.getTransactionInfo().total,
+              shippingMethods: applePaysettings.shippingMethods,
+              error: {
+                code: APErrorCode.addressUnserviceable,
+                contactField: APErrorContactField.postalAddress,
+                message:
+                  typeof err === "string"
+                    ? err
+                    : "Shipping is not available for the given address",
+              },
+            });
+          });
       } catch (err) {
         logError("onShippingContactSelected error.", err);
         reject({ errors: [err] });
@@ -224,8 +268,30 @@ window.apRequest = {
           data: JSON.stringify(shippingMethod),
         });
         lastSelectedShippingMethod = shippingMethod;
-        const resp = self.getTransactionInfo(null, shippingMethod);
-        resolve(resp);
+        const address = applePayContactToAddress(
+          lastApplePayShippingContact || {}
+        );
+        const methodId =
+          shippingMethod && shippingMethod.identifier
+            ? shippingMethod.identifier
+            : "";
+
+        fetchApplePayWalletTotals(address, methodId)
+          .then(function (data) {
+            cartTotal.total = parseFloat(data.total).toFixed(2);
+            if (
+              data.shipping_methods_apple &&
+              data.shipping_methods_apple.length
+            ) {
+              applePaysettings.shippingMethods = data.shipping_methods_apple;
+            }
+            resolve(self.getTransactionInfo());
+          })
+          .catch(function (err) {
+            logError("onShippingMethodSelected calculate error.", err);
+            // Fall back to stale total rather than hard-failing the sheet.
+            resolve(self.getTransactionInfo());
+          });
       } catch (err) {
         logError("onShippingMethodSelected error.", err);
         reject({ errors: [err] });
@@ -237,7 +303,7 @@ window.apRequest = {
     return new Promise((resolve, reject) => {
       try {
         console.log("paymentMethod", JSON.stringify(paymentMethod));
-        const resp = self.getTransactionInfo(null, null, paymentMethod.type);
+        const resp = self.getTransactionInfo();
         resolve(resp);
       } catch (err) {        
         console.error("onPaymentMethodSelected error.", exMsg(err));
@@ -379,7 +445,8 @@ window.apRequest = {
       city: shippingCity,
     };
 
-    // Return the AJAX promise so Apple Pay can complete/cancel the sheet correctly.
+    // Return the order AJAX promise so onPaymentAuthorize can resolve/reject
+    // the Apple Pay sheet only after the server responds.
     return applePaycreateWooCommerceOrder(
       xcardnum,
       totalAmount,
@@ -389,17 +456,24 @@ window.apRequest = {
     );
   },
   onPaymentAuthorize: function (applePayload) {
+    const self = this;
+    // Always post the amount shown on the Apple Pay sheet. Do not re-fetch and
+    // overwrite here — that would make validate_wallet_client_amount() compare
+    // the server total to itself. Server rejects mismatches (e.g. tax changed
+    // after billing address) with "Your total has changed, please try again."
+    //
+    // Wait for Woo order + charge to finish before resolving the sheet.
+    // Early resolve("{}") made Apple Pay show Done while AJAX was still running.
     const amtAppleQuick = parseFloat(cartTotal.total).toFixed(2);
-
-    return this.authorize(applePayload, amtAppleQuick.toString())
-      .then((response) => {
-        console.log(response);
-        return response;
+    return self
+      .authorize(applePayload, amtAppleQuick.toString())
+      .then(function () {
+        return "{}";
       })
-      .catch((err) => {
+      .catch(function (err) {
         console.error("authorizeAPay error.", JSON.stringify(err));
         apRequest.handleAPError(err);
-        throw err;
+        return Promise.reject(err);
       });
   },
   handleAPError: function (err) {
@@ -485,17 +559,19 @@ function applePaycreateWooCommerceOrder(
   shippingContact,
   lastSelectedShippingMethod
 ) {
-  // Prevent duplicate AJAX / double order creation from cart quick checkout.
-  if (cardknoxApayOrderSubmitting) {
-    return Promise.reject(new Error("Order is already being processed."));
-  }
-  cardknoxApayOrderSubmitting = true;
-
   return new Promise(function (resolve, reject) {
+    // Prevent duplicate AJAX / double order creation from cart quick checkout.
+    if (cardknoxApayOrderSubmitting) {
+      reject(
+        new Error("Your order is already being processed. Please wait.")
+      );
+      return;
+    }
+    cardknoxApayOrderSubmitting = true;
+
     jQuery.ajax({
       url: applePaysettings.ajax_url,
       type: "POST",
-      dataType: "json",
       data: {
         action: "applepay_cardknox_create_order",
         apple_pay_token: token,
@@ -506,35 +582,40 @@ function applePaycreateWooCommerceOrder(
         security: applePaysettings.create_order_nonce, // Include nonce
       },
       success: function (response) {
-        if (response && response.success) {
+        if (response.success) {
+          // Resolve first so the Apple Pay sheet can complete, then redirect.
           resolve(response);
           window.location.href = response.data.redirect_url;
-          return;
+        } else {
+          cardknoxApayOrderSubmitting = false;
+          var msg =
+            (response && response.data) ||
+            "There was a problem with your order.";
+          if (typeof msg !== "string") {
+            msg = "There was a problem with your order.";
+          }
+          jQuery(".applepay-error")
+            .html("<div> " + msg + " </div>")
+            .show();
+          setTimeout(function () {
+            jQuery(".applepay-error").html("").hide();
+          }, 3000);
+          reject(new Error(msg));
         }
-
-        cardknoxApayOrderSubmitting = false;
-        var message =
-          response && response.data
-            ? response.data
-            : "Payment failed";
-        jQuery(".applepay-error")
-          .html("<div> " + message + " </div>")
-          .show();
-        setTimeout(function () {
-          jQuery(".applepay-error").html("").hide();
-        }, 3000);
-        reject(new Error(typeof message === "string" ? message : "Payment failed"));
       },
       error: function (error) {
         cardknoxApayOrderSubmitting = false;
         console.log(error); // Log the full error response
+        var msg =
+          (error && error.responseText) ||
+          "There was a problem with your order.";
         jQuery(".applepay-error")
-          .html("<div> " + (error.responseText || "Payment failed") + " </div>")
+          .html("<div> " + msg + " </div>")
           .show();
         setTimeout(function () {
           jQuery(".applepay-error").html("").hide();
         }, 3000);
-        reject(error);
+        reject(new Error(msg));
       },
     });
   });

@@ -1,3 +1,6 @@
+.hidden {
+  display: none;
+}
 .woocommerce-cart #ap-container {
   width: 53%;
   height: 40px;

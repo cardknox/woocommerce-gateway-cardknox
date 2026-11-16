@@ -65,12 +65,11 @@ jQuery(function ($) {
       $input.wrap('<span class="cardknox-password-wrap"></span>');
 
       const $toggle = $(
-        '<button type="button" class="button button-secondary cardknox-password-toggle" aria-label="' +
-          showPasswordLabel +
-          '">' +
+        '<button type="button" class="button button-secondary cardknox-password-toggle">' +
           '<span class="dashicons dashicons-visibility" aria-hidden="true"></span>' +
           "</button>"
       );
+      $toggle.attr("aria-label", showPasswordLabel);
 
       $input.after($toggle);
 

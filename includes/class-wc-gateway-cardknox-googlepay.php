@@ -277,6 +277,7 @@ class WCCardknoxGooglepay extends WC_Payment_Gateway_CC
             $postData['xCardNum']           = wc_clean(wp_unslash($_POST['xCardNumToken']));
             $postData['xDigitalWalletType'] = 'googlepay';
         }
+        
         return $postData;
     }
 

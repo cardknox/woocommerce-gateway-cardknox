@@ -29,6 +29,13 @@ class WCCardknoxACH extends WC_Payment_Gateway
      */
     public $wcVersion;
 
+    /**
+     * Whether ACH requires a logged-in customer.
+     *
+     * @var bool
+     */
+    public $require_login;
+
     public function __construct()
     {
         $this->id                   = 'cardknox-ach';
@@ -45,12 +52,13 @@ class WCCardknoxACH extends WC_Payment_Gateway
 
         $option = get_option('woocommerce_cardknox_settings', array());
 
-        $this->enabled     = $this->get_option('ach_enabled', 'no');
-        $this->title       = $this->get_option('ach_title', __('ACH', 'woo-cardknox-gateway'));
-        $this->description = $this->get_option('ach_description', __('Pay securely with your bank account (ACH).', 'woo-cardknox-gateway'));
-        $this->logging     = 'yes' === (isset($option['logging']) ? $option['logging'] : 'no');
-        $this->token_key   = isset($option['token_key']) ? $option['token_key'] : '';
-        $this->wcVersion   = version_compare(WC_VERSION, '3.0.0', '<');
+        $this->enabled       = $this->get_option('ach_enabled', 'no');
+        $this->require_login = 'yes' === $this->get_option('ach_require_login', 'yes');
+        $this->title         = $this->get_option('ach_title', __('ACH', 'woo-cardknox-gateway'));
+        $this->description   = $this->get_option('ach_description', __('Pay securely with your bank account (ACH).', 'woo-cardknox-gateway'));
+        $this->logging       = 'yes' === (isset($option['logging']) ? $option['logging'] : 'no');
+        $this->token_key     = isset($option['token_key']) ? $option['token_key'] : '';
+        $this->wcVersion     = version_compare(WC_VERSION, '3.0.0', '<');
 
         add_action('wp_enqueue_scripts', array($this, 'payment_scripts'));
         // Save ACH settings from the main Sola gateway ACH tab.
@@ -82,7 +90,26 @@ class WCCardknoxACH extends WC_Payment_Gateway
             return false;
         }
 
+        // Hide ACH from guests when login is required.
+        if ($this->require_login && !is_user_logged_in()) {
+            return false;
+        }
+
         return parent::is_available();
+    }
+
+    /**
+     * Whether the current customer is allowed to use ACH.
+     *
+     * @return bool
+     */
+    protected function can_user_use_ach()
+    {
+        if (!$this->require_login) {
+            return true;
+        }
+
+        return is_user_logged_in();
     }
 
     /**
@@ -245,6 +272,14 @@ class WCCardknoxACH extends WC_Payment_Gateway
      */
     public function validate_fields()
     {
+        $valid = true;
+
+        // Block guest ACH submissions when login is required (defense in depth).
+        if (!$this->can_user_use_ach()) {
+            wc_add_notice(__('You must be logged in to pay with ACH.', 'woo-cardknox-gateway'), 'error');
+            return false;
+        }
+
         $account_type    = isset($_POST['cardknox_ach_account_type']) ? sanitize_text_field(wp_unslash($_POST['cardknox_ach_account_type'])) : '';
         $name_on_account = isset($_POST['cardknox_ach_name_on_account']) ? sanitize_text_field(wp_unslash($_POST['cardknox_ach_name_on_account'])) : '';
         $routing = (isset($_POST['cardknox_ach_routing_number']) && is_scalar($_POST['cardknox_ach_routing_number'])) ? preg_replace('/\D/', '', wp_unslash($_POST['cardknox_ach_routing_number'])) : '';
@@ -252,8 +287,6 @@ class WCCardknoxACH extends WC_Payment_Gateway
 
         $ach_token       = isset($_POST['xACH']) ? sanitize_text_field(wp_unslash($_POST['xACH'])) : '';
         $consent         = !empty($_POST['cardknox_ach_consent']);
-
-        $valid = true;
 
         if (!in_array($account_type, array('Checking', 'Savings'), true)) {
             wc_add_notice(__('Please select an account type.', 'woo-cardknox-gateway'), 'error');
@@ -473,6 +506,10 @@ class WCCardknoxACH extends WC_Payment_Gateway
     public function process_payment($order_id)
     {
         try {
+            if (!$this->can_user_use_ach()) {
+                throw new Exception(__('You must be logged in to pay with ACH.', 'woo-cardknox-gateway'));
+            }
+
             $order = wc_get_order($order_id);
 
             $name_on_account = isset($_POST['cardknox_ach_name_on_account']) ? sanitize_text_field(wp_unslash($_POST['cardknox_ach_name_on_account'])) : '';

@@ -150,14 +150,8 @@ class WC_Gateway_Cardknox_Addons extends WC_Gateway_Cardknox
     protected function generate_payment_request_for_subscription($request, $order)
     {
         $request['xCommand']     = 'cc:sale';
-        error_log('After setting xCommand: ' . print_r($request, true));
-        
-
         $request = self::get_order_data($request, $order);
-        error_log('After get_order_data: ' . print_r($request, true));
-
         $request = self::get_billing_shiping_info($request, $order);
-        error_log('After get_billing_shiping_info: ' . print_r($request, true));
 
         return $request;
     }

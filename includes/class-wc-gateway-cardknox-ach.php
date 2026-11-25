@@ -832,7 +832,7 @@ class WCCardknoxACH extends WC_Payment_Gateway
      * @param string $reason
      * @return bool|WP_Error
      */
-        public function process_refund($order_id, $amount = null, $reason = '')
+    public function process_refund($order_id, $amount = null, $reason = '')
     {
         $order = wc_get_order($order_id);
 

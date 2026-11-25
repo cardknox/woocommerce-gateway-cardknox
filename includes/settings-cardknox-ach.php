@@ -22,7 +22,7 @@ $wc_cardknox_ach_settings = array(
         'title'       => __('Require Login for ACH Payments', 'woo-cardknox-gateway'),
         'label'       => __('Require Login for ACH Payments', 'woo-cardknox-gateway'),
         'type'        => 'checkbox',
-        'description' => __('When enabled, ACH is available only to logged-in customers and hidden from guests at checkout.', 'woo-cardknox-gateway'),
+        'description' => __('When enabled, ACH is hidden from guests. Logged-in customers can use it, and so can customers who create an account during checkout. If guest checkout is turned off, new customers can use ACH on their first order.', 'woo-cardknox-gateway'),
         'default'     => 'yes',
         'desc_tip'    => true,
     ),

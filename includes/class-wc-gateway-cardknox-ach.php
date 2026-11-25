@@ -30,7 +30,11 @@ class WCCardknoxACH extends WC_Payment_Gateway
     public $wcVersion;
 
     /**
-     * Whether ACH requires a logged-in customer.
+     * Whether ACH requires a customer account.
+     *
+     * Logged-in customers qualify, and so do customers who will have an
+     * account before payment (guest checkout disabled, or "create account"
+     * chosen at checkout). WooCommerce creates that account after validation.
      *
      * @var bool
      */
@@ -90,8 +94,9 @@ class WCCardknoxACH extends WC_Payment_Gateway
             return false;
         }
 
-        // Hide ACH from guests when login is required.
-        if ($this->require_login && !is_user_logged_in()) {
+        // Guests stay hidden. Customers who already have an account, or who
+        // will have one before payment, still see ACH.
+        if (!$this->can_user_use_ach()) {
             return false;
         }
 
@@ -101,6 +106,12 @@ class WCCardknoxACH extends WC_Payment_Gateway
     /**
      * Whether the current customer is allowed to use ACH.
      *
+     * Payment methods render, and validate_fields() runs, before
+     * WC_Checkout::process_customer() creates the account and logs them in.
+     * Checking only is_user_logged_in() hides ACH from every new customer
+     * when guest checkout is off, and from anyone who creates an account
+     * during checkout.
+     *
      * @return bool
      */
     protected function can_user_use_ach()
@@ -109,7 +120,178 @@ class WCCardknoxACH extends WC_Payment_Gateway
             return true;
         }
 
-        return is_user_logged_in();
+        if (is_user_logged_in()) {
+            return true;
+        }
+
+        return $this->customer_will_have_account();
+    }
+
+    /**
+     * Whether this checkout creates an account before the gateway is charged.
+     *
+     * @return bool
+     */
+    protected function customer_will_have_account()
+    {
+        if (!$this->is_account_creation_checkout()) {
+            return false;
+        }
+
+        if (!function_exists('WC') || !WC()->checkout()) {
+            return false;
+        }
+
+        $checkout = WC()->checkout();
+
+        // Guest checkout is off, so WooCommerce always creates the account.
+        if (method_exists($checkout, 'is_registration_required') && $checkout->is_registration_required()) {
+            return true;
+        }
+
+        if (!method_exists($checkout, 'is_registration_enabled') || !$checkout->is_registration_enabled()) {
+            return false;
+        }
+
+        if ($this->posted_create_account()) {
+            return true;
+        }
+
+        // First paint, before the form is posted: follow the checkbox default.
+        if (!$this->checkout_form_was_posted()) {
+            return (bool) apply_filters('woocommerce_create_account_default_checked', false);
+        }
+
+        return false;
+    }
+
+    /**
+     * Account creation only happens on checkout, not on pay-for-order.
+     *
+     * @return bool
+     */
+    protected function is_account_creation_checkout()
+    {
+        // Checkout AJAX is not the checkout page URL, so detect it before endpoint checks.
+        if (isset($_REQUEST['wc-ajax'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+            $action = sanitize_text_field(wp_unslash($_REQUEST['wc-ajax']));
+            return in_array($action, array('update_order_review', 'checkout'), true);
+        }
+
+        // Pay-for-order and order-received do not create an account before payment.
+        if (function_exists('is_wc_endpoint_url') && is_wc_endpoint_url()) {
+            return false;
+        }
+
+        if (function_exists('is_checkout') && is_checkout()) {
+            return true;
+        }
+
+        return defined('WOOCOMMERCE_CHECKOUT') && WOOCOMMERCE_CHECKOUT;
+    }
+
+    /**
+     * Whether the checkout form has been posted (including update_order_review).
+     *
+     * @return bool
+     */
+    protected function checkout_form_was_posted()
+    {
+        if (!empty($_POST['post_data']) || !empty($_POST['woocommerce-process-checkout-nonce'])) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Whether the customer checked "Create an account".
+     *
+     * Classic checkout AJAX sends the form in post_data, not as top-level POST fields.
+     *
+     * @return bool
+     */
+    protected function posted_create_account()
+    {
+        if (isset($_POST['createaccount']) && $this->is_affirmative(wp_unslash($_POST['createaccount']))) { // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+            return true;
+        }
+
+        if (!isset($_POST['post_data']) || !is_string($_POST['post_data'])) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+            return false;
+        }
+
+        $parsed = array();
+        parse_str(wp_unslash($_POST['post_data']), $parsed); // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+
+        return isset($parsed['createaccount']) && $this->is_affirmative($parsed['createaccount']);
+    }
+
+    /**
+     * @param mixed $value Posted checkbox value.
+     * @return bool
+     */
+    protected function is_affirmative($value)
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if (!is_scalar($value)) {
+            return false;
+        }
+
+        return in_array(strtolower((string) $value), array('1', 'true', 'yes', 'on'), true);
+    }
+
+    /**
+     * Optional account signup needs a payment-method refresh when the box changes.
+     *
+     * WooCommerce does not refresh payment methods when "Create an account" is toggled.
+     *
+     * @return bool
+     */
+    protected function should_refresh_ach_on_create_account()
+    {
+        if (!$this->require_login || is_user_logged_in()) {
+            return false;
+        }
+
+        if (!function_exists('WC') || !WC()->checkout()) {
+            return false;
+        }
+
+        $checkout = WC()->checkout();
+
+        return method_exists($checkout, 'is_registration_enabled')
+            && $checkout->is_registration_enabled()
+            && method_exists($checkout, 'is_registration_required')
+            && !$checkout->is_registration_required();
+    }
+
+    /**
+     * Checkout can show ACH later on this page if the customer creates an account.
+     *
+     * update_order_review swaps in the payment fields without enqueueing scripts,
+     * so ach.css and cardknox-ach.js have to be on the page before that happens.
+     *
+     * @return bool
+     */
+    protected function checkout_may_reveal_ach()
+    {
+        if (!$this->should_refresh_ach_on_create_account()) {
+            return false;
+        }
+
+        if (!function_exists('is_checkout') || !is_checkout()) {
+            return false;
+        }
+
+        if (function_exists('is_wc_endpoint_url') && is_wc_endpoint_url()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -122,6 +304,11 @@ class WCCardknoxACH extends WC_Payment_Gateway
         }
 
         if (!is_cart() && !is_checkout() && !isset($_GET['pay_for_order'])) {
+            return;
+        }
+
+        // ACH is hidden, so skip ach.css and cardknox-ach.js.
+        if (!$this->can_user_use_ach() && !$this->checkout_may_reveal_ach()) {
             return;
         }
 
@@ -150,6 +337,13 @@ class WCCardknoxACH extends WC_Payment_Gateway
             wp_rand(),
             true
         );
+
+        if ($this->should_refresh_ach_on_create_account()) {
+            wp_add_inline_script(
+                'woocommerce_cardknox_ach',
+                'jQuery(function($){$(document.body).on("change","#createaccount",function(){$(document.body).trigger("update_checkout");});});'
+            );
+        }
 
         wp_localize_script(
             'woocommerce_cardknox_ach',
@@ -266,6 +460,24 @@ class WCCardknoxACH extends WC_Payment_Gateway
     }
 
     /**
+     * Customer-facing message when this method requires an account.
+     *
+     * Uses the configured title so a renamed method is not still called ACH.
+     *
+     * @return string
+     */
+    protected function get_account_required_message()
+    {
+        $title = $this->title ? wp_strip_all_tags($this->title) : __('ACH', 'woo-cardknox-gateway');
+
+        return sprintf(
+            /* translators: %s: payment method title */
+            __('You must be logged in or create an account during checkout to pay with %s.', 'woo-cardknox-gateway'),
+            $title
+        );
+    }
+
+    /**
      * Validate ACH fields on checkout.
      *
      * @return bool
@@ -274,9 +486,10 @@ class WCCardknoxACH extends WC_Payment_Gateway
     {
         $valid = true;
 
-        // Block guest ACH submissions when login is required (defense in depth).
+        // Runs before WooCommerce creates the checkout account, so this allows
+        // customers who are about to get an account and still blocks guests.
         if (!$this->can_user_use_ach()) {
-            wc_add_notice(__('You must be logged in to pay with ACH.', 'woo-cardknox-gateway'), 'error');
+            wc_add_notice($this->get_account_required_message(), 'error');
             return false;
         }
 
@@ -506,11 +719,13 @@ class WCCardknoxACH extends WC_Payment_Gateway
     public function process_payment($order_id)
     {
         try {
-            if (!$this->can_user_use_ach()) {
-                throw new Exception(__('You must be logged in to pay with ACH.', 'woo-cardknox-gateway'));
-            }
-
+            // Load the order first so a later failure can mark it failed,
+            // send the failed-order email, and pass it to the error hook.
             $order = wc_get_order($order_id);
+
+            if (!$this->can_user_use_ach()) {
+                throw new Exception($this->get_account_required_message());
+            }
 
             $name_on_account = isset($_POST['cardknox_ach_name_on_account']) ? sanitize_text_field(wp_unslash($_POST['cardknox_ach_name_on_account'])) : '';
             $this->store_ach_consent($order, $name_on_account);

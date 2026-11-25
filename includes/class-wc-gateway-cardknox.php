@@ -407,13 +407,16 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
 
         $suffix = defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? '' : '.min';
 
-        wp_enqueue_style('woocommerce_cardknox_admin_style', plugins_url('/assets/css/cardknox-admin-style.css',WC_CARDKNOX_MAIN_FILE), false, WC_CARDKNOX_VERSION,'all' );
+        wp_enqueue_style('dashicons');
+        wp_enqueue_style('woocommerce_cardknox_admin_style', plugins_url('/assets/css/cardknox-admin-style.css',WC_CARDKNOX_MAIN_FILE), array('dashicons'), WC_CARDKNOX_VERSION,'all' );
 
-        wp_enqueue_script('woocommerce_cardknox_admin', plugins_url('assets/js/cardknox-admin' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE), array(), WC_CARDKNOX_VERSION, true);
+        wp_enqueue_script('woocommerce_cardknox_admin', plugins_url('assets/js/cardknox-admin' . $suffix . '.js', WC_CARDKNOX_MAIN_FILE), array('jquery'), WC_CARDKNOX_VERSION, true);
 
         $cardknox_admin_params = array(
             'localized_messages' => array(
                 'missing_transaction_key' => __('Missing Trasnaction Key. Please set the trasnaction key field above and re-try.', 'woo-cardknox-gateway'),
+                'show_password'           => __('Show password', 'woo-cardknox-gateway'),
+                'hide_password'           => __('Hide password', 'woo-cardknox-gateway'),
             ),
             'ajaxurl' => admin_url('admin-ajax.php')
         );
@@ -485,7 +488,10 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
             'xSoftwareName'        => 'Wordpress_WooCommerce',
             'xCommand'             => $this->capture ? 'cc:sale' : 'cc:authonly',
             'xAmount'              => $woocommerce->cart->get_cart_contents_total(),
-            'threeds_object'       => array('ajax_url' => admin_url('admin-ajax.php'))
+            'threeds_object'       => array(
+                'ajax_url' => admin_url('admin-ajax.php'),
+                'nonce'    => wp_create_nonce('cardknox_3ds_verify'),
+            ),
         );
 
         // merge localized messages to be use in JS
@@ -756,9 +762,12 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                         $this->process_response($response, $order);
                     } else {
                         if ($response['xResult'] === 'V' && $paymentName === 'cardknox') {
+                            $this->store_pending_3ds_verification($order, $response, $forceCustomer);
+                            // Refresh after account creation at checkout so verify uses the logged-in user nonce.
                             return array(
-                                'result'   => 'success',
-                                'response' => $response
+                                'result'        => 'success',
+                                'response'      => $response,
+                                'threeds_nonce' => wp_create_nonce('cardknox_3ds_verify'),
                             );
                         }
                     }
@@ -835,6 +844,37 @@ class WC_Gateway_Cardknox extends WC_Payment_Gateway_CC
                 'redirect' => '',
             );
         }
+    }
+
+    /**
+     * Bind a pending 3DS verification to the checkout session and order.
+     *
+     * @param WC_Order $order Order awaiting 3DS verification.
+     * @param array    $response Gateway verify-required response.
+     * @param bool     $forceCustomer Force customer/token save flag.
+     */
+    protected function store_pending_3ds_verification($order, $response, $forceCustomer = false)
+    {
+        if (!function_exists('WC') || !WC()->session || empty($response['xRefNum'])) {
+            return;
+        }
+
+        $order_id = $order->get_id();
+        $order->update_meta_data('_cardknox_3ds_pending_ref', $response['xRefNum']);
+        $order->save();
+
+        WC()->session->set(
+            'cardknox_3ds_pending',
+            array(
+                'order_id'       => $order_id,
+                'order_key'      => $order->get_order_key(),
+                'x_ref_num'      => $response['xRefNum'],
+                'force_customer' => (bool) $forceCustomer,
+            )
+        );
+
+        // Ensure WooCommerce keeps this order tied to the current checkout session.
+        WC()->session->set('order_awaiting_payment', $order_id);
     }
 
     public function save_payment($forceCustomer, $response)

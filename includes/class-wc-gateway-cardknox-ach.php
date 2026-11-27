@@ -149,7 +149,7 @@ class WCCardknoxACH extends WC_Payment_Gateway
             return true;
         }
 
-        if (!method_exists($checkout, 'is_registration_enabled') || !$checkout->is_registration_enabled()) {
+        if (!$this->is_registration_optional()) {
             return false;
         }
 
@@ -207,13 +207,14 @@ class WCCardknoxACH extends WC_Payment_Gateway
     /**
      * Whether the customer checked "Create an account".
      *
+     * Matches WC_Checkout::get_posted_data(), which treats any non-empty value as checked.
      * Classic checkout AJAX sends the form in post_data, not as top-level POST fields.
      *
      * @return bool
      */
     protected function posted_create_account()
     {
-        if (isset($_POST['createaccount']) && $this->is_affirmative(wp_unslash($_POST['createaccount']))) { // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        if (!empty($_POST['createaccount'])) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
             return true;
         }
 
@@ -224,39 +225,16 @@ class WCCardknoxACH extends WC_Payment_Gateway
         $parsed = array();
         parse_str(wp_unslash($_POST['post_data']), $parsed); // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
-        return isset($parsed['createaccount']) && $this->is_affirmative($parsed['createaccount']);
+        return !empty($parsed['createaccount']);
     }
 
     /**
-     * @param mixed $value Posted checkbox value.
-     * @return bool
-     */
-    protected function is_affirmative($value)
-    {
-        if (is_bool($value)) {
-            return $value;
-        }
-
-        if (!is_scalar($value)) {
-            return false;
-        }
-
-        return in_array(strtolower((string) $value), array('1', 'true', 'yes', 'on'), true);
-    }
-
-    /**
-     * Optional account signup needs a payment-method refresh when the box changes.
-     *
-     * WooCommerce does not refresh payment methods when "Create an account" is toggled.
+     * Registration is offered, and the customer can skip it.
      *
      * @return bool
      */
-    protected function should_refresh_ach_on_create_account()
+    protected function is_registration_optional()
     {
-        if (!$this->require_login || is_user_logged_in()) {
-            return false;
-        }
-
         if (!function_exists('WC') || !WC()->checkout()) {
             return false;
         }
@@ -270,28 +248,21 @@ class WCCardknoxACH extends WC_Payment_Gateway
     }
 
     /**
-     * Checkout can show ACH later on this page if the customer creates an account.
+     * Optional account signup needs a payment-method refresh when the box changes.
      *
-     * update_order_review swaps in the payment fields without enqueueing scripts,
+     * WooCommerce does not refresh payment methods when "Create an account" is toggled.
+     * update_order_review then swaps in the payment fields without enqueueing scripts,
      * so ach.css and cardknox-ach.js have to be on the page before that happens.
      *
      * @return bool
      */
-    protected function checkout_may_reveal_ach()
+    protected function should_refresh_ach_on_create_account()
     {
-        if (!$this->should_refresh_ach_on_create_account()) {
+        if (!$this->require_login || is_user_logged_in()) {
             return false;
         }
 
-        if (!function_exists('is_checkout') || !is_checkout()) {
-            return false;
-        }
-
-        if (function_exists('is_wc_endpoint_url') && is_wc_endpoint_url()) {
-            return false;
-        }
-
-        return true;
+        return $this->is_account_creation_checkout() && $this->is_registration_optional();
     }
 
     /**
@@ -307,8 +278,9 @@ class WCCardknoxACH extends WC_Payment_Gateway
             return;
         }
 
-        // ACH is hidden, so skip ach.css and cardknox-ach.js.
-        if (!$this->can_user_use_ach() && !$this->checkout_may_reveal_ach()) {
+        // ACH is hidden until the customer creates an account, so skip the assets
+        // unless this page may reveal ACH when the checkbox changes.
+        if (!$this->can_user_use_ach() && !$this->should_refresh_ach_on_create_account()) {
             return;
         }
 
@@ -338,27 +310,22 @@ class WCCardknoxACH extends WC_Payment_Gateway
             true
         );
 
-        if ($this->should_refresh_ach_on_create_account()) {
-            wp_add_inline_script(
-                'woocommerce_cardknox_ach',
-                'jQuery(function($){$(document.body).on("change","#createaccount",function(){$(document.body).trigger("update_checkout");});});'
-            );
-        }
-
         wp_localize_script(
             'woocommerce_cardknox_ach',
             'wc_cardknox_ach_params',
             array(
-                'key'                     => $this->token_key,
-                'software_name'           => 'Wordpress_WooCommerce',
-                'software_version'        => WC_CARDKNOX_VERSION,
-                'i18n_account_type'       => __('Please select an account type.', 'woo-cardknox-gateway'),
-                'i18n_name_required'      => __('Name on account is required.', 'woo-cardknox-gateway'),
-                'i18n_routing_invalid'    => __('Please enter a valid 9-digit routing number.', 'woo-cardknox-gateway'),
-                'i18n_account_required'   => __('Account number is required.', 'woo-cardknox-gateway'),
-                'i18n_account_invalid'    => __('Please enter a valid account number.', 'woo-cardknox-gateway'),
-                'i18n_consent_required'   => __('You must acknowledge and agree to the ACH terms and conditions.', 'woo-cardknox-gateway'),
-                'i18n_ifields_unavailable'=> __('Payment form is not ready. Please refresh and try again.', 'woo-cardknox-gateway'),
+                'key'                       => $this->token_key,
+                'software_name'             => 'Wordpress_WooCommerce',
+                'software_version'          => WC_CARDKNOX_VERSION,
+                // wp_localize_script stringifies bools ("1" / ""). The listener lives in cardknox-ach.js.
+                'refresh_on_create_account' => $this->should_refresh_ach_on_create_account(),
+                'i18n_account_type'         => __('Please select an account type.', 'woo-cardknox-gateway'),
+                'i18n_name_required'        => __('Name on account is required.', 'woo-cardknox-gateway'),
+                'i18n_routing_invalid'      => __('Please enter a valid 9-digit routing number.', 'woo-cardknox-gateway'),
+                'i18n_account_required'     => __('Account number is required.', 'woo-cardknox-gateway'),
+                'i18n_account_invalid'      => __('Please enter a valid account number.', 'woo-cardknox-gateway'),
+                'i18n_consent_required'     => __('You must acknowledge and agree to the ACH terms and conditions.', 'woo-cardknox-gateway'),
+                'i18n_ifields_unavailable'  => __('Payment form is not ready. Please refresh and try again.', 'woo-cardknox-gateway'),
             )
         );
     }

@@ -320,6 +320,14 @@ jQuery(function ($) {
     setTimeout(setupWhenVisible, 500);
   });
 
+  // WooCommerce does not refresh payment methods when "Create an account" toggles.
+  // Param is "1" or "" because wp_localize_script stringifies booleans.
+  if (getParams().refresh_on_create_account) {
+    $(document.body).on("change", "#createaccount", function () {
+      $(document.body).trigger("update_checkout");
+    });
+  }
+
   $(document).on("change", 'input[name="payment_method"]', function () {
     if ($(this).val() === "cardknox-ach") {
       setTimeout(initIFields, 300);

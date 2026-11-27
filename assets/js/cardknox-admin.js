@@ -43,6 +43,21 @@ jQuery(function ($) {
         })
         .change();
 
+      // Require Login is only relevant while ACH is enabled.
+      $("input#woocommerce_cardknox-ach_ach_enabled")
+        .change(function () {
+          if ($(this).is(":checked")) {
+            $("#woocommerce_cardknox-ach_ach_require_login")
+              .closest("tr")
+              .show();
+          } else {
+            $("#woocommerce_cardknox-ach_ach_require_login")
+              .closest("tr")
+              .hide();
+          }
+        })
+        .change();
+
       this.initPasswordToggle();
     },
 
